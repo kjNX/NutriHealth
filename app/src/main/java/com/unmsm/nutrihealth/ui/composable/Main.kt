@@ -7,7 +7,6 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.unmsm.nutrihealth.data.repository.getContacts
@@ -28,11 +27,11 @@ fun Composite(state: PagerState, modifier: Modifier = Modifier) {
 @Composable
 fun MainDisplay() {
     var pagerState = rememberPagerState{ 3 }
-    var coroutineScope = rememberCoroutineScope()
 
     Scaffold(
         topBar = { TopBar() },
-        bottomBar = { NavBar(pagerState.currentPage) }
+        bottomBar = { NavBar(pagerState) },
+        floatingActionButton = { EntryFABs() }
     ) { innerPadding ->
         Composite(state = pagerState, modifier = Modifier.fillMaxSize().padding(innerPadding))
     }

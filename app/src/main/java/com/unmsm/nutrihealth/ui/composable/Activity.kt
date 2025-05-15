@@ -21,7 +21,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -30,11 +29,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.unmsm.nutrihealth.R
 import com.unmsm.nutrihealth.data.model.StatTrak
-import com.unmsm.nutrihealth.ui.theme.NutriHealthTheme
 
 @Composable
 fun TrackingDisplay(stats: StatTrak, modifier: Modifier = Modifier) {
@@ -42,7 +39,7 @@ fun TrackingDisplay(stats: StatTrak, modifier: Modifier = Modifier) {
         Image(
             painter = painterResource(R.drawable.maps),
             contentDescription = null,
-            contentScale = ContentScale.FillHeight,
+            contentScale = ContentScale.FillBounds,
             modifier = Modifier.fillMaxSize()
         )
         Column(
@@ -157,6 +154,7 @@ fun StatCard(icon: ImageVector, value: String, measure: String, modifier: Modifi
     }
 }
 
+/*
 @Preview
 @Composable
 private fun ActivityPreview() {
@@ -166,3 +164,4 @@ private fun ActivityPreview() {
         }
     }
 }
+*/
