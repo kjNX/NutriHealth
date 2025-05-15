@@ -44,12 +44,12 @@ import kotlinx.coroutines.launch
 fun MainTopBar() {
     val iconDescription = listOf(
         "Historial",
-        "Informe detallado",
+//        "Informe detallado",
         "Perfil"
     )
     val icons = listOf(
         Icons.Default.History,
-        Icons.Default.Analytics,
+//        Icons.Default.Analytics,
         Icons.Default.Face3
     )
 
