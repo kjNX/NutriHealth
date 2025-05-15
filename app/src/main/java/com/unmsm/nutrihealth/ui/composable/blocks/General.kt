@@ -1,4 +1,4 @@
-package com.unmsm.nutrihealth.ui.composable
+package com.unmsm.nutrihealth.ui.composable.blocks
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer

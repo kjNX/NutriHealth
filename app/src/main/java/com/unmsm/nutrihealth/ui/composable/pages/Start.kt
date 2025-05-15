@@ -1,4 +1,4 @@
-package com.unmsm.nutrihealth.ui.composable
+package com.unmsm.nutrihealth.ui.composable.pages
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -19,10 +19,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.unmsm.nutrihealth.ui.composable.blocks.FitCard
 
 @Composable
 fun StartDisplay(modifier: Modifier = Modifier) {
@@ -45,8 +47,18 @@ fun StartDisplay(modifier: Modifier = Modifier) {
 fun RemindersCard(onReminderClick: () -> Unit) {
     FitCard(title = "Recordatorios") {
         Column {
-            ReminderItem("Beber 200ml de agua", "En 30 minutos", Icons.Default.Opacity, onClick = onReminderClick)
-            ReminderItem("Almuerzo programado", "En 1 hora y 15 minutos", Icons.Default.Restaurant, onClick = onReminderClick)
+            ReminderItem(
+                "Beber 200ml de agua",
+                "En 30 minutos",
+                Icons.Default.Opacity,
+                onClick = onReminderClick
+            )
+            ReminderItem(
+                "Almuerzo programado",
+                "En 1 hora y 15 minutos",
+                Icons.Default.Restaurant,
+                onClick = onReminderClick
+            )
         }
     }
 }
@@ -79,7 +91,7 @@ fun MacronutrientCard() {
 }
 
 @Composable
-fun NutrientProgress(name: String, current: Float, target: Float, color: androidx.compose.ui.graphics.Color) {
+fun NutrientProgress(name: String, current: Float, target: Float, color: Color) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         CircularProgressIndicator(progress = current / target, color = color, strokeWidth = 6.dp)
         Text("${(current / target * 100).toInt()}%", fontSize = 12.sp)

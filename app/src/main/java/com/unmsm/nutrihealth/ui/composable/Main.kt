@@ -11,6 +11,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.unmsm.nutrihealth.data.repository.getContacts
 import com.unmsm.nutrihealth.data.repository.trackerStats
+import com.unmsm.nutrihealth.ui.composable.blocks.EntryFABs
+import com.unmsm.nutrihealth.ui.composable.blocks.MainTopBar
+import com.unmsm.nutrihealth.ui.composable.blocks.NavBar
+import com.unmsm.nutrihealth.ui.composable.pages.ContactList
+import com.unmsm.nutrihealth.ui.composable.pages.StartDisplay
+import com.unmsm.nutrihealth.ui.composable.pages.TrackingDisplay
 import com.unmsm.nutrihealth.ui.theme.NutriHealthTheme
 
 @Composable
@@ -29,7 +35,7 @@ fun MainDisplay() {
     var pagerState = rememberPagerState{ 3 }
 
     Scaffold(
-        topBar = { TopBar() },
+        topBar = { MainTopBar() },
         bottomBar = { NavBar(pagerState) },
         floatingActionButton = { EntryFABs() }
     ) { innerPadding ->

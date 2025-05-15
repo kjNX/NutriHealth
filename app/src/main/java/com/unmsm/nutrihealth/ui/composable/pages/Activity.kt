@@ -1,4 +1,4 @@
-package com.unmsm.nutrihealth.ui.composable
+package com.unmsm.nutrihealth.ui.composable.pages
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
