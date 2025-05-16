@@ -26,7 +26,7 @@ import com.unmsm.nutrihealth.ui.theme.NutriHealthTheme
 fun Messaging(onNavigate: () -> Unit) {
     val contact = Contact("ML", "")
     Scaffold(
-        topBar = { SubsectionTopBar(title = contact.displayName, onNavigate = onNavigate) },
+        topBar = { SubsectionTopBar(title = contact.name, onNavigate = onNavigate) },
         bottomBar = { MessageBar() }
     ) { innerPadding ->
         MessageLog(
@@ -63,7 +63,7 @@ fun MessageItem(contact: Contact, message: Message, modifier: Modifier = Modifie
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = contact.displayName.first().toString(),
+                    text = contact.name.first().toString(),
                     color = Color.White,
                     style = MaterialTheme.typography.labelLarge
                 )

@@ -1,9 +1,12 @@
 package com.unmsm.nutrihealth.data.repository
 
+import com.google.firebase.Firebase
+import com.google.firebase.firestore.firestore
 import com.unmsm.nutrihealth.data.model.Food
 
+
 fun getFood() = listOf(
-    Food("Plátano", 200, 2.5f, 51f, .7f),
+    Food("Plátano", calories = 200, protein = 2.5f, carbs = 51f, fats = .7f),
     Food("Naranja", 85, 1.7f, 21f, .2f),
     Food("Manzana", 65, .3f, 17f, .2f),
     Food("Pan", 102, 4.6f, 19f, .9f),
@@ -14,3 +17,8 @@ fun getFood() = listOf(
     Food("Sopa de pollo", 86, 6.1f, 8.5f, 2.9f),
     Food("Sprite", 100, 0f, 27f, 0f)
 )
+
+/*
+fun getFood() {
+}
+ */

@@ -13,12 +13,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.unmsm.nutrihealth.data.repository.getContacts
+import com.unmsm.nutrihealth.logic.FoodViewModel
 import com.unmsm.nutrihealth.ui.composable.blocks.EntryFABs
 import com.unmsm.nutrihealth.ui.composable.blocks.MainTopBar
 import com.unmsm.nutrihealth.ui.composable.blocks.NavBar
 import com.unmsm.nutrihealth.ui.composable.pages.main.ContactList
 import com.unmsm.nutrihealth.ui.composable.pages.main.StartDisplay
 import com.unmsm.nutrihealth.ui.composable.pages.main.TrackingDisplay
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.unmsm.nutrihealth.data.model.Food
 
 @Composable
 fun Composite(state: PagerState, modifier: Modifier = Modifier, onContactSelect: () -> Unit) {
@@ -39,9 +42,10 @@ fun Composite(state: PagerState, modifier: Modifier = Modifier, onContactSelect:
 fun MainDisplay(
     onTopBarClick: List<() -> Unit>,
     onScanClick: () -> Unit,
-    onContactSelect: () -> Unit
+    onContactSelect: () -> Unit,
+    viewModel: FoodViewModel = viewModel()
 ) {
-    var pagerState = rememberPagerState{ 3 }
+    val pagerState = rememberPagerState { 3 }
     var showDialog by remember { mutableStateOf(false) }
 
     val hideDialog = { showDialog = false }
@@ -49,10 +53,14 @@ fun MainDisplay(
     Scaffold(
         topBar = { MainTopBar(onTopBarClick) },
         bottomBar = { NavBar(pagerState) },
-        floatingActionButton = { if(pagerState.currentPage == 2) null else EntryFABs(
-            onScanClick = onScanClick,
-            onTypeClick = { showDialog = true }
-        ) }
+        floatingActionButton = {
+            if (pagerState.currentPage != 2) {
+                EntryFABs(
+                    onScanClick = onScanClick,
+                    onTypeClick = { showDialog = true }
+                )
+            }
+        }
     ) { innerPadding ->
         Composite(
             state = pagerState,
@@ -61,10 +69,19 @@ fun MainDisplay(
                 .fillMaxSize()
                 .padding(innerPadding)
         )
-        if(showDialog) TypeAddDialog(
-            onDismiss = hideDialog,
-            onCancel = hideDialog,
-            onConfirm = hideDialog
-        )
+
+        if (showDialog) {
+            TypeAddDialog(
+                onDismiss = hideDialog,
+                onCancel = hideDialog,
+                onConfirm = { food: Food ->
+                    viewModel.addFood(food) { success ->
+                        // Aquí podrías mostrar un Toast/Snackbar si quieres
+                        showDialog = false
+                    }
+                }
+            )
+        }
     }
 }
+

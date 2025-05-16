@@ -53,7 +53,7 @@ fun ContactListItem(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = contact.displayName.firstOrNull()?.toString() ?: "?",
+                text = contact.name.firstOrNull()?.toString() ?: "?",
                 style = MaterialTheme.typography.titleMedium,
                 color = Color.White
             )
@@ -63,7 +63,7 @@ fun ContactListItem(
 
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = contact.displayName,
+                text = contact.name,
                 style = MaterialTheme.typography.titleLarge
             )
             Text(

@@ -1,6 +1,6 @@
 package com.unmsm.nutrihealth.data.model
 
 data class Contact(
-    val displayName: String,
+    val name: String,
     val description: String
 )

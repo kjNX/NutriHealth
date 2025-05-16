@@ -71,7 +71,7 @@ fun TrackerCard(modifier: Modifier = Modifier) {
                 .padding(bottom = 16.dp)
         ) {
             Column {
-                Text(text = User.StatTrak.time, style = MaterialTheme.typography.headlineLarge)
+                Text(text = User.StatTrak.parseTime(), style = MaterialTheme.typography.headlineLarge)
                 Text(text = "Completa tu objetivo", style = MaterialTheme.typography.labelSmall)
             }
             Button(onClick = {}) {
