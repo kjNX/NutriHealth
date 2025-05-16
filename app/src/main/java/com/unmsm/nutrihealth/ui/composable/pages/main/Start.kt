@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Opacity
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material3.*
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.geometry.Offset
@@ -20,6 +21,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.unmsm.nutrihealth.data.model.User
 import com.unmsm.nutrihealth.ui.composable.blocks.BlockItem
 import com.unmsm.nutrihealth.ui.composable.blocks.EasyCard
 
@@ -46,7 +48,7 @@ fun StartDisplay(modifier: Modifier = Modifier) {
 
 @Composable
 fun CaloriesCard() {
-    val animatedProgress by animateFloatAsState(targetValue = 1450f / 2150f)
+    val animatedProgress by animateFloatAsState(targetValue = User.Plan.dailyCal / 2150f)
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -55,13 +57,13 @@ fun CaloriesCard() {
     ) {
         Column(Modifier.padding(16.dp)) {
             Text("🔥 Calorías de hoy", style = MaterialTheme.typography.titleMedium)
-            Text("1450 de 2150 kcal", style = MaterialTheme.typography.bodyLarge)
+            Text("${User.Plan.dailyCal} de 2150 kcal", style = MaterialTheme.typography.bodyLarge)
             LinearProgressIndicator(
-                progress = animatedProgress,
+                progress = { animatedProgress },
+                color = Color(0xFFFF7043),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 8.dp),
-                color = Color(0xFFFF7043)
+                    .padding(top = 8.dp)
             )
         }
     }
