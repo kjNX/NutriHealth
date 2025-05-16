@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.unmsm.nutrihealth.ui.composable.blocks.BlockItem
 import com.unmsm.nutrihealth.ui.composable.blocks.EasyCard
-
+import com.unmsm.nutrihealth.ui.theme.*
 @Composable
 fun StartDisplay(modifier: Modifier = Modifier) {
     Column(modifier = modifier.verticalScroll(rememberScrollState()).padding(16.dp)) {
@@ -83,9 +83,9 @@ fun CaloriesCard() {
 fun MacronutrientCard() {
     EasyCard(title = "Macronutrientes") {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            NutrientProgress("Proteínas", 75f, 161f, MaterialTheme.colorScheme.primary)
-            NutrientProgress("Carbos", 120f, 242f, MaterialTheme.colorScheme.tertiary)
-            NutrientProgress("Grasas", 40f, 60f, MaterialTheme.colorScheme.secondary)
+            NutrientProgress("Proteínas", 75f, 161f, proteina)
+            NutrientProgress("Carbos", 120f, 242f, carbohidrato)
+            NutrientProgress("Grasas", 40f, 60f, grasa)
         }
     }
 }
