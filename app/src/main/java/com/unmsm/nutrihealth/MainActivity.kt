@@ -5,21 +5,18 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.runtime.*
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.unmsm.nutrihealth.data.model.Contact
 import com.unmsm.nutrihealth.data.repository.getContacts
 import com.unmsm.nutrihealth.logic.AuthViewModel
-import com.unmsm.nutrihealth.ui.composable.AuthDisplay
-import com.unmsm.nutrihealth.ui.composable.History
-import com.unmsm.nutrihealth.ui.composable.MainDisplay
-import com.unmsm.nutrihealth.ui.composable.Messaging
-import com.unmsm.nutrihealth.ui.composable.Profile
-import com.unmsm.nutrihealth.ui.composable.Scan
+import com.unmsm.nutrihealth.ui.composable.*
 import com.unmsm.nutrihealth.ui.theme.NutriHealthTheme
 
-enum class MainScreen() {
+enum class MainScreen {
+    Onboarding,
     Auth,
     Main,
     Scan,
@@ -32,10 +29,14 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val authViewModel = AuthViewModel()
+
         enableEdgeToEdge()
         setContent {
             NutriHealthTheme {
-                var navController = rememberNavController()
+                val navController = rememberNavController()
+
+                // 🔁 Estado para simular que se muestre solo una vez
+                var showOnboarding by remember { mutableStateOf(true) }
 
                 val goto = { path: String -> navController.navigate(path) }
                 val navigate = { navController.navigate(MainScreen.Main.name) }
@@ -46,7 +47,7 @@ class MainActivity : ComponentActivity() {
                         email = email,
                         password = password,
                         onResult = { value: Boolean, msg: String ->
-                            if(value) goto(MainScreen.Main.name)
+                            if (value) goto(MainScreen.Main.name)
                             else Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
                         }
                     )
@@ -58,7 +59,7 @@ class MainActivity : ComponentActivity() {
                         email = email,
                         password = password,
                         onResult = { value: Boolean, msg: String ->
-                            if(value) goto(MainScreen.Main.name)
+                            if (value) goto(MainScreen.Main.name)
                             else Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
                         }
                     )
@@ -66,9 +67,17 @@ class MainActivity : ComponentActivity() {
 
                 NavHost(
                     navController = navController,
-                    startDestination = MainScreen.Auth.name,
+                    startDestination = if (showOnboarding) MainScreen.Onboarding.name else MainScreen.Auth.name
                 ) {
-                    composable(route = MainScreen.Auth.name) {
+                    composable(MainScreen.Onboarding.name) {
+                        OnboardingScreen(
+                            onFinish = {
+                                showOnboarding = false
+                                goto(MainScreen.Auth.name)
+                            }
+                        )
+                    }
+                    composable(MainScreen.Auth.name) {
                         AuthDisplay(
                             onLogin = login,
                             onRegister = register,
@@ -76,32 +85,32 @@ class MainActivity : ComponentActivity() {
                             onFacebookAccess = {}
                         )
                     }
-                    composable(route = MainScreen.Main.name) {
+                    composable(MainScreen.Main.name) {
                         MainDisplay(
                             onTopBarClick = listOf(
                                 { goto(MainScreen.History.name) },
                                 { goto(MainScreen.Profile.name) }
                             ),
                             onScanClick = { goto(MainScreen.Scan.name) },
-                            onContactSelect = { contact -> goto("${MainScreen.Messaging.name}/${contact.name}") }
-
+                            onContactSelect = { contact ->
+                                goto("${MainScreen.Messaging.name}/${contact.name}")
+                            }
                         )
                     }
-                    composable(route = MainScreen.Scan.name) {
+                    composable(MainScreen.Scan.name) {
                         Scan(onNavigate = navigate)
                     }
-                    composable(route = MainScreen.History.name) {
+                    composable(MainScreen.History.name) {
                         History(onNavigate = navigate)
                     }
-                    composable(route = MainScreen.Profile.name) {
+                    composable(MainScreen.Profile.name) {
                         Profile(onNavigate = navigate, onLogout = logout)
                     }
-                    composable(route = "${MainScreen.Messaging.name}/{contactName}") { backStackEntry ->
+                    composable("${MainScreen.Messaging.name}/{contactName}") { backStackEntry ->
                         val contactName = backStackEntry.arguments?.getString("contactName") ?: ""
                         val contact = getContacts().find { it.name == contactName } ?: Contact(contactName, "")
                         Messaging(contact = contact, onNavigate = navigate)
                     }
-
                 }
             }
         }

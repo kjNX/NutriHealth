@@ -13,14 +13,17 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.unmsm.nutrihealth.R
+import com.unmsm.nutrihealth.ui.theme.NutriHealthTheme
 import kotlinx.coroutines.launch
 
 // i'm putting everything on the same file because no other file cares about the onboarding
@@ -74,39 +77,72 @@ fun OnboardingPage(onboardingData: OnboardingData, modifier: Modifier = Modifier
 }
 
 @Composable
-fun OnboardingScreen(modifier: Modifier = Modifier) {
-    val pagerState = rememberPagerState {
-        onboardingList.size
-    }
+fun OnboardingScreen(
+    modifier: Modifier = Modifier,
+    onFinish: () -> Unit
+) {
+    val pagerState = rememberPagerState { onboardingList.size }
     val coroutineScope = rememberCoroutineScope()
     val isFirstPage = pagerState.currentPage == 0
     val isLastPage = pagerState.currentPage == pagerState.pageCount - 1
-    Column(modifier = modifier
-        .fillMaxSize()
-        .padding(16.dp)) {
+
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        // 👉 Botón SALTAR arriba a la derecha
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 8.dp),
+            horizontalArrangement = Arrangement.End
+        ) {
+            TextButton(onClick = onFinish) {
+                Text("Saltar")
+            }
+        }
+
+        // 👉 Páginas del onboarding
         HorizontalPager(state = pagerState, modifier = Modifier.weight(1f)) { page ->
             OnboardingPage(onboardingList[page])
         }
+
+        // 👉 Botones de navegación
         Row(
             horizontalArrangement = if (isFirstPage) Arrangement.End else Arrangement.SpaceBetween,
             modifier = Modifier.fillMaxWidth()
         ) {
-            if(!isFirstPage)
+            if (!isFirstPage) {
                 Button(onClick = {
-                    coroutineScope.launch{
+                    coroutineScope.launch {
                         pagerState.animateScrollToPage(pagerState.currentPage - 1)
                     }
                 }) {
-                    Text(text = "Regresar")
+                    Text("Regresar")
                 }
+            }
+
             Button(onClick = {
-                /*if(isLastPage) navController.navigate("auth")
-                else coroutineScope.launch{
-                    pagerState.animateScrollToPage(pagerState.currentPage + 1)
-                }*/
+                if (isLastPage) {
+                    onFinish()
+                } else {
+                    coroutineScope.launch {
+                        pagerState.animateScrollToPage(pagerState.currentPage + 1)
+                    }
+                }
             }) {
-                Text(text = if(isLastPage) "Comenzar" else "Siguiente")
+                Text(if (isLastPage) "Comenzar" else "Siguiente")
             }
         }
+    }
+}
+
+
+@Preview(showBackground = true)
+@Composable
+fun OnboardingScreenPreview() {
+    NutriHealthTheme {
+        OnboardingScreen(onFinish = {})
     }
 }
