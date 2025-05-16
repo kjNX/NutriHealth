@@ -1,10 +1,7 @@
 package com.unmsm.nutrihealth.ui.composable
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Fastfood
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -24,7 +21,7 @@ fun TypeAddDialog(
     var calories by remember { mutableStateOf("") }
     var protein by remember { mutableStateOf("") }
     var carbs by remember { mutableStateOf("") }
-    var fat by remember { mutableStateOf("") }
+    var fats by remember { mutableStateOf("") }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -35,7 +32,7 @@ fun TypeAddDialog(
                     calories = calories.toIntOrNull() ?: 0,
                     protein = protein.toFloatOrNull() ?: 0f,
                     carbs = carbs.toFloatOrNull() ?: 0f,
-                    fats = fat.toFloatOrNull() ?: 0f
+                    fats = fats.toFloatOrNull() ?: 0f
                 )
                 onConfirm(food)
             }) {
@@ -54,7 +51,7 @@ fun TypeAddDialog(
                 TextField(value = calories, onValueChange = { calories = it }, label = { Text("Calorías") })
                 TextField(value = protein, onValueChange = { protein = it }, label = { Text("Proteínas") })
                 TextField(value = carbs, onValueChange = { carbs = it }, label = { Text("Carbohidratos") })
-                TextField(value = fat, onValueChange = { fat = it }, label = { Text("Grasas") })
+                TextField(value = fats, onValueChange = { fats = it }, label = { Text("Grasas") })
             }
         }
     )

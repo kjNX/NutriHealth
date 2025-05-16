@@ -68,48 +68,49 @@ class AuthViewModel : ViewModel() {
                     val userData = userDoc.collection("data")
 
                     val throwMe = { dbTask: Task<DocumentSnapshot> ->
-                        if(!dbTask.isSuccessful) throw RuntimeException()
-                        if(!dbTask.result.exists()) {
-                            auth.signOut()
-                            throw RuntimeException()
-                        }
                     }
 
-                    val read = { ref: DocumentReference, action: (DocumentSnapshot) -> Unit ->
-                        { dbTask: Task<DocumentSnapshot> ->
-                            throwMe(dbTask)
-                            action(dbTask.result)
+                    val read = { ref: DocumentReference, exec: (DocumentSnapshot) -> Unit ->
+                        ref.get().addOnCompleteListener { dbTask ->
+                            val result = dbTask.result
+                            if(!dbTask.isSuccessful || !result.exists())
+                                throw RuntimeException()
+                            exec(result)
                         }
                     }
 
                     try {
                         read(userDoc) { res ->
-                            User.name = res.get("name").toString()
-                            User.email = res.get("email").toString()
+                            val data = res.data
+                            User.name = data?.get("name").toString()
+                            User.email = data?.get("email").toString()
                         }
                         read(userData.document("goal")) { res ->
-                            User.Target.startingWeight = res.get("startingWeight").toString().toInt()
-                            User.Target.currentWeight = res.get("currentWeight").toString().toInt()
-                            User.Target.targetWeight = res.get("targetWeight").toString().toInt()
+                            val data = res.data
+                            User.Target.startingWeight = data?.get("startingWeight").toString().toInt()
+                            User.Target.currentWeight = data?.get("currentWeight").toString().toInt()
+                            User.Target.targetWeight = data?.get("targetWeight").toString().toInt()
                             User.Target.updatePercentage()
                         }
                         read(userData.document("plan")) { res ->
-                            User.Plan.dailyCal = res.get("dailyCal").toString().toInt()
-                            User.Plan.protein = res.get("protein").toString().toInt()
-                            User.Plan.carbs = res.get("carbs").toString().toInt()
-                            User.Plan.fats = res.get("fats").toString().toInt()
+                            val data = res.data
+                            User.Plan.dailyCal = data?.get("dailyCal").toString().toInt()
+                            User.Plan.protein = data?.get("protein").toString().toInt()
+                            User.Plan.carbs = data?.get("carbs").toString().toInt()
+                            User.Plan.fats = data?.get("fats").toString().toInt()
                         }
                         read(userData.document("stats")) { res ->
-                            User.StatTrak.time = res.get("time").toString().toInt()
-                            User.StatTrak.mileage = res.get("mileage").toString().toFloat()
-                            User.StatTrak.cal = res.get("cal").toString().toInt()
-                            User.StatTrak.avgSpeed = res.get("avgSpeed").toString().toFloat()
+                            val data = res.data
+                            User.StatTrak.time = data?.get("time").toString().toInt()
+                            User.StatTrak.mileage = data?.get("mileage").toString().toFloat()
+                            User.StatTrak.cal = data?.get("cal").toString().toInt()
+                            User.StatTrak.avgSpeed = data?.get("avgSpeed").toString().toFloat()
                         }
                         onResult(true, "")
                     } catch (_: RuntimeException) {
                         onResult(false, "Verificación de integridad fallida. Contacte al administrador")
                     }
-
+/*
                     firestore.collection("users").document(User.id).get()
                         .addOnSuccessListener { document ->
                             if (document.exists()) {
@@ -121,7 +122,7 @@ class AuthViewModel : ViewModel() {
                         }
                         .addOnFailureListener {
                             onResult(false, "No se pudo verificar el usuario en la base de datos.")
-                        }
+                        }*/
                 } else {
                     val errorMessage = getFriendlyError(task.exception)
                     onResult(false, errorMessage)

@@ -56,7 +56,7 @@ object User {
         }
 
         fun mkRandom() {
-            dailyCal = (1500..2500).random()
+            dailyCal = (1500..2150).random()
             protein = (100..200).random()
             carbs = (200..300).random()
             fats = (50..120).random()
