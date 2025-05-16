@@ -7,46 +7,65 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import com.unmsm.nutrihealth.data.repository.getContacts
 import com.unmsm.nutrihealth.data.repository.trackerStats
 import com.unmsm.nutrihealth.ui.composable.blocks.EntryFABs
 import com.unmsm.nutrihealth.ui.composable.blocks.MainTopBar
 import com.unmsm.nutrihealth.ui.composable.blocks.NavBar
-import com.unmsm.nutrihealth.ui.composable.pages.ContactList
-import com.unmsm.nutrihealth.ui.composable.pages.StartDisplay
-import com.unmsm.nutrihealth.ui.composable.pages.TrackingDisplay
-import com.unmsm.nutrihealth.ui.theme.NutriHealthTheme
+import com.unmsm.nutrihealth.ui.composable.pages.main.ContactList
+import com.unmsm.nutrihealth.ui.composable.pages.main.StartDisplay
+import com.unmsm.nutrihealth.ui.composable.pages.main.TrackingDisplay
 
 @Composable
-fun Composite(state: PagerState, modifier: Modifier = Modifier) {
+fun Composite(state: PagerState, modifier: Modifier = Modifier, onContactSelect: () -> Unit) {
     HorizontalPager(state = state, modifier = modifier) { page ->
         when(page) {
             0 -> StartDisplay(modifier = Modifier.fillMaxSize())
-            1 -> ContactList(contacts = getContacts(), modifier = Modifier.fillMaxSize())
+            1 -> ContactList(
+                contacts = getContacts(),
+                modifier = Modifier.fillMaxSize(),
+                onSelect = onContactSelect
+            )
             2 -> TrackingDisplay(stats = trackerStats(), modifier = Modifier.fillMaxSize())
         }
     }
 }
 
 @Composable
-fun MainDisplay() {
+fun MainDisplay(
+    onTopBarClick: List<() -> Unit>,
+    onScanClick: () -> Unit,
+    onContactSelect: () -> Unit
+) {
     var pagerState = rememberPagerState{ 3 }
+    var showDialog by remember { mutableStateOf(false) }
+
+    val hideDialog = { showDialog = false }
 
     Scaffold(
-        topBar = { MainTopBar() },
+        topBar = { MainTopBar(onTopBarClick) },
         bottomBar = { NavBar(pagerState) },
-        floatingActionButton = { EntryFABs() }
+        floatingActionButton = { if(pagerState.currentPage == 2) null else EntryFABs(
+            onScanClick = onScanClick,
+            onTypeClick = { showDialog = true }
+        ) }
     ) { innerPadding ->
-        Composite(state = pagerState, modifier = Modifier.fillMaxSize().padding(innerPadding))
-    }
-}
-
-@Preview
-@Composable
-private fun Preview() {
-    NutriHealthTheme {
-        MainDisplay()
+        Composite(
+            state = pagerState,
+            onContactSelect = onContactSelect,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        )
+        if(showDialog) TypeAddDialog(
+            onDismiss = hideDialog,
+            onCancel = hideDialog,
+            onConfirm = hideDialog
+        )
     }
 }

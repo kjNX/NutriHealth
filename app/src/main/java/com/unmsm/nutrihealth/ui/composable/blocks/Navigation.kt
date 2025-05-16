@@ -11,7 +11,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.automirrored.outlined.Chat
-import androidx.compose.material.icons.filled.Analytics
 import androidx.compose.material.icons.filled.BorderColor
 import androidx.compose.material.icons.filled.Camera
 import androidx.compose.material.icons.filled.Face3
@@ -41,7 +40,7 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainTopBar() {
+fun MainTopBar(onClick: List<() -> Unit>) {
     val iconDescription = listOf(
         "Historial",
 //        "Informe detallado",
@@ -69,7 +68,7 @@ fun MainTopBar() {
         actions = {
             Row {
                 for((idx, item) in icons.withIndex())
-                    IconButton(onClick = {}) {
+                    IconButton(onClick = onClick[idx]) {
                         Icon(
                             imageVector = item,
                             contentDescription = iconDescription[idx]
@@ -82,13 +81,13 @@ fun MainTopBar() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SubsectionTopBar(title: String) {
+fun SubsectionTopBar(title: String, onNavigate: () -> Unit) {
     TopAppBar(
         title = {
             Text(text = title, style = MaterialTheme.typography.titleLarge)
         },
         navigationIcon = {
-            IconButton(onClick = {}) {
+            IconButton(onClick = onNavigate) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Default.ArrowBack,
                     contentDescription = "Regresar"
@@ -135,16 +134,16 @@ fun NavBar(pagerState: PagerState) {
 }
 
 @Composable
-fun EntryFABs() {
+fun EntryFABs(onScanClick: () -> Unit, onTypeClick: () -> Unit) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        SmallFloatingActionButton(onClick = {}) {
+        SmallFloatingActionButton(onClick = onTypeClick) {
             Icon(
                 imageVector = Icons.Default.BorderColor,
                 contentDescription = "Ingresar comida"
             )
         }
         Spacer(modifier = Modifier.height(8.dp))
-        FloatingActionButton(onClick = {}) {
+        FloatingActionButton(onClick = onScanClick) {
             Icon(
                 imageVector = Icons.Default.Camera,
                 contentDescription = "Escanear comida"

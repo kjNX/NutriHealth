@@ -1,4 +1,4 @@
-package com.unmsm.nutrihealth.ui.composable.pages
+package com.unmsm.nutrihealth.ui.composable.pages.main
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -23,19 +23,19 @@ import androidx.compose.ui.unit.dp
 import com.unmsm.nutrihealth.data.model.Contact
 
 @Composable
-fun ContactList(contacts: List<Contact>, modifier: Modifier = Modifier) {
+fun ContactList(onSelect: () -> Unit, contacts: List<Contact>, modifier: Modifier = Modifier) {
     LazyColumn(modifier = modifier) {
         items(contacts) { contact ->
-            ContactListItem(contact = contact)
+            ContactListItem(contact = contact, onClick = onSelect)
         }
     }
 }
 
 @Composable
-fun ContactListItem(contact: Contact, modifier: Modifier = Modifier) {
+fun ContactListItem(onClick: () -> Unit, contact: Contact, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
-            .clickable(onClick = {})
+            .clickable(onClick = onClick)
             .fillMaxWidth()
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically

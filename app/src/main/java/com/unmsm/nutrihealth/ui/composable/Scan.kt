@@ -27,6 +27,16 @@ import com.unmsm.nutrihealth.ui.composable.blocks.SubsectionTopBar
 import com.unmsm.nutrihealth.ui.theme.NutriHealthTheme
 
 @Composable
+fun Scan(onNavigate: () -> Unit) {
+    Scaffold(topBar = { SubsectionTopBar(
+        title = "Escanear comida",
+        onNavigate = onNavigate
+    ) }) { innerPadding ->
+        ScanDisplay(modifier = Modifier.padding(innerPadding))
+    }
+}
+
+@Composable
 fun ScanDisplay(modifier: Modifier = Modifier) {
     Box(modifier = modifier.fillMaxSize()) {
         Image(
@@ -35,11 +45,16 @@ fun ScanDisplay(modifier: Modifier = Modifier) {
             contentScale = ContentScale.FillBounds
         )
         Column(
-            modifier = Modifier.fillMaxSize()
-                .background(Brush.verticalGradient(listOf(
-                    Color.Transparent,
-                    Color(32,32,32)
-                ), 1640f))
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        listOf(
+                            Color.Transparent,
+                            Color(32, 32, 32)
+                        ), 1640f
+                    )
+                )
                 .padding(16.dp),
             verticalArrangement = Arrangement.Bottom,
             horizontalAlignment = Alignment.CenterHorizontally
@@ -59,7 +74,7 @@ fun ScanDisplay(modifier: Modifier = Modifier) {
 @Composable
 private fun Preview() {
     NutriHealthTheme {
-        Scaffold(topBar = { SubsectionTopBar(title = "Escanear comida") }) { innerPadding ->
+        Scaffold(topBar = { SubsectionTopBar(title = "Escanear comida", {}) }) { innerPadding ->
             ScanDisplay(modifier = Modifier.padding(innerPadding))
         }
     }

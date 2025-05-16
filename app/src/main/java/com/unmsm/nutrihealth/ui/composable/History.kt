@@ -21,6 +21,16 @@ import com.unmsm.nutrihealth.data.repository.getFood
 import com.unmsm.nutrihealth.ui.composable.blocks.SubsectionTopBar
 
 @Composable
+fun History(onNavigate: () -> Unit) {
+    Scaffold(topBar = { SubsectionTopBar(
+        title = "Historial",
+        onNavigate = onNavigate
+    ) }) { innerPadding ->
+        HistoryDisplay(foodHistory = getFood(), modifier = Modifier.padding(innerPadding))
+    }
+}
+
+@Composable
 fun HistoryDisplay(foodHistory: List<Food>, modifier: Modifier = Modifier) {
     LazyColumn(modifier = modifier.fillMaxSize()) {
         items(foodHistory) { i ->
@@ -32,7 +42,9 @@ fun HistoryDisplay(foodHistory: List<Food>, modifier: Modifier = Modifier) {
 @Composable
 fun HistoryItem(food: Food, modifier: Modifier = Modifier) {
     Row(
-        modifier = modifier.fillMaxWidth().padding(8.dp),
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -49,7 +61,7 @@ fun HistoryItem(food: Food, modifier: Modifier = Modifier) {
 @Preview(showBackground = true)
 @Composable
 private fun HistoryPreview() {
-    Scaffold(topBar = { SubsectionTopBar(title = "Historial") }) { innerPadding ->
+    Scaffold(topBar = { SubsectionTopBar(title = "Historial", {}) }) { innerPadding ->
         HistoryDisplay(foodHistory = getFood(), modifier = Modifier.padding(innerPadding))
     }
 }

@@ -1,4 +1,4 @@
-package com.unmsm.nutrihealth.ui.composable.pages
+package com.unmsm.nutrihealth.ui.composable.pages.main
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -48,58 +48,89 @@ fun TrackingDisplay(stats: StatTrak, modifier: Modifier = Modifier) {
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Bottom
+        ) { TrackerCard(stats = stats) }
+    }
+}
+
+@Composable
+fun TrackerCard(stats: StatTrak, modifier: Modifier = Modifier) {
+    Column(
+        verticalArrangement = Arrangement.Bottom,
+        modifier = modifier
+            .background(
+                color = Color.White,
+                shape = RoundedCornerShape(8.dp)
+            )
+            .padding(16.dp)
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp)
         ) {
-            Column(
-                verticalArrangement = Arrangement.Bottom,
-                modifier = Modifier
-                    .background(
-                        color = Color.White,
-                        shape = RoundedCornerShape(8.dp)
-                    )
-                    .padding(16.dp)
-            ) {
-                Row(
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp)
-                ) {
-                    Column {
-                        Text(text = stats.time, style = MaterialTheme.typography.headlineLarge)
-                        Text(text = "Completa tu objetivo", style = MaterialTheme.typography.labelSmall)
-                    }
-                    Button(onClick = {}) {
-                        Icon(imageVector = Icons.Default.Pause, contentDescription = "Pausar")
-                    }
-                }
-                Row {
-                    StatCard(
-                        icon = Icons.AutoMirrored.Filled.DirectionsRun,
-                        value = stats.mileage.toString(),
-                        measure = "km",
-                        modifier = Modifier.weight(1f)
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    StatCard(
-                        icon = Icons.Default.LocalFireDepartment,
-                        value = stats.cal.toString(),
-                        measure = "cal",
-                        modifier = Modifier.weight(1f)
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    StatCard(
-                        icon = Icons.Default.Speed,
-                        value = stats.avgSpeed.toString(),
-                        measure = "km/h",
-                        modifier = Modifier.weight(1f)
-                    )
-                }
+            Column {
+                Text(text = stats.time, style = MaterialTheme.typography.headlineLarge)
+                Text(text = "Completa tu objetivo", style = MaterialTheme.typography.labelSmall)
             }
+            Button(onClick = {}) {
+                Icon(imageVector = Icons.Default.Pause, contentDescription = "Pausar")
+            }
+        }
+        Row {
+            StatCard(
+                icon = Icons.AutoMirrored.Filled.DirectionsRun,
+                value = stats.mileage.toString(),
+                measure = "km",
+                modifier = Modifier.weight(1f)
+            )
+            Spacer(Modifier.width(8.dp))
+            StatCard(
+                icon = Icons.Default.LocalFireDepartment,
+                value = stats.cal.toString(),
+                measure = "cal",
+                modifier = Modifier.weight(1f)
+            )
+            Spacer(Modifier.width(8.dp))
+            StatCard(
+                icon = Icons.Default.Speed,
+                value = stats.avgSpeed.toString(),
+                measure = "km/h",
+                modifier = Modifier.weight(1f)
+            )
         }
     }
 }
+
 /*
+@Composable
+fun StatRow(stats: StatTrak) {
+    Row {
+        StatCard(
+            icon = Icons.AutoMirrored.Filled.DirectionsRun,
+            value = stats.mileage.toString(),
+            measure = "km",
+            modifier = Modifier.weight(1f)
+        )
+        Spacer(Modifier.width(8.dp))
+        StatCard(
+            icon = Icons.Default.LocalFireDepartment,
+            value = stats.cal.toString(),
+            measure = "cal",
+            modifier = Modifier.weight(1f)
+        )
+        Spacer(Modifier.width(8.dp))
+        StatCard(
+            icon = Icons.Default.Speed,
+            value = stats.avgSpeed.toString(),
+            measure = "km/h",
+            modifier = Modifier.weight(1f)
+        )
+    }
+}
+
+
 @Composable
 fun TrainingDisplay(activityList: List<Activity>, modifier: Modifier = Modifier) {
     LazyColumn(modifier = modifier.padding(16.dp)) {
