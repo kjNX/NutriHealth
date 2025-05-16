@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.unmsm.nutrihealth.data.model.User
 import com.unmsm.nutrihealth.ui.composable.blocks.EasyButton
 import com.unmsm.nutrihealth.ui.composable.blocks.EasyCard
 
@@ -45,14 +46,16 @@ fun SettingsTab(onLogout: () -> Unit, modifier: Modifier = Modifier) {
 fun Preferences() {
     EasyCard(title = "Preferencias") {
         LabelSwitch(
-            checked = false,
+            checked = User.Preferences.useMetric,
             label = "Unidades métricas (kg, cm)",
-            icon = Icons.Default.Difference
+            icon = Icons.Default.Difference,
+            onTap = { value -> User.Preferences.useMetric = value }
         )
         LabelSwitch(
-            checked = false,
+            checked = User.Preferences.notificationsEnabled,
             label = "Notificaciones",
-            icon = Icons.Default.Notifications
+            icon = Icons.Default.Notifications,
+            onTap = { value -> User.Preferences.notificationsEnabled }
         )
     }
 }
@@ -66,7 +69,13 @@ fun Export() {
 }
 
 @Composable
-fun LabelSwitch(checked: Boolean, label: String, icon: ImageVector, modifier: Modifier = Modifier) {
+fun LabelSwitch(
+    checked: Boolean,
+    label: String,
+    icon: ImageVector,
+    onTap: (Boolean) -> Unit,
+    modifier: Modifier = Modifier
+) {
     Row(
         modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
@@ -76,7 +85,7 @@ fun LabelSwitch(checked: Boolean, label: String, icon: ImageVector, modifier: Mo
             Icon(imageVector = icon, contentDescription = null)
             Text(text = label, modifier = Modifier.padding(start = 8.dp))
         }
-        Switch(checked = checked, onCheckedChange = {})
+        Switch(checked = checked, onCheckedChange = onTap)
     }
 }
 

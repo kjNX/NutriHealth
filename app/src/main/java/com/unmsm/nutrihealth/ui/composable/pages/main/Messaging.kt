@@ -41,7 +41,7 @@ fun ContactListItem(onClick: () -> Unit, contact: Contact, modifier: Modifier = 
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column {
-            Text(text = contact.displayName, style = MaterialTheme.typography.headlineSmall)
+            Text(text = contact.name, style = MaterialTheme.typography.headlineSmall)
             Spacer(modifier = Modifier.height(4.dp))
             Text(text = contact.description, style = MaterialTheme.typography.bodySmall)
         }

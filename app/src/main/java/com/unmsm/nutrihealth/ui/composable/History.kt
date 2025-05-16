@@ -53,7 +53,7 @@ fun HistoryItem(food: Food, modifier: Modifier = Modifier) {
             Text(text = "${food.calories} calorías", style = MaterialTheme.typography.labelMedium)
             Text(text = "${food.carbs} carbohidratos", style = MaterialTheme.typography.labelMedium)
             Text(text = "${food.protein} proteínas", style = MaterialTheme.typography.labelMedium)
-            Text(text = "${food.fat} grasas", style = MaterialTheme.typography.labelMedium)
+            Text(text = "${food.fats} grasas", style = MaterialTheme.typography.labelMedium)
         }
     }
 }

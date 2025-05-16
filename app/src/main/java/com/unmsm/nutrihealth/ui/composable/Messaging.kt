@@ -34,7 +34,7 @@ import com.unmsm.nutrihealth.ui.theme.NutriHealthTheme
 fun Messaging(onNavigate: () -> Unit) {
     val contact = Contact("ML", "")
     Scaffold(
-        topBar = { SubsectionTopBar(title = contact.displayName, onNavigate = onNavigate) },
+        topBar = { SubsectionTopBar(title = contact.name, onNavigate = onNavigate) },
         bottomBar = { MessageBar() }
     ) { innerPadding ->
         MessageLog(
@@ -52,7 +52,7 @@ fun Messaging(onNavigate: () -> Unit) {
 fun MessageItem(contact: Contact, message: Message, modifier: Modifier = Modifier) {
     Column(modifier = modifier.padding(8.dp)) {
         Text(
-            text = if (message.isOwned) "You" else contact.displayName,
+            text = if (message.isOwned) "You" else contact.name,
             color = if (message.isOwned) Color.Red else Color.Green,
             style = MaterialTheme.typography.bodySmall
         )
@@ -102,7 +102,7 @@ private fun MessagingPreview() {
 
     NutriHealthTheme {
         Scaffold(
-            topBar = { SubsectionTopBar(contact.displayName, {}) },
+            topBar = { SubsectionTopBar(contact.name, {}) },
             bottomBar = { MessageBar() }
         ) { innerPadding ->
             MessageLog(

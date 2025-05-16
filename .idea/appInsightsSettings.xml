@@ -10,9 +10,9 @@
               <option name="connection">
                 <ConnectionSetting>
                   <option name="appId" value="com.unmsm.nutrihealth" />
-                  <option name="mobileSdkAppId" value="1:850823488709:android:fcadff698de834b247bcac" />
-                  <option name="projectId" value="nutrihealth-9dec4" />
-                  <option name="projectNumber" value="850823488709" />
+                  <option name="mobileSdkAppId" value="1:404270601914:android:5dec0b839e1b7046825483" />
+                  <option name="projectId" value="nutrihealth-e63a8" />
+                  <option name="projectNumber" value="404270601914" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />

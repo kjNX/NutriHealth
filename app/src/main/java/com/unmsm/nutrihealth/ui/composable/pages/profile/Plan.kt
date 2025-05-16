@@ -16,8 +16,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.unmsm.nutrihealth.data.model.User
 import com.unmsm.nutrihealth.ui.composable.blocks.BlockItem
 import com.unmsm.nutrihealth.ui.composable.blocks.EasyCard
+
+val plan = User.Plan
 
 @Composable
 fun PlanTab(modifier: Modifier = Modifier) {
@@ -30,7 +33,7 @@ fun PlanTab(modifier: Modifier = Modifier) {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(text = "Calorías diarias")
-                Text(text = "2150 kcal")
+                Text(text = "${plan.dailyCal / 1000f} kcal")
             }
             StatsRow()
         }
@@ -45,21 +48,21 @@ fun StatsRow(modifier: Modifier = Modifier) {
         ValueCard(
             title = "Proteínas",
             percentage = 30,
-            amount = 161,
+            amount = plan.protein,
             modifier = Modifier.weight(1f)
         )
         Spacer(Modifier.width(8.dp))
         ValueCard(
             title = "Carbohidratos",
             percentage = 45,
-            amount = 242,
+            amount = plan.carbs,
             modifier = Modifier.weight(1f)
         )
         Spacer(Modifier.width(8.dp))
         ValueCard(
             title = "Grasas",
             percentage = 25,
-            amount = 60,
+            amount = plan.fats,
             modifier = Modifier.weight(1f)
         )
     }
