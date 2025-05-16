@@ -1,36 +1,23 @@
 package com.unmsm.nutrihealth.ui.composable
 
 import androidx.annotation.DrawableRes
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Password
 import androidx.compose.material.icons.filled.People
-import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.unmsm.nutrihealth.R
 
 @Composable
@@ -44,14 +31,23 @@ fun EnhancedTextField(
     visualTransformation: VisualTransformation = VisualTransformation.None
 ) {
     Column(modifier = modifier) {
-        Text(text = title)
+        Text(text = title, style = MaterialTheme.typography.labelLarge)
         TextField(
             value = value,
             onValueChange = onValueChange,
             leadingIcon = { Icon(imageVector = icon, contentDescription = null) },
             placeholder = { Text(text = placeholder) },
             visualTransformation = visualTransformation,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            shape = MaterialTheme.shapes.medium,
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+                unfocusedIndicatorColor = MaterialTheme.colorScheme.outline,
+                disabledIndicatorColor = MaterialTheme.colorScheme.outline
+            )
         )
     }
 }
@@ -63,9 +59,16 @@ fun SocialLoginButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Button(onClick = onClick, modifier = modifier) {
-        Icon(painter = painterResource(icon), contentDescription = null)
-        Text(text = "Continuar con $networkName", modifier = Modifier.padding(start = 4.dp))
+    Button(
+        onClick = onClick,
+        modifier = modifier,
+        shape = MaterialTheme.shapes.medium
+    ) {
+        Icon(painter = painterResource(id = icon), contentDescription = null)
+        Text(
+            text = "Continuar con $networkName",
+            modifier = Modifier.padding(start = 8.dp)
+        )
     }
 }
 
@@ -81,54 +84,73 @@ fun AuthDisplay(
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    
+
     val login = { onLogin(email, password) }
     val register = { onRegister(name, email, password) }
 
     Column(
-        modifier = modifier.fillMaxSize().padding(16.dp),
+        modifier = modifier
+            .fillMaxSize()
+            .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text(text = "Bienvenido a NutriHealth", style = MaterialTheme.typography.headlineLarge)
-        Text(text = if(isLoggingIn) "Inicia sesión" else "Crea tu cuenta", style = MaterialTheme.typography.headlineSmall)
-        Column {
-            if (!isLoggingIn)
+        // Logo superior
+        Image(
+            painter = painterResource(id = R.drawable.logo_nutrihealth),
+            contentDescription = "Logo NutriHealth",
+            modifier = Modifier
+                .width(96.dp)
+                .padding(bottom = 16.dp)
+        )
+
+        Text(
+            text = "Bienvenido a NutriHealth",
+            style = MaterialTheme.typography.headlineMedium
+        )
+        Text(
+            text = if (isLoggingIn) "Inicia sesión" else "Crea tu cuenta",
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(bottom = 24.dp)
+        )
+
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
+            if (!isLoggingIn) {
                 EnhancedTextField(
                     value = name,
                     title = "Nombre",
                     icon = Icons.Default.People,
                     placeholder = "Ingrese nombre",
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    onValueChange = { i -> name = i }
+                    onValueChange = { name = it }
                 )
+            }
             EnhancedTextField(
                 value = email,
                 title = "Correo electrónico",
                 icon = Icons.Default.Email,
                 placeholder = "tucorreo@email.com",
-                modifier = Modifier
-                    .fillMaxWidth(),
-                onValueChange = { i -> email = i }
+                onValueChange = { email = it }
             )
             EnhancedTextField(
                 value = password,
                 title = "Contraseña",
                 icon = Icons.Default.Password,
                 placeholder = "Ingrese contraseña",
-                modifier = Modifier
-                    .fillMaxWidth(),
-                visualTransformation = PasswordVisualTransformation(),
-                onValueChange = { i -> password = i }
+                onValueChange = { password = it },
+                visualTransformation = PasswordVisualTransformation()
             )
         }
-        Column(modifier = Modifier.width(300.dp)) {
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.width(300.dp)) {
             Button(
                 onClick = if (isLoggingIn) login else register,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.medium
             ) {
-                Text(text = if(isLoggingIn) "Iniciar sesión" else "Registrarse")
+                Text(text = if (isLoggingIn) "Iniciar sesión" else "Registrarse")
             }
             SocialLoginButton(
                 icon = R.drawable.google,
@@ -143,18 +165,17 @@ fun AuthDisplay(
                 modifier = Modifier.fillMaxWidth()
             )
         }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         Row {
-            Text(text = "¿${if(isLoggingIn) "No" else "Ya"} tienes una cuenta? ")
+            Text(text = if (isLoggingIn) "¿No tienes una cuenta? " else "¿Ya tienes una cuenta? ")
             Text(
                 text = if (isLoggingIn) "Regístrate" else "Inicia sesión",
-                modifier = Modifier.clickable(onClick = { isLoggingIn = !isLoggingIn })
+                modifier = Modifier.clickable { isLoggingIn = !isLoggingIn },
+                color = MaterialTheme.colorScheme.primary,
+                fontSize = 14.sp
             )
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun Preview() {
-    AuthDisplay({a, b -> }, {a, b, c ->}, {}, {})
 }

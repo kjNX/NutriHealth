@@ -27,8 +27,13 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun Profile(onNavigate: () -> Unit, onLogout: () -> Unit) {
-    Scaffold(topBar = { SubsectionTopBar("Perfil", onNavigate = onNavigate) }) { innerPadding ->
-        ProfileDisplay(modifier = Modifier.padding(innerPadding), onLogout = onLogout)
+    Scaffold(topBar = {
+        SubsectionTopBar("Perfil", onNavigate = onNavigate)
+    }) { innerPadding ->
+        ProfileDisplay(
+            modifier = Modifier.padding(innerPadding),
+            onLogout = onLogout
+        )
     }
 }
 
@@ -49,6 +54,7 @@ fun ProfileDisplay(onLogout: () -> Unit, modifier: Modifier = Modifier) {
                 .padding(horizontal = 16.dp, vertical = 12.dp)
                 .fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
         ) {
             Row(
@@ -65,7 +71,8 @@ fun ProfileDisplay(onLogout: () -> Unit, modifier: Modifier = Modifier) {
                 Column {
                     Text(
                         text = User.name,
-                        style = MaterialTheme.typography.titleLarge
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
                         text = User.email,
@@ -76,16 +83,32 @@ fun ProfileDisplay(onLogout: () -> Unit, modifier: Modifier = Modifier) {
             }
         }
 
-        // 🧭 Pestañas
-        PrimaryTabRow(selectedTabIndex = pagerState.currentPage) {
+        // 🧭 Barra de pestañas
+        PrimaryTabRow(
+            selectedTabIndex = pagerState.currentPage,
+            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+            contentColor = MaterialTheme.colorScheme.primary
+        ) {
             tabLabels.forEachIndexed { idx, label ->
                 Tab(
                     selected = idx == pagerState.currentPage,
                     onClick = {
-                        coroutineScope.launch { pagerState.animateScrollToPage(idx) }
+                        coroutineScope.launch {
+                            pagerState.animateScrollToPage(idx)
+                        }
                     },
-                    text = { Text(text = label) },
-                    icon = { Icon(tabIcons[idx], contentDescription = null) }
+                    text = {
+                        Text(
+                            text = label,
+                            style = MaterialTheme.typography.labelLarge
+                        )
+                    },
+                    icon = {
+                        Icon(
+                            imageVector = tabIcons[idx],
+                            contentDescription = null
+                        )
+                    }
                 )
             }
         }
@@ -105,7 +128,9 @@ fun ProfileDisplay(onLogout: () -> Unit, modifier: Modifier = Modifier) {
 @Composable
 private fun Preview() {
     NutriHealthTheme {
-        Scaffold(topBar = { SubsectionTopBar("Perfil", {}) }) { innerPadding ->
+        Scaffold(topBar = {
+            SubsectionTopBar("Perfil", {})
+        }) { innerPadding ->
             ProfileDisplay(modifier = Modifier.padding(innerPadding), onLogout = {})
         }
     }

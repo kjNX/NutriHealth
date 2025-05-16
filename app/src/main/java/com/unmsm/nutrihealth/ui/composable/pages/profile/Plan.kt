@@ -1,6 +1,5 @@
 package com.unmsm.nutrihealth.ui.composable.pages.profile
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -10,11 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.unmsm.nutrihealth.data.model.User
 import com.unmsm.nutrihealth.ui.composable.blocks.BlockItem
-import com.unmsm.nutrihealth.ui.composable.blocks.EasyCard
-
-val plan = User.Plan
 
 @Composable
 fun PlanTab(modifier: Modifier = Modifier) {
@@ -23,21 +18,31 @@ fun PlanTab(modifier: Modifier = Modifier) {
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        EasyCard(title = "Plan alimenticio", modifier = Modifier.fillMaxWidth()) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 12.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(text = "Calorías diarias")
-                Text(text = "${plan.dailyCal / 1000f} kcal")
-                Text(text = "Calorías diarias", style = MaterialTheme.typography.bodyLarge)
-                Text(text = "2150 kcal", style = MaterialTheme.typography.bodyLarge)
+        // 🍽 Plan alimenticio
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            elevation = CardDefaults.cardElevation(4.dp)
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text("🍽 Plan alimenticio", style = MaterialTheme.typography.titleMedium)
+                Spacer(Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text("Calorías diarias", style = MaterialTheme.typography.bodyLarge)
+                    Text("2150 kcal", style = MaterialTheme.typography.bodyLarge)
+                }
+                StatsRow()
             }
-            StatsRow()
         }
+
         Spacer(Modifier.height(16.dp))
+
         Recommendations()
     }
 }
@@ -51,33 +56,24 @@ fun StatsRow(modifier: Modifier = Modifier) {
         ValueCard(
             title = "Proteínas",
             percentage = 30,
-            amount = plan.protein,
-            color = Color(0xFF79DC0F), // celeste claro
+            amount = 161,
+            color = Color(0xFF9CCC65), // verde claro
             modifier = Modifier.weight(1f)
         )
         ValueCard(
             title = "Carbohidratos",
             percentage = 45,
-            amount = plan.carbs,
-            color = Color(0xFF2196F3), // amarillo suave
+            amount = 242,
+            color = Color(0xFFFFF176), // amarillo suave
             modifier = Modifier.weight(1f)
         )
         ValueCard(
             title = "Grasas",
             percentage = 25,
-            amount = plan.fats,
-            color = Color(0xFFEE546B), // rojo rosado claro
+            amount = 60,
+            color = Color(0xFFE57373), // rojo rosado
             modifier = Modifier.weight(1f)
         )
-    }
-}
-
-@Composable
-fun Recommendations() {
-    EasyCard(title = "Recomendaciones") {
-        BlockItem(title = "Comidas recomendadas", subtitle = "Basado en tus objetivos") { }
-        BlockItem(title = "Ejercicios sugeridos", subtitle = "Para maximizar resultados") { }
-        BlockItem(title = "Actualizar objetivo", subtitle = "Modificar tu meta actual") { }
     }
 }
 
@@ -92,14 +88,15 @@ fun ValueCard(
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = color)
+        colors = CardDefaults.cardColors(containerColor = color),
+        elevation = CardDefaults.cardElevation(2.dp)
     ) {
         Column(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 12.dp)
+                .padding(vertical = 16.dp)
         ) {
             Text(text = title, style = MaterialTheme.typography.titleSmall)
             Text(text = "$percentage%", style = MaterialTheme.typography.headlineSmall)
@@ -108,8 +105,35 @@ fun ValueCard(
     }
 }
 
+@Composable
+fun Recommendations() {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(4.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text("💡 Recomendaciones", style = MaterialTheme.typography.titleMedium)
+            Spacer(Modifier.height(8.dp))
+            BlockItem(
+                title = "Comidas recomendadas",
+                subtitle = "Basado en tus objetivos"
+            ) {}
+            BlockItem(
+                title = "Ejercicios sugeridos",
+                subtitle = "Para maximizar resultados"
+            ) {}
+            BlockItem(
+                title = "Actualizar objetivo",
+                subtitle = "Modificar tu meta actual"
+            ) {}
+        }
+    }
+}
+
 @Preview(showBackground = true)
 @Composable
-private fun Preview() {
+private fun PreviewPlanTab() {
     PlanTab()
 }
