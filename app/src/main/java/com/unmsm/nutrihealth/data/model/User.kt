@@ -1,29 +1,43 @@
 package com.unmsm.nutrihealth.data.model
 
 object User {
-    val name: String = ""
-    val email: String = ""
-    val currentWeight: Int = 0
-    val goalWeight: Int = 0
-    val progressPercent: Int = 0
+    var id: String = ""
+    var name: String = ""
+    var email: String = ""
+    object Target {
+        var currentWeight: Int = 0
+        var goalWeight: Int = 0
+        var progressPercent: Int = 0
 
-    val milestones: List<Milestone> = listOf()
-
-    object NutritionPlan {
-        val dailyCalories: Int = 0
-        val proteinGrams: Int = 0
-        val carbsGrams: Int = 0
-        val fatGrams: Int = 0
     }
+
+    object Milestones {
+        var milestones: List<Milestone> = listOf()
+    }
+
+    object Plan {
+        var dailyCalories: Int = 0
+        var proteinGrams: Int = 0
+        var carbsGrams: Int = 0
+        var fatGrams: Int = 0
+    }
+
     object Preferences {
-        val useMetric: Boolean = false
-        val notificationsEnabled: Boolean = false
+        var useMetric: Boolean = false
+        var notificationsEnabled: Boolean = false
+    }
+
+    object StatTrak {
+        val time: String = "01:50:10"
+        val mileage: Float = 10f
+        val cal: Int = 500
+        val avgSpeed: Float = 5.3f
     }
 
     data class Milestone(
-        val title: String,
-        val status: MilestoneStatus,
-        val description: String = ""
+        var title: String,
+        var status: MilestoneStatus,
+        var description: String = ""
     )
 
     enum class MilestoneStatus {

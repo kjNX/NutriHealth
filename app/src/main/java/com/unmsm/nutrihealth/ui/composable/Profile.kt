@@ -20,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.unmsm.nutrihealth.data.model.User
 import com.unmsm.nutrihealth.ui.composable.blocks.SubsectionTopBar
 import com.unmsm.nutrihealth.ui.composable.pages.profile.PlanTab
 import com.unmsm.nutrihealth.ui.composable.pages.profile.SettingsTab
@@ -28,15 +29,15 @@ import com.unmsm.nutrihealth.ui.theme.NutriHealthTheme
 import kotlinx.coroutines.launch
 
 @Composable
-fun Profile(onNavigate: () -> Unit) {
+fun Profile(onNavigate: () -> Unit, onLogout: () -> Unit) {
     Scaffold(topBar = { SubsectionTopBar("Perfil", onNavigate = onNavigate) }) { innerPadding ->
-        ProfileDisplay(modifier = Modifier.padding(innerPadding))
+        ProfileDisplay(modifier = Modifier.padding(innerPadding), onLogout = onLogout)
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProfileDisplay(modifier: Modifier = Modifier) {
+fun ProfileDisplay(onLogout: () -> Unit, modifier: Modifier = Modifier) {
     var pagerState = rememberPagerState { 3 }
     var coroutineScope = rememberCoroutineScope()
 
@@ -44,9 +45,9 @@ fun ProfileDisplay(modifier: Modifier = Modifier) {
 
     Column(modifier = modifier.fillMaxSize()) {
         Row(modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp), verticalAlignment = Alignment.Bottom) {
-            Text(text = "Ana García", style = MaterialTheme.typography.headlineMedium)
+            Text(text = User.name, style = MaterialTheme.typography.headlineMedium)
             Spacer(Modifier.width(8.dp))
-            Text(text = "ana.garcia@ejemplo.com", style = MaterialTheme.typography.labelSmall)
+            Text(text = User.email, style = MaterialTheme.typography.labelSmall)
         }
         PrimaryTabRow(pagerState.currentPage) {
             for((idx, i) in tabLabels.withIndex())
@@ -59,7 +60,7 @@ fun ProfileDisplay(modifier: Modifier = Modifier) {
             when(page) {
                 0 -> TargetTab()
                 1 -> PlanTab()
-                2 -> SettingsTab()
+                2 -> SettingsTab(onLogout = onLogout)
             }
         }
     }
@@ -70,7 +71,7 @@ fun ProfileDisplay(modifier: Modifier = Modifier) {
 private fun Preview() {
     NutriHealthTheme {
         Scaffold(topBar = { SubsectionTopBar("Perfil", {}) }) { innerPadding ->
-            ProfileDisplay(modifier = Modifier.padding(innerPadding))
+            ProfileDisplay(modifier = Modifier.padding(innerPadding), onLogout = {})
         }
     }
 }

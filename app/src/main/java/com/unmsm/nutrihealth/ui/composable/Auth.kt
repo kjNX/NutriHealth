@@ -27,27 +27,30 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.unmsm.nutrihealth.R
 
 @Composable
 fun EnhancedTextField(
+    value: String,
     title: String,
     icon: ImageVector,
     placeholder: String,
-    modifier: Modifier = Modifier
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    visualTransformation: VisualTransformation = VisualTransformation.None
 ) {
     Column(modifier = modifier) {
         Text(text = title)
         TextField(
-            value = "",
-            onValueChange = {},
-            placeholder = {
-                Row {
-                    Icon(imageVector = icon, contentDescription = null)
-                    Text(text = placeholder, modifier = Modifier.padding(start = 16.dp))
-                } },
+            value = value,
+            onValueChange = onValueChange,
+            leadingIcon = { Icon(imageVector = icon, contentDescription = null) },
+            placeholder = { Text(text = placeholder) },
+            visualTransformation = visualTransformation,
             modifier = Modifier.fillMaxWidth()
         )
     }
@@ -67,11 +70,23 @@ fun SocialLoginButton(
 }
 
 @Composable
-fun AuthDisplay(modifier: Modifier = Modifier) {
+fun AuthDisplay(
+    onLogin: (String, String) -> Unit,
+    onRegister: (String, String, String) -> Unit,
+    onGoogleAccess: () -> Unit,
+    onFacebookAccess: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     var isLoggingIn by remember { mutableStateOf(true) }
+    var name by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    
+    val login = { onLogin(email, password) }
+    val register = { onRegister(name, email, password) }
 
     Column(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize().padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -80,44 +95,51 @@ fun AuthDisplay(modifier: Modifier = Modifier) {
         Column {
             if (!isLoggingIn)
                 EnhancedTextField(
+                    value = name,
                     title = "Nombre",
                     icon = Icons.Default.People,
                     placeholder = "Ingrese nombre",
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp)
+                        .fillMaxWidth(),
+                    onValueChange = { i -> name = i }
                 )
             EnhancedTextField(
+                value = email,
                 title = "Correo electrónico",
                 icon = Icons.Default.Email,
                 placeholder = "tucorreo@email.com",
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp)
+                    .fillMaxWidth(),
+                onValueChange = { i -> email = i }
             )
             EnhancedTextField(
+                value = password,
                 title = "Contraseña",
                 icon = Icons.Default.Password,
                 placeholder = "Ingrese contraseña",
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp)
+                    .fillMaxWidth(),
+                visualTransformation = PasswordVisualTransformation(),
+                onValueChange = { i -> password = i }
             )
         }
         Column(modifier = Modifier.width(300.dp)) {
-            Button(onClick = {}, modifier = Modifier.fillMaxWidth()) {
-                Text(text = "Iniciar sesión")
+            Button(
+                onClick = if (isLoggingIn) login else register,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(text = if(isLoggingIn) "Iniciar sesión" else "Registrarse")
             }
             SocialLoginButton(
                 icon = R.drawable.google,
                 networkName = "Google",
-                onClick = {},
+                onClick = onGoogleAccess,
                 modifier = Modifier.fillMaxWidth()
             )
             SocialLoginButton(
                 icon = R.drawable.facebook,
                 networkName = "Facebook",
-                onClick = {},
+                onClick = onFacebookAccess,
                 modifier = Modifier.fillMaxWidth()
             )
         }
@@ -134,5 +156,5 @@ fun AuthDisplay(modifier: Modifier = Modifier) {
 @Preview(showBackground = true)
 @Composable
 private fun Preview() {
-    AuthDisplay()
+    AuthDisplay({a, b -> }, {a, b, c ->}, {}, {})
 }

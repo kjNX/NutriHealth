@@ -13,7 +13,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.unmsm.nutrihealth.data.repository.getContacts
-import com.unmsm.nutrihealth.data.repository.trackerStats
 import com.unmsm.nutrihealth.ui.composable.blocks.EntryFABs
 import com.unmsm.nutrihealth.ui.composable.blocks.MainTopBar
 import com.unmsm.nutrihealth.ui.composable.blocks.NavBar
@@ -31,7 +30,7 @@ fun Composite(state: PagerState, modifier: Modifier = Modifier, onContactSelect:
                 modifier = Modifier.fillMaxSize(),
                 onSelect = onContactSelect
             )
-            2 -> TrackingDisplay(stats = trackerStats(), modifier = Modifier.fillMaxSize())
+            2 -> TrackingDisplay(modifier = Modifier.fillMaxSize())
         }
     }
 }

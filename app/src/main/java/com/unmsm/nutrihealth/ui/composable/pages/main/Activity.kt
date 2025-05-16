@@ -31,10 +31,10 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.unmsm.nutrihealth.R
-import com.unmsm.nutrihealth.data.model.StatTrak
+import com.unmsm.nutrihealth.data.model.User
 
 @Composable
-fun TrackingDisplay(stats: StatTrak, modifier: Modifier = Modifier) {
+fun TrackingDisplay(modifier: Modifier = Modifier) {
     Box(modifier = modifier.fillMaxSize()) {
         Image(
             painter = painterResource(R.drawable.maps),
@@ -48,12 +48,12 @@ fun TrackingDisplay(stats: StatTrak, modifier: Modifier = Modifier) {
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Bottom
-        ) { TrackerCard(stats = stats) }
+        ) { TrackerCard() }
     }
 }
 
 @Composable
-fun TrackerCard(stats: StatTrak, modifier: Modifier = Modifier) {
+fun TrackerCard(modifier: Modifier = Modifier) {
     Column(
         verticalArrangement = Arrangement.Bottom,
         modifier = modifier
@@ -71,7 +71,7 @@ fun TrackerCard(stats: StatTrak, modifier: Modifier = Modifier) {
                 .padding(bottom = 16.dp)
         ) {
             Column {
-                Text(text = stats.time, style = MaterialTheme.typography.headlineLarge)
+                Text(text = User.StatTrak.time, style = MaterialTheme.typography.headlineLarge)
                 Text(text = "Completa tu objetivo", style = MaterialTheme.typography.labelSmall)
             }
             Button(onClick = {}) {
@@ -81,21 +81,21 @@ fun TrackerCard(stats: StatTrak, modifier: Modifier = Modifier) {
         Row {
             StatCard(
                 icon = Icons.AutoMirrored.Filled.DirectionsRun,
-                value = stats.mileage.toString(),
+                value = User.StatTrak.mileage.toString(),
                 measure = "km",
                 modifier = Modifier.weight(1f)
             )
             Spacer(Modifier.width(8.dp))
             StatCard(
                 icon = Icons.Default.LocalFireDepartment,
-                value = stats.cal.toString(),
+                value = User.StatTrak.cal.toString(),
                 measure = "cal",
                 modifier = Modifier.weight(1f)
             )
             Spacer(Modifier.width(8.dp))
             StatCard(
                 icon = Icons.Default.Speed,
-                value = stats.avgSpeed.toString(),
+                value = User.StatTrak.avgSpeed.toString(),
                 measure = "km/h",
                 modifier = Modifier.weight(1f)
             )

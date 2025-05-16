@@ -27,13 +27,17 @@ import com.unmsm.nutrihealth.ui.composable.blocks.EasyButton
 import com.unmsm.nutrihealth.ui.composable.blocks.EasyCard
 
 @Composable
-fun SettingsTab(modifier: Modifier = Modifier) {
+fun SettingsTab(onLogout: () -> Unit, modifier: Modifier = Modifier) {
     Column(modifier = modifier.fillMaxSize().padding(16.dp)) {
         Preferences()
         Spacer(Modifier.height(16.dp))
         Export()
         Spacer(Modifier.height(12.dp))
-        EasyButton(icon = Icons.AutoMirrored.Filled.Logout, label = "Cerrar sesión", onClick = {})
+        EasyButton(
+            icon = Icons.AutoMirrored.Filled.Logout,
+            label = "Cerrar sesión",
+            onClick = onLogout
+        )
     }
 }
 
@@ -79,5 +83,5 @@ fun LabelSwitch(checked: Boolean, label: String, icon: ImageVector, modifier: Mo
 @Preview(showBackground = true)
 @Composable
 private fun Preview() {
-    SettingsTab()
+    SettingsTab(onLogout = {})
 }
