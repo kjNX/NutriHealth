@@ -8,6 +8,8 @@ import androidx.activity.enableEdgeToEdge
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.unmsm.nutrihealth.data.model.Contact
+import com.unmsm.nutrihealth.data.repository.getContacts
 import com.unmsm.nutrihealth.logic.AuthViewModel
 import com.unmsm.nutrihealth.ui.composable.AuthDisplay
 import com.unmsm.nutrihealth.ui.composable.History
@@ -81,7 +83,8 @@ class MainActivity : ComponentActivity() {
                                 { goto(MainScreen.Profile.name) }
                             ),
                             onScanClick = { goto(MainScreen.Scan.name) },
-                            onContactSelect = { goto(MainScreen.Messaging.name) }
+                            onContactSelect = { contact -> goto("${MainScreen.Messaging.name}/${contact.name}") }
+
                         )
                     }
                     composable(route = MainScreen.Scan.name) {
@@ -93,9 +96,12 @@ class MainActivity : ComponentActivity() {
                     composable(route = MainScreen.Profile.name) {
                         Profile(onNavigate = navigate, onLogout = logout)
                     }
-                    composable(route = MainScreen.Messaging.name) {
-                        Messaging(onNavigate = navigate)
+                    composable(route = "${MainScreen.Messaging.name}/{contactName}") { backStackEntry ->
+                        val contactName = backStackEntry.arguments?.getString("contactName") ?: ""
+                        val contact = getContacts().find { it.name == contactName } ?: Contact(contactName, "")
+                        Messaging(contact = contact, onNavigate = navigate)
                     }
+
                 }
             }
         }

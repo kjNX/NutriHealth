@@ -21,10 +21,11 @@ import com.unmsm.nutrihealth.ui.composable.pages.main.ContactList
 import com.unmsm.nutrihealth.ui.composable.pages.main.StartDisplay
 import com.unmsm.nutrihealth.ui.composable.pages.main.TrackingDisplay
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.unmsm.nutrihealth.data.model.Contact
 import com.unmsm.nutrihealth.data.model.Food
 
 @Composable
-fun Composite(state: PagerState, modifier: Modifier = Modifier, onContactSelect: () -> Unit) {
+fun Composite(state: PagerState, modifier: Modifier = Modifier, onContactSelect: (Contact) -> Unit) {
     HorizontalPager(state = state, modifier = modifier) { page ->
         when(page) {
             0 -> StartDisplay(modifier = Modifier.fillMaxSize())
@@ -42,7 +43,7 @@ fun Composite(state: PagerState, modifier: Modifier = Modifier, onContactSelect:
 fun MainDisplay(
     onTopBarClick: List<() -> Unit>,
     onScanClick: () -> Unit,
-    onContactSelect: () -> Unit,
+    onContactSelect: (Contact) -> Unit,
     viewModel: FoodViewModel = viewModel()
 ) {
     val pagerState = rememberPagerState { 3 }

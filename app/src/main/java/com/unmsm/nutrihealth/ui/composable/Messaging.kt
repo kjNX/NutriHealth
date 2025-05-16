@@ -23,8 +23,7 @@ import com.unmsm.nutrihealth.ui.composable.blocks.SubsectionTopBar
 import com.unmsm.nutrihealth.ui.theme.NutriHealthTheme
 
 @Composable
-fun Messaging(onNavigate: () -> Unit) {
-    val contact = Contact("ML", "")
+fun Messaging(contact: Contact,onNavigate: () -> Unit) {
     Scaffold(
         topBar = { SubsectionTopBar(title = contact.name, onNavigate = onNavigate) },
         bottomBar = { MessageBar() }
@@ -151,6 +150,6 @@ private fun MessagingPreview() {
     val contact = Contact("ML", "")
 
     NutriHealthTheme {
-        Messaging(onNavigate = {})
+        Messaging(contact,onNavigate = {})
     }
 }

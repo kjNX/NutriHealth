@@ -19,13 +19,13 @@ import com.unmsm.nutrihealth.data.model.Contact
 
 @Composable
 fun ContactList(
-    onSelect: () -> Unit,
+    onSelect: (Contact) -> Unit,
     contacts: List<Contact>,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(modifier = modifier.padding(8.dp)) {
         items(contacts) { contact ->
-            ContactListItem(contact = contact, onClick = onSelect)
+            ContactListItem(contact = contact, onClick = { onSelect(contact) })
             Spacer(Modifier.height(8.dp))
         }
     }

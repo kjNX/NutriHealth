@@ -35,7 +35,7 @@ fun TypeAddDialog(
                     calories = calories.toIntOrNull() ?: 0,
                     protein = protein.toFloatOrNull() ?: 0f,
                     carbs = carbs.toFloatOrNull() ?: 0f,
-                    fat = fat.toFloatOrNull() ?: 0f
+                    fats = fat.toFloatOrNull() ?: 0f
                 )
                 onConfirm(food)
             }) {
