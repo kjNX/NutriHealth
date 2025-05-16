@@ -1,7 +1,6 @@
 package com.unmsm.nutrihealth.data.repository
 
-import com.google.firebase.Firebase
-import com.google.firebase.firestore.firestore
+
 import com.unmsm.nutrihealth.data.model.Food
 
 
@@ -18,7 +17,3 @@ fun getFood() = listOf(
     Food("Sprite", 100, 0f, 27f, 0f)
 )
 
-/*
-fun getFood() {
-}
- */
