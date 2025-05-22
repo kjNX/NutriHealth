@@ -19,28 +19,48 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.unmsm.nutrihealth.data.model.Contact
 import com.unmsm.nutrihealth.data.model.Message
+import com.unmsm.nutrihealth.logic.ChatViewModel
 import com.unmsm.nutrihealth.ui.composable.blocks.SubsectionTopBar
 import com.unmsm.nutrihealth.ui.theme.NutriHealthTheme
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
-fun Messaging(contact: Contact,onNavigate: () -> Unit) {
+fun Messaging(contact: Contact, onNavigate: () -> Unit, viewModel: ChatViewModel = viewModel()) {
+    val messages by viewModel.messages.collectAsState()
+    var userInput by remember { mutableStateOf("") }
+
     Scaffold(
         topBar = { SubsectionTopBar(title = contact.name, onNavigate = onNavigate) },
-        bottomBar = { MessageBar() }
+        bottomBar = {
+            MessageBar(
+                message = userInput,
+                onMessageChange = { userInput = it },
+                onSend = {
+                    if (userInput.isNotBlank()) {
+                        viewModel.sendMessage(userInput)
+                        userInput = ""
+                    }
+                }
+            )
+        }
     ) { innerPadding ->
-        MessageLog(
-            contact = contact,
-            messages = listOf(
-                Message("Hola, ¿cómo estás?", "12:00", false),
-                Message("Bien, gracias. ¿Y tú?", "12:01", true),
-                Message("Muy bien. ¿Listo para la sesión de nutrición?", "12:02", false)
-            ),
+        LazyColumn(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
-        )
+                .background(MaterialTheme.colorScheme.background)
+                .padding(vertical = 8.dp)
+        ) {
+            items(messages) { msg ->
+                MessageItem(
+                    contact = contact,
+                    message = Message(msg.content, msg.timestamp, msg.isUser)
+                )
+            }
+        }
     }
 }
+
 
 @Composable
 fun MessageItem(contact: Contact, message: Message, modifier: Modifier = Modifier) {
@@ -109,20 +129,24 @@ fun MessageLog(contact: Contact, messages: List<Message>, modifier: Modifier = M
 }
 
 @Composable
-fun MessageBar(modifier: Modifier = Modifier) {
-    var message by remember { mutableStateOf("") }
+fun MessageBar(
+    message: String,
+    onMessageChange: (String) -> Unit,
+    onSend: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     Row(
         modifier = modifier
             .fillMaxWidth()
             .padding(8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        IconButton(onClick = { /* voice action */ }) {
+        IconButton(onClick = { /* Acción de voz opcional */ }) {
             Icon(imageVector = Icons.Default.KeyboardVoice, contentDescription = "Voice")
         }
         TextField(
             value = message,
-            onValueChange = { message = it },
+            onValueChange = onMessageChange,
             placeholder = { Text("Escribe un mensaje...") },
             modifier = Modifier
                 .weight(1f)
@@ -137,12 +161,12 @@ fun MessageBar(modifier: Modifier = Modifier) {
                 disabledIndicatorColor = Color.Transparent
             )
         )
-
-        IconButton(onClick = { message = "" }) {
+        IconButton(onClick = onSend) {
             Icon(imageVector = Icons.AutoMirrored.Filled.Send, contentDescription = "Enviar")
         }
     }
 }
+
 
 @Preview
 @Composable
