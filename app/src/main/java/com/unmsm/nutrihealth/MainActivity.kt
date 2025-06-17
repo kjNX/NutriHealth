@@ -34,8 +34,6 @@ class MainActivity : ComponentActivity() {
         setContent {
             NutriHealthTheme {
                 val navController = rememberNavController()
-
-                // 🔁 Estado para simular que se muestre solo una vez
                 var showOnboarding by remember { mutableStateOf(true) }
 
                 val goto = { path: String -> navController.navigate(path) }
