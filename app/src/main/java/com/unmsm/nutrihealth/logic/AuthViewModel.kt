@@ -2,23 +2,25 @@ package com.unmsm.nutrihealth.logic
 
 import androidx.lifecycle.ViewModel
 import com.google.android.gms.tasks.Task
-import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthException
-import com.google.firebase.auth.auth
+import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.DocumentSnapshot
-import com.google.firebase.firestore.firestore
+import com.google.firebase.firestore.FirebaseFirestore
 import com.unmsm.nutrihealth.data.model.User
 
 class AuthViewModel : ViewModel() {
-    private val auth = Firebase.auth
-    private val firestore = Firebase.firestore
 
+    private val auth: FirebaseAuth = FirebaseAuth.getInstance()
+    private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
+
+    // Método para crear un nuevo usuario con correo y contraseña
     fun signup(name: String, email: String, password: String, onResult: (Boolean, String) -> Unit) {
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener {
                 if (it.isSuccessful) {
-//                    val userId = it.result?.user?.uid ?: return@addOnCompleteListener
+                    // Guardar la información del usuario en Firestore
                     User.id = it.result?.user?.uid ?: return@addOnCompleteListener
                     User.name = name
                     User.email = email
@@ -29,27 +31,16 @@ class AuthViewModel : ViewModel() {
                     val userDoc = firestore.collection("users").document(User.id)
                     val userData = userDoc.collection("data")
 
-                    val throwMe = { dbTask: Task<Void> ->
-                        if(!dbTask.isSuccessful) throw RuntimeException()
-                    }
-
-                    val write = { document: DocumentReference, obj: Any ->
-                        document.set(obj).addOnCompleteListener(throwMe)
-                    }
-
                     try {
-                        // Creating new entries
-                        // I hate callback hell
+                        // Guardar los datos del usuario en Firestore
                         write(userDoc, User)
                         write(userData.document("goal"), User.Target)
                         write(userData.document("plan"), User.Plan)
                         write(userData.document("stats"), User.StatTrak)
-
                         onResult(true, "")
-                    } catch(_: RuntimeException) {
-                        onResult(false, "Error al guardar datos del usuario.")
+                    } catch (e: Exception) {
+                        onResult(false, "Error al guardar los datos del usuario.")
                     }
-
                 } else {
                     val errorMessage = getFriendlyError(it.exception)
                     onResult(false, errorMessage)
@@ -57,29 +48,18 @@ class AuthViewModel : ViewModel() {
             }
     }
 
+    // Método para iniciar sesión con correo y contraseña
     fun login(email: String, password: String, onResult: (Boolean, String) -> Unit) {
         auth.signInWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-//                    val userId = auth.currentUser?.uid ?: return@addOnCompleteListener
+                    // Recuperar los datos del usuario desde Firestore
                     User.id = auth.currentUser?.uid ?: return@addOnCompleteListener
-
                     val userDoc = firestore.collection("users").document(User.id)
                     val userData = userDoc.collection("data")
 
-                    val throwMe = { dbTask: Task<DocumentSnapshot> ->
-                    }
-
-                    val read = { ref: DocumentReference, exec: (DocumentSnapshot) -> Unit ->
-                        ref.get().addOnCompleteListener { dbTask ->
-                            val result = dbTask.result
-                            if(!dbTask.isSuccessful || !result.exists())
-                                throw RuntimeException()
-                            exec(result)
-                        }
-                    }
-
                     try {
+                        // Leer los datos de Firestore
                         read(userDoc) { res ->
                             val data = res.data
                             User.name = data?.get("name").toString()
@@ -92,37 +72,10 @@ class AuthViewModel : ViewModel() {
                             User.Target.targetWeight = data?.get("targetWeight").toString().toInt()
                             User.Target.updatePercentage()
                         }
-                        read(userData.document("plan")) { res ->
-                            val data = res.data
-                            User.Plan.dailyCal = data?.get("dailyCal").toString().toInt()
-                            User.Plan.protein = data?.get("protein").toString().toInt()
-                            User.Plan.carbs = data?.get("carbs").toString().toInt()
-                            User.Plan.fats = data?.get("fats").toString().toInt()
-                        }
-                        read(userData.document("stats")) { res ->
-                            val data = res.data
-                            User.StatTrak.time = data?.get("time").toString().toInt()
-                            User.StatTrak.mileage = data?.get("mileage").toString().toFloat()
-                            User.StatTrak.cal = data?.get("cal").toString().toInt()
-                            User.StatTrak.avgSpeed = data?.get("avgSpeed").toString().toFloat()
-                        }
                         onResult(true, "")
-                    } catch (_: RuntimeException) {
-                        onResult(false, "Verificación de integridad fallida. Contacte al administrador")
+                    } catch (e: Exception) {
+                        onResult(false, "Error al obtener los datos del usuario.")
                     }
-/*
-                    firestore.collection("users").document(User.id).get()
-                        .addOnSuccessListener { document ->
-                            if (document.exists()) {
-                                onResult(true, "")
-                            } else {
-                                auth.signOut()
-                                onResult(false, "Este usuario no está registrado en NutriHealth.")
-                            }
-                        }
-                        .addOnFailureListener {
-                            onResult(false, "No se pudo verificar el usuario en la base de datos.")
-                        }*/
                 } else {
                     val errorMessage = getFriendlyError(task.exception)
                     onResult(false, errorMessage)
@@ -130,7 +83,38 @@ class AuthViewModel : ViewModel() {
             }
     }
 
-    // Traduce errores técnicos a mensajes más amigables
+    // Método para iniciar sesión con Google
+    fun loginWithGoogle(idToken: String, onResult: (Boolean, String) -> Unit) {
+        val credential = GoogleAuthProvider.getCredential(idToken, null)
+        auth.signInWithCredential(credential)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val user = auth.currentUser
+                    onResult(true, "Autenticación exitosa con Google.")
+                } else {
+                    val errorMessage = getFriendlyError(task.exception)
+                    onResult(false, errorMessage)
+                }
+            }
+    }
+
+    // Función para escribir datos en Firestore
+    private fun write(document: DocumentReference, obj: Any) {
+        document.set(obj).addOnCompleteListener {
+            if (!it.isSuccessful) throw RuntimeException()
+        }
+    }
+
+    // Función para leer datos desde Firestore
+    private fun read(ref: DocumentReference, exec: (DocumentSnapshot) -> Unit) {
+        ref.get().addOnCompleteListener { task ->
+            val result = task.result
+            if (!task.isSuccessful || result == null || !result.exists()) throw RuntimeException()
+            exec(result)
+        }
+    }
+
+    // Función para traducir los errores técnicos a mensajes más amigables
     private fun getFriendlyError(exception: Exception?): String {
         return when ((exception as? FirebaseAuthException)?.errorCode) {
             "ERROR_INVALID_EMAIL" -> "El correo electrónico no es válido."
