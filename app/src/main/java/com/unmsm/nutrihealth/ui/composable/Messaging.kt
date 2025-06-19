@@ -1,4 +1,4 @@
-package com.unmsm.nutrihealth.ui.composable
+/*package com.unmsm.nutrihealth.ui.composable
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -177,3 +177,4 @@ private fun MessagingPreview() {
         Messaging(contact,onNavigate = {})
     }
 }
+*/
