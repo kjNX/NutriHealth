@@ -162,7 +162,7 @@ fun MessageBar(
             )
         )
         IconButton(onClick = onSend) {
-            Icon(imageVector = Icons.AutoMirrored.Filled.Send, contentDescription = "Enviar")
+            Icon(imageVector = Icons.AutoMirrored.Filled.Send, contentDescription = "Enviar") //hola
         }
     }
 }
