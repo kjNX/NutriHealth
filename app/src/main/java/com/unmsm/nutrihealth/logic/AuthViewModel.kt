@@ -2,6 +2,7 @@ package com.unmsm.nutrihealth.logic
 
 import androidx.lifecycle.ViewModel
 import com.google.android.gms.tasks.Task
+import com.google.firebase.auth.FacebookAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.GoogleAuthProvider
@@ -113,6 +114,21 @@ class AuthViewModel : ViewModel() {
             exec(result)
         }
     }
+    // Método para iniciar sesión con Facebook
+    fun loginWithFacebook(token: String, onResult: (Boolean, String) -> Unit) {
+        val credential = FacebookAuthProvider.getCredential(token)
+        auth.signInWithCredential(credential)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val user = auth.currentUser
+                    onResult(true, "Autenticación exitosa con Facebook.")
+                } else {
+                    val errorMessage = getFriendlyError(task.exception)
+                    onResult(false, errorMessage)
+                }
+            }
+    }
+
 
     // Función para traducir los errores técnicos a mensajes más amigables
     private fun getFriendlyError(exception: Exception?): String {

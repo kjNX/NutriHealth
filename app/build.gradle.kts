@@ -74,5 +74,10 @@ dependencies {
     implementation("com.google.firebase:firebase-ai")
     // Dependencia para Google Sign-In
     implementation("com.google.android.gms:play-services-auth:20.1.0")
+    implementation("com.google.firebase:firebase-auth:23.2.1")
+    implementation("com.facebook.android:facebook-login:16.3.0")
+    implementation ("com.facebook.android:facebook-android-sdk:latest.release")
+
+
 
 }

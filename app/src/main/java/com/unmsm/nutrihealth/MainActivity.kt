@@ -22,6 +22,12 @@ import com.unmsm.nutrihealth.data.repository.getContacts
 import com.unmsm.nutrihealth.logic.AuthViewModel
 import com.unmsm.nutrihealth.ui.composable.*
 import com.unmsm.nutrihealth.ui.theme.NutriHealthTheme
+import com.facebook.*
+import com.facebook.appevents.AppEventsLogger
+import com.facebook.login.LoginManager
+import com.facebook.login.LoginResult
+import com.google.firebase.auth.FacebookAuthProvider
+import com.google.firebase.auth.FirebaseAuthUserCollisionException
 
 enum class MainScreen {
     Onboarding,
@@ -36,6 +42,7 @@ enum class MainScreen {
 class MainActivity : ComponentActivity() {
 
     private lateinit var googleSignInClient: GoogleSignInClient
+    private lateinit var callbackManager: CallbackManager
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
     private lateinit var gotoAfterLogin: (String) -> Unit
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -43,6 +50,10 @@ class MainActivity : ComponentActivity() {
         val authViewModel = AuthViewModel()
 
         enableEdgeToEdge()
+        FacebookSdk.sdkInitialize(applicationContext)
+        AppEventsLogger.activateApp(application)
+        callbackManager = CallbackManager.Factory.create()
+
         setContent {
             NutriHealthTheme {
                 val navController = rememberNavController()
@@ -107,7 +118,7 @@ class MainActivity : ComponentActivity() {
                             onLogin = login,
                             onRegister = register,
                             onGoogleAccess = onGoogleAccess,  // Pasa correctamente la función aquí
-                            onFacebookAccess = {}
+                            onFacebookAccess = {signInWithFacebook()}
                         )
                     }
                     composable(MainScreen.Main.name) {
@@ -140,6 +151,11 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: android.content.Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        callbackManager.onActivityResult(requestCode, resultCode, data)
+    }
+
 
     // Lanzar el flujo de inicio de sesión con Google
     private val googleSignInLauncher =
@@ -176,4 +192,50 @@ class MainActivity : ComponentActivity() {
                 }
         }
     }
+    private fun signInWithFacebook() {
+        Log.d("FacebookLogin", "Iniciando flujo de login con Facebook...")
+
+        LoginManager.getInstance().logInWithReadPermissions(this, listOf("email", "public_profile"))
+        LoginManager.getInstance().registerCallback(callbackManager, object : FacebookCallback<LoginResult> {
+
+            override fun onSuccess(result: LoginResult) {
+                val credential = FacebookAuthProvider.getCredential(result.accessToken.token)
+                auth.signInWithCredential(credential)
+                    .addOnCompleteListener(this@MainActivity) { task ->
+                        if (task.isSuccessful) {
+                            val user = auth.currentUser
+                            Toast.makeText(this@MainActivity, "Bienvenido, ${user?.displayName}", Toast.LENGTH_SHORT).show()
+                            gotoAfterLogin(MainScreen.Main.name)
+                        } else {
+                            val exception = task.exception
+                            if (exception is FirebaseAuthUserCollisionException) {
+                                // ✅ Manejo específico del error de colisión
+                                Toast.makeText(
+                                    this@MainActivity,
+                                    "Ya existe una cuenta con este correo. Intenta ingresar con Google o correo/contraseña.",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            } else {
+                                // Otros errores
+                                Log.e("FacebookLogin", "Error autenticando con Facebook", exception)
+                                Toast.makeText(this@MainActivity, "Error autenticando con Facebook", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    }
+            }
+
+
+            override fun onCancel() {
+                Log.w("FacebookLogin", "Inicio de sesión cancelado por el usuario.")
+                Toast.makeText(this@MainActivity, "Inicio cancelado por el usuario", Toast.LENGTH_SHORT).show()
+            }
+
+            override fun onError(error: FacebookException) {
+                Log.e("FacebookLogin", "Error durante el login con Facebook", error)
+                Toast.makeText(this@MainActivity, "Error de Facebook: ${error.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
+
+
 }
