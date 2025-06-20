@@ -2,9 +2,9 @@ package com.unmsm.nutrihealth
 
 import android.app.Activity
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -21,6 +21,15 @@ import androidx.core.app.ActivityCompat
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.facebook.*
+import com.facebook.appevents.AppEventsLogger
+import com.facebook.login.LoginManager
+import com.facebook.login.LoginResult
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
+import com.google.firebase.auth.*
 import com.unmsm.nutrihealth.data.model.Contact
 import com.unmsm.nutrihealth.data.repository.getContacts
 import com.unmsm.nutrihealth.logic.AuthViewModel
@@ -36,47 +45,62 @@ import dagger.hilt.android.AndroidEntryPoint
 enum class MainScreen {
     Onboarding, Auth, Main, Scan, History, Profile, Messaging
 }
+
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    private lateinit var googleSignInClient: GoogleSignInClient
+    private lateinit var callbackManager: CallbackManager
+    private val auth: FirebaseAuth = FirebaseAuth.getInstance()
+    private lateinit var gotoAfterLogin: (String) -> Unit
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         enableEdgeToEdge()
 
+        // Facebook SDK Init
+        FacebookSdk.sdkInitialize(applicationContext)
+        AppEventsLogger.activateApp(application)
+        callbackManager = CallbackManager.Factory.create()
+
+        val authViewModel = AuthViewModel()
+
         setContent {
-            PermissionRequester() // 👈 Solicita permisos de ubicación
+            PermissionRequester() // Permisos ubicación
 
             NutriHealthTheme {
                 val navController = rememberNavController()
                 var showOnboarding by remember { mutableStateOf(true) }
 
                 val goto = { path: String -> navController.navigate(path) }
+                gotoAfterLogin = goto
                 val navigate = { navController.navigate(MainScreen.Main.name) }
                 val logout = { navController.navigate(MainScreen.Auth.name) }
 
-                val authViewModel = remember { AuthViewModel() }
-
                 val login = { email: String, password: String ->
-                    authViewModel.login(
-                        email = email,
-                        password = password,
-                        onResult = { value: Boolean, msg: String ->
-                            if (value) goto(MainScreen.Main.name)
-                            else Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
-                        }
-                    )
+                    authViewModel.login(email, password) { success, msg ->
+                        if (success) goto(MainScreen.Main.name)
+                        else Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
+                    }
                 }
 
                 val register = { name: String, email: String, password: String ->
-                    authViewModel.signup(
-                        name = name,
-                        email = email,
-                        password = password,
-                        onResult = { value: Boolean, msg: String ->
-                            if (value) goto(MainScreen.Main.name)
-                            else Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
-                        }
-                    )
+                    authViewModel.signup(name, email, password) { success, msg ->
+                        if (success) goto(MainScreen.Main.name)
+                        else Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
+                    }
+                }
+
+                // Google SignIn config
+                val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                    .requestIdToken(getString(R.string.web_client))
+                    .requestEmail()
+                    .build()
+                googleSignInClient = GoogleSignIn.getClient(this, gso)
+                val onGoogleAccess = {
+                    val intent = googleSignInClient.signInIntent
+                    googleSignInLauncher.launch(intent)
                 }
 
                 NavHost(
@@ -84,26 +108,22 @@ class MainActivity : ComponentActivity() {
                     startDestination = if (showOnboarding) MainScreen.Onboarding.name else MainScreen.Auth.name
                 ) {
                     composable(MainScreen.Onboarding.name) {
-                        OnboardingScreen(
-                            onFinish = {
-                                showOnboarding = false
-                                goto(MainScreen.Auth.name)
-                            }
-                        )
+                        OnboardingScreen {
+                            showOnboarding = false
+                            goto(MainScreen.Auth.name)
+                        }
                     }
-
                     composable(MainScreen.Auth.name) {
                         AuthDisplay(
                             onLogin = login,
                             onRegister = register,
-                            onGoogleAccess = {},
-                            onFacebookAccess = {}
+                            onGoogleAccess = onGoogleAccess,
+                            onFacebookAccess = { signInWithFacebook() }
                         )
                     }
-
                     composable(MainScreen.Main.name) {
                         MainDisplay(
-                            navController = navController, // ✅ parámetro corregido
+                            navController = navController,
                             onTopBarClick = listOf(
                                 { goto(MainScreen.History.name) },
                                 { goto(MainScreen.Profile.name) }
@@ -114,27 +134,83 @@ class MainActivity : ComponentActivity() {
                             }
                         )
                     }
-
-                    composable(MainScreen.Scan.name) {
-                        Scan(onNavigate = navigate)
-                    }
-
-                    composable(MainScreen.History.name) {
-                        History(onNavigate = navigate)
-                    }
-
-                    composable(MainScreen.Profile.name) {
-                        Profile(onNavigate = navigate, onLogout = logout)
-                    }
-
-                    composable("${MainScreen.Messaging.name}/{contactName}") { backStackEntry ->
-                        val contactName = backStackEntry.arguments?.getString("contactName") ?: ""
-                        val contact = getContacts().find { it.name == contactName } ?: Contact(contactName, "")
-                        // Messaging(contact = contact, onNavigate = navigate)
+                    composable(MainScreen.Scan.name) { Scan(onNavigate = navigate) }
+                    composable(MainScreen.History.name) { History(onNavigate = navigate) }
+                    composable(MainScreen.Profile.name) { Profile(onNavigate = navigate, onLogout = logout) }
+                    composable("${MainScreen.Messaging.name}/{contactName}") { backStack ->
+                        val name = backStack.arguments?.getString("contactName") ?: ""
+                        val contact = getContacts().find { it.name == name } ?: Contact(name, "")
+                        Messaging(contact = contact, onNavigate = navigate)
                     }
                 }
             }
         }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        callbackManager.onActivityResult(requestCode, resultCode, data)
+    }
+
+    private val googleSignInLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+            try {
+                val account = task.getResult(ApiException::class.java)
+                signInWithGoogle(account?.idToken)
+            } catch (e: ApiException) {
+                Log.e("GoogleSignIn", "Error: ${e.statusCode}")
+                Toast.makeText(this, "Error de inicio con Google", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+    private fun signInWithGoogle(idToken: String?) {
+        idToken?.let {
+            val credential = GoogleAuthProvider.getCredential(it, null)
+            auth.signInWithCredential(credential)
+                .addOnCompleteListener(this) { task ->
+                    if (task.isSuccessful) {
+                        val user = auth.currentUser
+                        Toast.makeText(this, "Bienvenido, ${user?.displayName}", Toast.LENGTH_SHORT).show()
+                        gotoAfterLogin(MainScreen.Main.name)
+                    } else {
+                        Toast.makeText(this, "Error de autenticación", Toast.LENGTH_SHORT).show()
+                    }
+                }
+        }
+    }
+
+    private fun signInWithFacebook() {
+        LoginManager.getInstance().logInWithReadPermissions(this, listOf("email", "public_profile"))
+        LoginManager.getInstance().registerCallback(callbackManager, object : FacebookCallback<LoginResult> {
+            override fun onSuccess(result: LoginResult) {
+                val credential = FacebookAuthProvider.getCredential(result.accessToken.token)
+                auth.signInWithCredential(credential)
+                    .addOnCompleteListener(this@MainActivity) { task ->
+                        if (task.isSuccessful) {
+                            val user = auth.currentUser
+                            Toast.makeText(this@MainActivity, "Bienvenido, ${user?.displayName}", Toast.LENGTH_SHORT).show()
+                            gotoAfterLogin(MainScreen.Main.name)
+                        } else {
+                            val e = task.exception
+                            if (e is FirebaseAuthUserCollisionException) {
+                                Toast.makeText(this@MainActivity, "Cuenta ya existente. Intenta con otro método.", Toast.LENGTH_LONG).show()
+                            } else {
+                                Log.e("FacebookLogin", "Error: ", e)
+                                Toast.makeText(this@MainActivity, "Error autenticando con Facebook", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    }
+            }
+
+            override fun onCancel() {
+                Toast.makeText(this@MainActivity, "Inicio cancelado", Toast.LENGTH_SHORT).show()
+            }
+
+            override fun onError(error: FacebookException) {
+                Toast.makeText(this@MainActivity, "Error Facebook: ${error.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
     }
 
     @Composable
@@ -158,8 +234,7 @@ class MainActivity : ComponentActivity() {
         if (showPermissionDeclinedRationale) {
             LocationPermissionRequestDialog(
                 onDismissClick = {
-                    if (!activity.hasLocationPermission())
-                        activity.finish()
+                    if (!activity.hasLocationPermission()) activity.finish()
                     else showPermissionDeclinedRationale = false
                 },
                 onOkClick = { activity.openAppSetting() }
