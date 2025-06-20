@@ -69,6 +69,7 @@ fun HistoryScreen(navController: NavController, historyViewModel: ActivityHistor
     }
 }
 
+
 @Preview(showBackground = true)
 @Composable
 fun HistoryScreenPreview() {
