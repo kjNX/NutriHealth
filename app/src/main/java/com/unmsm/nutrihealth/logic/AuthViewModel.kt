@@ -124,7 +124,23 @@ class AuthViewModel : ViewModel() {
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     val user = auth.currentUser
-                    onResult(true, "Autenticación exitosa con Google.")
+                    // Guardar el usuario en Firestore
+                    user?.let {
+                        val userDoc = firestore.collection("users").document(it.uid)
+                        val userData = hashMapOf(
+                            "email" to it.email,
+                            "name" to it.displayName,
+                            "photoUrl" to it.photoUrl.toString()
+                        )
+                        userDoc.set(userData)
+                            .addOnCompleteListener { writeTask ->
+                                if (writeTask.isSuccessful) {
+                                    onResult(true, "Autenticación exitosa con Google y datos guardados.")
+                                } else {
+                                    onResult(false, "Error al guardar los datos del usuario.")
+                                }
+                            }
+                    }
                 } else {
                     val errorMessage = getFriendlyError(task.exception)
                     onResult(false, errorMessage)
@@ -132,6 +148,38 @@ class AuthViewModel : ViewModel() {
             }
     }
 
+
+
+    // Método para iniciar sesión con Facebook
+    fun loginWithFacebook(token: String, onResult: (Boolean, String) -> Unit) {
+        val credential = FacebookAuthProvider.getCredential(token)
+        auth.signInWithCredential(credential)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val user = auth.currentUser
+                    // Guardar el usuario en Firestore
+                    user?.let {
+                        val userDoc = firestore.collection("users").document(it.uid)
+                        val userData = hashMapOf(
+                            "email" to it.email,
+                            "name" to it.displayName,
+                            "photoUrl" to it.photoUrl.toString()
+                        )
+                        userDoc.set(userData)
+                            .addOnCompleteListener { writeTask ->
+                                if (writeTask.isSuccessful) {
+                                    onResult(true, "Autenticación exitosa con Facebook y datos guardados.")
+                                } else {
+                                    onResult(false, "Error al guardar los datos del usuario.")
+                                }
+                            }
+                    }
+                } else {
+                    val errorMessage = getFriendlyError(task.exception)
+                    onResult(false, errorMessage)
+                }
+            }
+    }
     // Función para escribir datos en Firestore
     private fun write(document: DocumentReference, obj: Any) {
         document.set(obj).addOnCompleteListener {
@@ -146,20 +194,6 @@ class AuthViewModel : ViewModel() {
             if (!task.isSuccessful || result == null || !result.exists()) throw RuntimeException()
             exec(result)
         }
-    }
-    // Método para iniciar sesión con Facebook
-    fun loginWithFacebook(token: String, onResult: (Boolean, String) -> Unit) {
-        val credential = FacebookAuthProvider.getCredential(token)
-        auth.signInWithCredential(credential)
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    val user = auth.currentUser
-                    onResult(true, "Autenticación exitosa con Facebook.")
-                } else {
-                    val errorMessage = getFriendlyError(task.exception)
-                    onResult(false, errorMessage)
-                }
-            }
     }
 
     // Traduce errores técnicos a mensajes más amigables
