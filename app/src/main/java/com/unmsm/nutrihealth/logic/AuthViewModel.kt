@@ -84,6 +84,7 @@ class AuthViewModel : ViewModel() {
                             User.name = data?.get("name").toString()
                             User.email = data?.get("email").toString()
                         }
+                        /*
                         read(userData.document("goal")) { res ->
                             val data = res.data
 //                            UserData.weight = data?.get("weight").toString().toFloat()
@@ -106,6 +107,7 @@ class AuthViewModel : ViewModel() {
 //                            User.StatTrak.cal = data?.get("cal").toString().toInt()
 //                            User.StatTrak.avgSpeed = data?.get("avgSpeed").toString().toFloat()
 //                        }
+                        */
                         onResult(true, "")
                     } catch (e: Exception) {
                         onResult(false, "Error al obtener los datos del usuario.")

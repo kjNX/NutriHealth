@@ -121,8 +121,6 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-
-
                 NavHost(
                     navController = navController,
                     startDestination = if (showOnboarding) MainScreen.Onboarding.name else MainScreen.Auth.name
