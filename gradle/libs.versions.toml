@@ -28,6 +28,9 @@ lifecycle = "2.6.1"
 credentials = "1.5.0"
 credentialsPlayServicesAuth = "1.5.0"
 googleid = "1.1.1"
+firebaseAppcheckInterop = "17.0.0"
+foundationAndroid = "1.7.2"
+firebaseAi = "16.1.0"
 
 
 [plugins]
@@ -101,3 +104,6 @@ androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-co
 androidx-credentials = { group = "androidx.credentials", name = "credentials", version.ref = "credentials" }
 androidx-credentials-play-services-auth = { group = "androidx.credentials", name = "credentials-play-services-auth", version.ref = "credentialsPlayServicesAuth" }
 googleid = { group = "com.google.android.libraries.identity.googleid", name = "googleid", version.ref = "googleid" }
+firebase-appcheck-interop = { group = "com.google.firebase", name = "firebase-appcheck-interop", version.ref = "firebaseAppcheckInterop" }
+androidx-foundation-android = { group = "androidx.compose.foundation", name = "foundation-android", version.ref = "foundationAndroid" }
+firebase-ai = { group = "com.google.firebase", name = "firebase-ai", version.ref = "firebaseAi" }
