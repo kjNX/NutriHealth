@@ -38,6 +38,7 @@ import com.unmsm.nutrihealth.logic.extension.hasLocationPermission
 import com.unmsm.nutrihealth.logic.extension.openAppSetting
 import com.unmsm.nutrihealth.logic.utils.PermissionUtils
 import com.unmsm.nutrihealth.ui.composable.*
+import com.unmsm.nutrihealth.ui.composable.pages.map.HistoryScreen
 import com.unmsm.nutrihealth.ui.compose.component.LocationPermissionRequestDialog
 import com.unmsm.nutrihealth.ui.theme.NutriHealthTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -135,7 +136,8 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                     composable(MainScreen.Scan.name) { Scan(onNavigate = navigate) }
-                    composable(MainScreen.History.name) { History(onNavigate = navigate) }
+                    composable(MainScreen.History.name) {
+                        HistoryScreen(navController = navController)}
                     composable(MainScreen.Profile.name) { Profile(onNavigate = navigate, onLogout = logout) }
                     composable("${MainScreen.Messaging.name}/{contactName}") { backStack ->
                         val name = backStack.arguments?.getString("contactName") ?: ""
@@ -182,35 +184,54 @@ class MainActivity : ComponentActivity() {
 
     private fun signInWithFacebook() {
         LoginManager.getInstance().logInWithReadPermissions(this, listOf("email", "public_profile"))
-        LoginManager.getInstance().registerCallback(callbackManager, object : FacebookCallback<LoginResult> {
-            override fun onSuccess(result: LoginResult) {
-                val credential = FacebookAuthProvider.getCredential(result.accessToken.token)
-                auth.signInWithCredential(credential)
-                    .addOnCompleteListener(this@MainActivity) { task ->
-                        if (task.isSuccessful) {
-                            val user = auth.currentUser
-                            Toast.makeText(this@MainActivity, "Bienvenido, ${user?.displayName}", Toast.LENGTH_SHORT).show()
-                            gotoAfterLogin(MainScreen.Main.name)
-                        } else {
-                            val e = task.exception
-                            if (e is FirebaseAuthUserCollisionException) {
-                                Toast.makeText(this@MainActivity, "Cuenta ya existente. Intenta con otro método.", Toast.LENGTH_LONG).show()
+        LoginManager.getInstance().registerCallback(
+            callbackManager,
+            object : FacebookCallback<LoginResult> {
+                override fun onSuccess(result: LoginResult) {
+                    val credential = FacebookAuthProvider.getCredential(result.accessToken.token)
+                    auth.signInWithCredential(credential)
+                        .addOnCompleteListener(this@MainActivity) { task ->
+                            if (task.isSuccessful) {
+                                val user = auth.currentUser
+                                Toast.makeText(
+                                    this@MainActivity,
+                                    "Bienvenido, ${user?.displayName}",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                gotoAfterLogin(MainScreen.Main.name)
                             } else {
-                                Log.e("FacebookLogin", "Error: ", e)
-                                Toast.makeText(this@MainActivity, "Error autenticando con Facebook", Toast.LENGTH_SHORT).show()
+                                val e = task.exception
+                                if (e is FirebaseAuthUserCollisionException) {
+                                    Toast.makeText(
+                                        this@MainActivity,
+                                        "Cuenta ya existente. Intenta con otro método.",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                } else {
+                                    Log.e("FacebookLogin", "Error: ", e)
+                                    Toast.makeText(
+                                        this@MainActivity,
+                                        "Error autenticando con Facebook",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
                             }
                         }
-                    }
-            }
+                }
 
-            override fun onCancel() {
-                Toast.makeText(this@MainActivity, "Inicio cancelado", Toast.LENGTH_SHORT).show()
-            }
+                override fun onCancel() {
+                    Toast.makeText(this@MainActivity, "Inicio cancelado", Toast.LENGTH_SHORT).show()
+                }
 
-            override fun onError(error: FacebookException) {
-                Toast.makeText(this@MainActivity, "Error Facebook: ${error.message}", Toast.LENGTH_SHORT).show()
+                override fun onError(error: FacebookException) {
+                    Toast.makeText(
+                        this@MainActivity,
+                        "Error Facebook: ${error.message}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
             }
-        })
+        )
     }
 
     @Composable

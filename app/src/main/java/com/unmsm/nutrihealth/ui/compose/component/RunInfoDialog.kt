@@ -108,14 +108,16 @@ private fun RunImage(
     Box(
         modifier = modifier,
     ) {
-        Image(
-            bitmap = run.img.asImageBitmap(),
-            contentDescription = null,
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(1f),
-            contentScale = ContentScale.Crop,
-        )
+        run.img?.let {
+            Image(
+                bitmap = it.asImageBitmap(),
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(1f),
+                contentScale = ContentScale.Crop,
+            )
+        }
 
         IconButton(
             onClick = onDismiss,

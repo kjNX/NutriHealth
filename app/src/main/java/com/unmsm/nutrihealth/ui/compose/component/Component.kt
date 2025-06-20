@@ -36,7 +36,6 @@ import com.unmsm.nutrihealth.logic.extension.getDisplayDate
 import com.unmsm.nutrihealth.data.model.Run
 import java.util.Date
 
-
 @Composable
 fun RunningStatsItem(
     modifier: Modifier = Modifier,
@@ -82,13 +81,24 @@ fun RunItem(
         modifier = modifier
             .fillMaxWidth()
     ) {
-        Image(
-            bitmap = run.img.asImageBitmap(),
-            contentDescription = null,
-            modifier = Modifier
-                .size(70.dp),
-            contentScale = ContentScale.Fit
-        )
+        // Usando llamada segura para acceder a `img` (Bitmap?)
+        run.img?.let { bitmap ->
+            Image(
+                bitmap = bitmap.asImageBitmap(),
+                contentDescription = null,
+                modifier = Modifier
+                    .size(70.dp),
+                contentScale = ContentScale.Fit
+            )
+        } ?: run {
+            // Si `img` es null, mostramos una imagen predeterminada o un ícono
+            Icon(
+                imageVector = ImageVector.vectorResource(id = R.drawable.ic_default_image),
+                contentDescription = "Imagen por defecto",
+                modifier = Modifier.size(70.dp)
+            )
+        }
+
         Spacer(modifier = Modifier.size(16.dp))
         RunInfo(
             modifier = Modifier
@@ -246,5 +256,4 @@ fun LocationPermissionRequestDialog(
             }
         },
     )
-
 }

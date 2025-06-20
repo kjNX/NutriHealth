@@ -15,8 +15,7 @@ import com.unmsm.nutrihealth.data.tracking.location.DefaultLocationTrackingManag
 import com.sdevprem.runtrack.data.tracking.location.LocationUtils
 import com.sdevprem.runtrack.data.tracking.timer.DefaultTimeTracker
 
-import com.unmsm.nutrihealth.data.db.RunTrackDB
-import com.unmsm.nutrihealth.data.db.RunTrackDB.Companion.RUN_TRACK_DB_NAME
+
 import com.unmsm.nutrihealth.data.model.LocationTrackingManager
 import com.unmsm.nutrihealth.logic.background.BackgroundTrackingManager
 import com.unmsm.nutrihealth.logic.timer.TimeTracker
@@ -47,19 +46,9 @@ abstract class AppModule {
         ) = LocationServices
             .getFusedLocationProviderClient(context)
 
-        @Provides
-        @Singleton
-        fun provideRunningDB(
-            @ApplicationContext context: Context
-        ): RunTrackDB = Room.databaseBuilder(
-            context,
-            RunTrackDB::class.java,
-            RUN_TRACK_DB_NAME
-        ).build()
 
-        @Singleton
-        @Provides
-        fun provideRunDao(db: RunTrackDB) = db.getRunDao()
+
+
 
         @Provides
         @Singleton

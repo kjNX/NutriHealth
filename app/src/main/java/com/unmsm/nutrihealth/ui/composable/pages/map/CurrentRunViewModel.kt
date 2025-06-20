@@ -11,7 +11,6 @@ import com.unmsm.nutrihealth.di.IoDispatcher
 import com.unmsm.nutrihealth.logic.usecase.GetCurrentRunStateWithCaloriesUseCase
 import com.unmsm.nutrihealth.data.model.CurrentRunStateWithCalories
 import com.unmsm.nutrihealth.data.model.Run
-import com.unmsm.nutrihealth.data.repository.AppRepository
 import com.unmsm.nutrihealth.logic.TrackingManager
 import com.unmsm.nutrihealth.logic.ActivityHistoryViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -27,7 +26,8 @@ import javax.inject.Inject
 @HiltViewModel
 class CurrentRunViewModel @Inject constructor(
     private val trackingManager: TrackingManager,
-    private val repository: AppRepository,
+    // Eliminamos el repositorio relacionado con Room
+    // private val repository: AppRepository,
     @ApplicationScope
     private val appCoroutineScope: CoroutineScope,
     @IoDispatcher
@@ -52,7 +52,7 @@ class CurrentRunViewModel @Inject constructor(
 
     fun finishRun(
         bitmap: Bitmap,
-        activityHistoryVM: ActivityHistoryViewModel?,
+        activityHistoryVM: ActivityHistoryViewModel? = null,
         context: Context
     ) {
         trackingManager.pauseTracking()
@@ -70,8 +70,7 @@ class CurrentRunViewModel @Inject constructor(
             caloriesBurned = currentRunStateWithCalories.value.caloriesBurnt
         )
 
-        // Guardado local
-        saveRun(run)
+
 
         // Guardado en Firestore
         if (activityHistoryVM != null) {
@@ -86,7 +85,5 @@ class CurrentRunViewModel @Inject constructor(
         trackingManager.stop()
     }
 
-    private fun saveRun(run: Run) = appCoroutineScope.launch(ioDispatcher) {
-        repository.insertRun(run)
-    }
+
 }

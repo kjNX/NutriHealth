@@ -7,7 +7,7 @@ import java.util.Date
 
 @Entity(tableName = "running_table")
 data class Run(
-    var img: Bitmap,
+    var img: Bitmap? = null,  // Cambié a null para permitir que sea opcional
     var timestamp: Date = Date(),
     var avgSpeedInKMH: Float = 0f,
     var distanceInMeters: Int = 0,
@@ -16,4 +16,15 @@ data class Run(
 
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0
-)
+) {
+    // Constructor vacío necesario para Firestore o Room (sin parámetros)
+    constructor() : this(
+        img = null,
+        timestamp = Date(),
+        avgSpeedInKMH = 0f,
+        distanceInMeters = 0,
+        durationInMillis = 0L,
+        caloriesBurned = 0,
+        id = 0
+    )
+}

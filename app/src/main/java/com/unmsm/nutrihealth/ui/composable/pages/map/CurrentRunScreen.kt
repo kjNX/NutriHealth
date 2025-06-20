@@ -62,6 +62,7 @@ fun CurrentRunScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
+        // Mapa con la ruta de la carrera
         CurrentRunMap(
             pathPoints = runState.currentRunState.pathPoints,
             isRunningFinished = isRunningFinished,
@@ -76,6 +77,7 @@ fun CurrentRunScreen(
             }
         }
 
+        // Barra superior
         TopBar(
             modifier = Modifier
                 .align(Alignment.TopStart)
@@ -87,6 +89,19 @@ fun CurrentRunScreen(
             }
         )
 
+        // Botón para ver historial de carreras
+        Button(
+            onClick = {
+                navController.navigate("HistoryScreen") // Aquí navegas a la pantalla de historial
+            },
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(16.dp)
+        ) {
+            Text("Ver historial de carreras")
+        }
+
+        // Tarjeta con estadísticas de la carrera
         ComposeUtils.SlideUpAnimatedVisibility(
             modifier = Modifier.align(Alignment.BottomCenter),
             visible = shouldShowRunningCard
@@ -102,6 +117,7 @@ fun CurrentRunScreen(
         }
     }
 }
+
 
 @Composable
 private fun TopBar(
