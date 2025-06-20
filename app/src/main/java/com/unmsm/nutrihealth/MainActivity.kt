@@ -42,6 +42,7 @@ import com.unmsm.nutrihealth.ui.composable.pages.map.HistoryScreen
 import com.unmsm.nutrihealth.ui.compose.component.LocationPermissionRequestDialog
 import com.unmsm.nutrihealth.ui.theme.NutriHealthTheme
 import dagger.hilt.android.AndroidEntryPoint
+import androidx.activity.viewModels
 
 enum class MainScreen {
     Onboarding, Auth, Main, Scan, History, Profile, Messaging
@@ -54,6 +55,8 @@ class MainActivity : ComponentActivity() {
     private lateinit var callbackManager: CallbackManager
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
     private lateinit var gotoAfterLogin: (String) -> Unit
+    // Usar viewModels() para inyectar AuthViewModel
+    private val authViewModel: AuthViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -64,8 +67,6 @@ class MainActivity : ComponentActivity() {
         FacebookSdk.sdkInitialize(applicationContext)
         AppEventsLogger.activateApp(application)
         callbackManager = CallbackManager.Factory.create()
-
-        val authViewModel = AuthViewModel()
 
         setContent {
             PermissionRequester() // Permisos ubicación
@@ -78,6 +79,7 @@ class MainActivity : ComponentActivity() {
                 gotoAfterLogin = goto
                 val navigate = { navController.navigate(MainScreen.Main.name) }
                 val logout = { navController.navigate(MainScreen.Auth.name) }
+                // Login con correo y contraseña
 
                 val login = { email: String, password: String ->
                     authViewModel.login(email, password) { success, msg ->
@@ -85,6 +87,7 @@ class MainActivity : ComponentActivity() {
                         else Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
                     }
                 }
+                // Registro con correo y contraseña
 
                 val register = { name: String, email: String, password: String ->
                     authViewModel.signup(name, email, password) { success, msg ->
@@ -93,16 +96,32 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
+
                 // Google SignIn config
                 val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                     .requestIdToken(getString(R.string.web_client))
                     .requestEmail()
                     .build()
                 googleSignInClient = GoogleSignIn.getClient(this, gso)
+
                 val onGoogleAccess = {
                     val intent = googleSignInClient.signInIntent
                     googleSignInLauncher.launch(intent)
                 }
+
+                // Facebook login via lambda
+                val onFacebookAccess = { token: String ->
+                    authViewModel.loginWithFacebook(token) { success, msg ->
+                        if (success) {
+                            Toast.makeText(this@MainActivity, "Bienvenido", Toast.LENGTH_SHORT).show()
+                            gotoAfterLogin(MainScreen.Main.name)
+                        } else {
+                            Toast.makeText(this@MainActivity, msg, Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+
+
 
                 NavHost(
                     navController = navController,
@@ -153,35 +172,35 @@ class MainActivity : ComponentActivity() {
         super.onActivityResult(requestCode, resultCode, data)
         callbackManager.onActivityResult(requestCode, resultCode, data)
     }
-
-    private val googleSignInLauncher =
+    // Lanzador de Google
+    val googleSignInLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
             try {
                 val account = task.getResult(ApiException::class.java)
-                signInWithGoogle(account?.idToken)
+                account?.idToken?.let { idToken ->
+                    // Asegurarse de que idToken no es null antes de pasarlo
+                    authViewModel.loginWithGoogle(idToken) { success, msg ->
+                        if (success) {
+                            Toast.makeText(this, "Bienvenido, ${account.displayName}", Toast.LENGTH_SHORT).show()
+                            gotoAfterLogin(MainScreen.Main.name)
+                        } else {
+                            Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                } ?: run {
+                    // Manejar el caso en que idToken es null
+                    Toast.makeText(this, "Token de Google no válido", Toast.LENGTH_SHORT).show()
+                }
             } catch (e: ApiException) {
                 Log.e("GoogleSignIn", "Error: ${e.statusCode}")
                 Toast.makeText(this, "Error de inicio con Google", Toast.LENGTH_SHORT).show()
             }
         }
 
-    private fun signInWithGoogle(idToken: String?) {
-        idToken?.let {
-            val credential = GoogleAuthProvider.getCredential(it, null)
-            auth.signInWithCredential(credential)
-                .addOnCompleteListener(this) { task ->
-                    if (task.isSuccessful) {
-                        val user = auth.currentUser
-                        Toast.makeText(this, "Bienvenido, ${user?.displayName}", Toast.LENGTH_SHORT).show()
-                        gotoAfterLogin(MainScreen.Main.name)
-                    } else {
-                        Toast.makeText(this, "Error de autenticación", Toast.LENGTH_SHORT).show()
-                    }
-                }
-        }
-    }
 
+
+    // Función para iniciar sesión con Facebook
     private fun signInWithFacebook() {
         LoginManager.getInstance().logInWithReadPermissions(this, listOf("email", "public_profile"))
         LoginManager.getInstance().registerCallback(
