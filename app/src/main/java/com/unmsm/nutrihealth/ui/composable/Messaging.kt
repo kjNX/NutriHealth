@@ -51,6 +51,7 @@ fun Messaging(contact: Contact, onNavigate: () -> Unit, viewModel: ChatViewModel
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
                 .padding(vertical = 8.dp)
+                .imePadding() // Ajuste automático para el teclado
         ) {
             items(messages) { msg ->
                 MessageItem(
@@ -58,9 +59,15 @@ fun Messaging(contact: Contact, onNavigate: () -> Unit, viewModel: ChatViewModel
                     message = msg // Mostrar el contenido del mensaje, con timestamp y propiedad de usuario
                 )
             }
+            item {
+                // Añadir un espacio de 80dp en la parte inferior para evitar que el contenido choque con los botones de navegación
+                Spacer(modifier = Modifier.height(80.dp))
+            }
         }
     }
 }
+
+
 
 @Composable
 fun MessageItem(contact: Contact, message: com.unmsm.nutrihealth.data.model.Message, modifier: Modifier = Modifier) {
