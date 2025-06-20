@@ -86,7 +86,7 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
 
     // ia
-    implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
+    implementation(libs.generativeai)
     // Google Maps Compose
     implementation(libs.maps.compose)
     implementation(libs.play.services.maps)
