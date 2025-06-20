@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.maps.secrets)
     alias(libs.plugins.dagger.hilt.android)
     alias(libs.plugins.jetbrains.kotlin.kapt)
+
 }
 
 android {
@@ -89,6 +90,9 @@ dependencies {
     implementation(libs.maps.compose)
     implementation(libs.play.services.maps)
     implementation(libs.play.services.location)
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
+    implementation(libs.googleid)
 
     // Testing
     testImplementation(libs.junit)
@@ -111,4 +115,8 @@ dependencies {
     implementation(libs.hilt.android)
     kapt(libs.hilt.compiler)
     implementation(libs.androidx.hilt.navigation.compose)
+    implementation("com.google.android.gms:play-services-auth:20.1.0")
+    implementation("com.google.firebase:firebase-auth:23.2.1")
+    implementation("com.facebook.android:facebook-login:16.3.0")
+    implementation ("com.facebook.android:facebook-android-sdk:latest.release")
 }
