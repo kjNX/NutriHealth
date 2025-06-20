@@ -9,10 +9,12 @@ object User {
     var id: String = ""
     var name: String = ""
     var email: String = ""
+    var stage: Int = 0
 
     fun reset() {
         id = ""
         name = ""
         email = ""
+        stage = 0
     }
 }

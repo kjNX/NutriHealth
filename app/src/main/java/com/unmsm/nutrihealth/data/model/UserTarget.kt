@@ -12,7 +12,7 @@ object UserTarget {
     var protein: Int = 0
     var carbs: Int = 0
     var fats: Int = 0
-    var priority: Priority = Priority.Zero
+    var priority: Priority = Priority.Health
 
     fun reset() {
         id = 0
@@ -24,7 +24,6 @@ object UserTarget {
     }
 
     enum class Priority(val description: String) {
-        Zero("No prioridad"),
         Health("Mejorar salud"),
         Weight("Bajar de peso"),
         Muscle("Ganar músculo")
