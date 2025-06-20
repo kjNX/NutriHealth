@@ -21,6 +21,7 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
     }
 
     buildTypes {
@@ -78,7 +79,7 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
 
     // Firebase
-    implementation(platform("com.google.firebase:firebase-bom:33.14.0"))
+    implementation(platform("com.google.firebase:firebase-bom:33.15.0"))
     implementation(libs.firebase.auth)
     implementation(libs.firebase.analytics)
     implementation(libs.firebase.firestore)
@@ -86,6 +87,8 @@ dependencies {
     //datastore
     implementation(libs.androidx.datastore.preferences)
 
+    // ia
+    implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
     // Google Maps Compose
     implementation(libs.maps.compose)
     implementation(libs.play.services.maps)
@@ -93,6 +96,9 @@ dependencies {
     implementation(libs.androidx.credentials)
     implementation(libs.androidx.credentials.play.services.auth)
     implementation(libs.googleid)
+    implementation(libs.firebase.appcheck.interop)
+    implementation(libs.firebase.appcheck.interop)
+    implementation(libs.androidx.foundation.android)
 
     // Testing
     testImplementation(libs.junit)
@@ -119,4 +125,12 @@ dependencies {
     implementation("com.google.firebase:firebase-auth:23.2.1")
     implementation("com.facebook.android:facebook-login:16.3.0")
     implementation ("com.facebook.android:facebook-android-sdk:latest.release")
+    implementation ("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation ("com.squareup.okhttp3:okhttp:4.9.0")
+    implementation("com.google.firebase:firebase-ai:1.0.0")
+    implementation ("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation ("com.squareup.okhttp3:okhttp:4.9.0")
+    implementation ("com.google.firebase:firebase-ai:1.0.0")
 }
