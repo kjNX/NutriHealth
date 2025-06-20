@@ -46,16 +46,16 @@ fun SettingsTab(onLogout: () -> Unit, modifier: Modifier = Modifier) {
 fun Preferences() {
     EasyCard(title = "Preferencias") {
         LabelSwitch(
-            checked = User.Preferences.useMetric,
+            checked = true,
             label = "Unidades métricas (kg, cm)",
             icon = Icons.Default.Difference,
-            onTap = { value -> User.Preferences.useMetric = value }
+            onTap = { /*value -> User.Preferences.useMetric = value*/ }
         )
         LabelSwitch(
-            checked = User.Preferences.notificationsEnabled,
+            checked = true,
             label = "Notificaciones",
             icon = Icons.Default.Notifications,
-            onTap = { value -> User.Preferences.notificationsEnabled }
+            onTap = { /* value -> User.Preferences.notificationsEnabled*/ }
         )
     }
 }
