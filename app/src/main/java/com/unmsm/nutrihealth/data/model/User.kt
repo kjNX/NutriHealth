@@ -36,11 +36,7 @@ object User {
         }
     }
 
-    /*
-    object Milestones {
-        var milestones: List<Milestone> = listOf()
-    }
-    */
+
 
     object Plan {
         var dailyCal: Int = 0
@@ -105,17 +101,5 @@ object User {
         }
     }
 
-    /*
-    data class Milestone(
-        var title: String,
-        var status: MilestoneStatus,
-        var description: String = ""
-    )
 
-    enum class MilestoneStatus {
-        COMPLETED,
-        IN_PROGRESS,
-        LOCKED
-    }
-    */
 }
