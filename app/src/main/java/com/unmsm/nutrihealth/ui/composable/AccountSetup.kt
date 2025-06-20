@@ -1,6 +1,5 @@
 package com.unmsm.nutrihealth.ui.composable
 
-import android.renderscript.ScriptGroup
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,32 +18,25 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SheetValue
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.unmsm.nutrihealth.data.model.UserTarget
-import com.unmsm.nutrihealth.logic.AccountSetupUiState
 import com.unmsm.nutrihealth.logic.AccountSetupViewModel
 import com.unmsm.nutrihealth.ui.composable.pages.profile.ValueCard
 import com.unmsm.nutrihealth.ui.theme.NutriHealthTheme
+import kotlinx.coroutines.launch
 
 data class ScreenData(
     val title: String,
@@ -216,17 +208,18 @@ fun EssentialData(
     onHeightChange: (String) -> Unit,
     onWeightChange: (String) -> Unit,
     onIntensityChange: (Float) -> Unit,
+    onNext: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var genderIndex by remember { mutableIntStateOf(0) }
-    val genderOptions = listOf("Hombre", "Mujer")
     Column(modifier = modifier) {
+        Text(text = "Datos personales", style = MaterialTheme.typography.titleLarge)
+        Text(text = "Información básica para calcular tus necesidades")
         ButtonField("Género", genderIndex, genderOptions, onGenderChange)
         InputField("Edad actual", age, onAgeChange, "años")
         InputField("Altura actual", height, onHeightChange, "cm")
         InputField("Peso actual", weight, onWeightChange, "kg")
         SliderField("Nivel de actividad", intensity, 0f..8f, 7, onIntensityChange)
-        Button(onClick = {}, modifier = Modifier.fillMaxWidth()) { Text(text = "Continuar") }
+        Button(onClick = onNext, modifier = Modifier.fillMaxWidth()) { Text(text = "Continuar") }
     }
 }
 
@@ -235,9 +228,12 @@ fun TargetData(
     targetWeight: String,
     onWeightChange: (String) -> Unit,
     onGoalChange: (UserTarget.Priority) -> Unit,
+    onNext: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier) {
+        Text(text = "Detalles de objetivo", style = MaterialTheme.typography.titleLarge)
+        Text(text = "Define tu meta específica")
         FormField(label = "Peso objetivo") {
             TextField(
                 value = targetWeight,
@@ -250,25 +246,36 @@ fun TargetData(
         FormField(label = "Meta principal") {
             RadioGroup(onTap = onGoalChange)
         }
-        Button(onClick = {}, modifier = Modifier.fillMaxWidth()) { Text(text = "Continuar") }
+        Button(onClick = onNext, modifier = Modifier.fillMaxWidth()) { Text(text = "Continuar") }
     }
 }
 
 @Composable
-fun Confirmation(modifier: Modifier = Modifier) {
+fun Confirmation(
+    tmb: Int,
+    recommendedKcal: Int,
+    protein: Int,
+    carbs: Int,
+    fats: Int,
+    timeToReach: Int,
+    onNext: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     Column(modifier = modifier) {
+        Text(text = "Resumen y análisis", style = MaterialTheme.typography.titleLarge)
+        Text(text = "Basado en tus datos, hemos calculado lo siguiente")
         FormField(label = "Metabolismo basal") {
-            Text(text = "1,720 kcal", style = MaterialTheme.typography.headlineMedium)
+            Text(text = "$tmb kcal", style = MaterialTheme.typography.headlineMedium)
         }
         FormField(label = "Cantidad de calorías recomendada") {
-            Text(text = "2,150 kcal", style = MaterialTheme.typography.headlineMedium)
+            Text(text = "$recommendedKcal kcal", style = MaterialTheme.typography.headlineMedium)
         }
         FormField(label = "Distribución de macronutrientes") {
             Row {
                 ValueCard(
                     title = "Proteínas",
                     percentage = 30,
-                    amount = 161,
+                    amount = protein,
                     color = Color(0xFF9CCC65), // verde claro
                     modifier = Modifier.weight(1f)
                 )
@@ -276,7 +283,7 @@ fun Confirmation(modifier: Modifier = Modifier) {
                 ValueCard(
                     title = "Carbohidratos",
                     percentage = 45,
-                    amount = 242,
+                    amount = carbs,
                     color = Color(0xFFFFF176), // amarillo suave
                     modifier = Modifier.weight(1f)
                 )
@@ -284,7 +291,7 @@ fun Confirmation(modifier: Modifier = Modifier) {
                 ValueCard(
                     title = "Grasas",
                     percentage = 25,
-                    amount = 60,
+                    amount = fats,
                     color = Color(0xFFE57373), // rojo rosado
                     modifier = Modifier.weight(1f)
                 )
@@ -292,41 +299,10 @@ fun Confirmation(modifier: Modifier = Modifier) {
         }
     }
     FormField(label = "Tiempo estimado para alcanzar su objetivo") {
-        Text(text = "12 semanas", style = MaterialTheme.typography.headlineMedium)
+        Text(text = "$timeToReach semanas", style = MaterialTheme.typography.headlineMedium)
     }
     Text(text = "Al hacer clic en \"Comenzar a utilizar NutriHealth\", usted acepta los Términos y Condiciones del Servicio.")
-}
-
-val setupList = listOf(
-    ScreenData(
-        "Datos personales",
-        "Información básica para calcular tus necesidades",
-        {
-
-        }
-    ),
-    ScreenData(
-        "Detalles de objetivo",
-        "Define tu meta específica",
-        {
-        }
-    ),
-    ScreenData(
-        "Resumen y análisis",
-        "Basado en tus datos, hemos calculado lo siguiente",
-        {
-
-        }
-    )
-)
-
-@Composable
-fun FullDisplay(screenData: ScreenData, modifier: Modifier = Modifier) {
-    Column {
-        Text(text = screenData.title, style = MaterialTheme.typography.titleLarge)
-        Text(text = screenData.description)
-        screenData.data()
-    }
+    Button(onClick = onNext, modifier = Modifier.fillMaxWidth()) { Text(text = "Comenzar a utilizar NutriHealth") }
 }
 
 @Composable
@@ -334,16 +310,52 @@ fun AccountSetupDisplay(
     modifier: Modifier = Modifier,
     viewModel: AccountSetupViewModel = viewModel()
 ) {
-    var pagerState = rememberPagerState(pageCount = { setupList.size })
+    var pagerState = rememberPagerState(pageCount = { 3 })
+    var coroutineScope = rememberCoroutineScope()
     var uiState = viewModel.uiState.collectAsState()
 
     Column {
-        ScreenTracker(pagerState.currentPage, setupList.size)
+        ScreenTracker(pagerState.currentPage, 3)
         HorizontalPager(state = pagerState) { i ->
             when(i) {
-                0 -> {}
-                1 -> {}
-                2 -> {}
+                0 -> {
+                    EssentialData(
+                        genderIndex = uiState.value.genderIndex,
+                        genderOptions = listOf("Hombre", "Mujer"),
+                        intensity = uiState.value.intensity,
+                        age = uiState.value.age,
+                        height = uiState.value.height,
+                        weight = uiState.value.weight,
+                        onGenderChange = { TODO() },
+                        onAgeChange = { TODO() },
+                        onHeightChange = { TODO() },
+                        onWeightChange = { uiState.value.copy(weight = it) },
+                        onIntensityChange = { uiState.value.copy(intensity = it) },
+                        onNext = {
+                            viewModel.submitData()
+                            coroutineScope.launch { pagerState.animateScrollToPage(1) }
+                        }
+                    )
+                }
+                1 -> {
+                    TargetData(
+                        targetWeight = uiState.value.targetWeight,
+                        onWeightChange = { TODO() },
+                        onGoalChange = { TODO() },
+                        onNext = { TODO() }
+                    )
+                }
+                2 -> {
+                    Confirmation(
+                        tmb = uiState.value.tmb,
+                        recommendedKcal = uiState.value.recommendedKcal,
+                        protein = uiState.value.protein,
+                        carbs = uiState.value.carbs,
+                        fats = uiState.value.fats,
+                        timeToReach = uiState.value.timeToReach,
+                        onNext = {}
+                    )
+                }
                 else -> {}
             }
         }
