@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">NutriHealth</string>
+    <string name="web_client">404270601914-9ibcrjj4ksm4otqpfs42v624tg8pe71d.apps.googleusercontent.com</string>
+
+    <string name="facebook_app_id">3185588448289510</string>
+    <string name="fb_login_protocol_scheme">fb3185588448289510</string>
+    <string name="facebook_client_token">afe6cd0cb4bc54108e197513cdee2ac7</string>
+
 </resources>
