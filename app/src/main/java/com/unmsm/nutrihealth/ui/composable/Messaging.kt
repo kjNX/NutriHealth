@@ -1,4 +1,4 @@
-/*package com.unmsm.nutrihealth.ui.composable
+package com.unmsm.nutrihealth.ui.composable
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -162,7 +162,7 @@ fun MessageBar(
             )
         )
         IconButton(onClick = onSend) {
-            Icon(imageVector = Icons.AutoMirrored.Filled.Send, contentDescription = "Enviar")
+            Icon(imageVector = Icons.AutoMirrored.Filled.Send, contentDescription = "Enviar") //hola
         }
     }
 }
@@ -177,4 +177,3 @@ private fun MessagingPreview() {
         Messaging(contact,onNavigate = {})
     }
 }
-*/
