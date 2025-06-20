@@ -44,7 +44,7 @@ import com.unmsm.nutrihealth.ui.theme.NutriHealthTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 enum class MainScreen {
-    Onboarding, Auth, Main, Scan, History, Profile, Messaging
+    Onboarding, Auth, Setup, Main, Scan, History, Profile, Messaging
 }
 
 @AndroidEntryPoint
@@ -107,6 +107,7 @@ class MainActivity : ComponentActivity() {
                 NavHost(
                     navController = navController,
                     startDestination = if (showOnboarding) MainScreen.Onboarding.name else MainScreen.Auth.name
+//                        MainScreen.Setup.name
                 ) {
                     composable(MainScreen.Onboarding.name) {
                         OnboardingScreen {
@@ -120,6 +121,11 @@ class MainActivity : ComponentActivity() {
                             onRegister = register,
                             onGoogleAccess = onGoogleAccess,
                             onFacebookAccess = { signInWithFacebook() }
+                        )
+                    }
+                    composable(MainScreen.Setup.name) {
+                        AccountSetupDisplay(
+                            onSetupFinish = { }
                         )
                     }
                     composable(MainScreen.Main.name) {
