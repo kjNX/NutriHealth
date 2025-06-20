@@ -8,7 +8,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
-import androidx.compose.material.icons.filled.KeyboardVoice
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
@@ -63,7 +62,6 @@ fun Messaging(contact: Contact, onNavigate: () -> Unit, viewModel: ChatViewModel
     }
 }
 
-
 @Composable
 fun MessageItem(contact: Contact, message: com.unmsm.nutrihealth.data.model.Message, modifier: Modifier = Modifier) {
     val isUser = message.isOwned
@@ -78,7 +76,7 @@ fun MessageItem(contact: Contact, message: com.unmsm.nutrihealth.data.model.Mess
             // Avatar for the contact
             Box(
                 modifier = Modifier
-                    .size(36.dp)
+                    .size(40.dp)
                     .clip(CircleShape)
                     .background(MaterialTheme.colorScheme.primary),
                 contentAlignment = Alignment.Center
@@ -86,7 +84,7 @@ fun MessageItem(contact: Contact, message: com.unmsm.nutrihealth.data.model.Mess
                 Text(
                     text = contact.name.first().toString(),
                     color = Color.White,
-                    style = MaterialTheme.typography.labelLarge
+                    style = MaterialTheme.typography.bodyLarge
                 )
             }
             Spacer(Modifier.width(8.dp))
@@ -98,17 +96,17 @@ fun MessageItem(contact: Contact, message: com.unmsm.nutrihealth.data.model.Mess
                     color = if (isUser) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
                     shape = RoundedCornerShape(16.dp)
                 )
-                .padding(horizontal = 12.dp, vertical = 8.dp)
-                .widthIn(max = 250.dp)
+                .padding(horizontal = 16.dp, vertical = 12.dp)
+                .widthIn(max = 280.dp)
         ) {
             Text(
                 text = message.content,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurface
             )
             Text(
                 text = message.time, // Mostrar la marca de tiempo
-                style = MaterialTheme.typography.labelSmall,
+                style = MaterialTheme.typography.bodySmall,
                 color = Color.Gray,
                 textAlign = TextAlign.End,
                 modifier = Modifier.fillMaxWidth()
@@ -116,7 +114,6 @@ fun MessageItem(contact: Contact, message: com.unmsm.nutrihealth.data.model.Mess
         }
     }
 }
-
 
 @Composable
 fun MessageBar(
@@ -128,16 +125,14 @@ fun MessageBar(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(8.dp),
+            .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        IconButton(onClick = { /* Acción de voz opcional */ }) {
-            Icon(imageVector = Icons.Default.KeyboardVoice, contentDescription = "Voice")
-        }
+        // Eliminamos el icono de voz para simplificar la UI
         TextField(
             value = message,
             onValueChange = onMessageChange,
-            placeholder = { Text("Escribe un mensaje...") },
+            placeholder = { Text("Escribe un mensaje...", style = MaterialTheme.typography.bodyLarge) },
             modifier = Modifier
                 .weight(1f)
                 .padding(horizontal = 8.dp),
