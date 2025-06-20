@@ -81,7 +81,7 @@ fun MainTopBar(onClick: List<() -> Unit>) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SubsectionTopBar(title: String, onNavigate: () -> Unit) {
+fun SubsectionTopBar(title: String, onNavigate: () -> Unit , modifier: Modifier = Modifier) {
     TopAppBar(
         title = {
             Text(text = title, style = MaterialTheme.typography.titleLarge)
@@ -93,7 +93,7 @@ fun SubsectionTopBar(title: String, onNavigate: () -> Unit) {
                     contentDescription = "Regresar"
                 )
             }
-        }
+        },  modifier = modifier
     )
 }
 
