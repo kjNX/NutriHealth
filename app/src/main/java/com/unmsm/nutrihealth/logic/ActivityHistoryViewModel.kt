@@ -1,4 +1,3 @@
-// ✅ ActivityHistoryViewModel.kt
 package com.unmsm.nutrihealth.logic
 
 import androidx.lifecycle.ViewModel
@@ -11,6 +10,7 @@ class ActivityHistoryViewModel : ViewModel() {
 
     private val firestore = FirebaseFirestore.getInstance()
 
+    // Método para guardar una carrera en Firestore
     fun saveRunToFirestore(run: Run, onResult: (Boolean, String) -> Unit) {
         val activity = mapOf(
             "timestamp" to run.timestamp,
@@ -29,6 +29,23 @@ class ActivityHistoryViewModel : ViewModel() {
             }
             .addOnFailureListener {
                 onResult(false, "Error al guardar: ${it.message}")
+            }
+    }
+
+    // Método para traer todas las carreras desde Firestore
+    fun fetchRunsFromFirestore(onResult: (List<Run>, String) -> Unit) {
+        firestore.collection("users")
+            .document(User.id)
+            .collection("activities")
+            .get()
+            .addOnSuccessListener { snapshot ->
+                val runs = snapshot.documents.mapNotNull { document ->
+                    document.toObject(Run::class.java)
+                }
+                onResult(runs, "Datos obtenidos correctamente de Firestore")
+            }
+            .addOnFailureListener {
+                onResult(emptyList(), "Error al obtener datos: ${it.message}")
             }
     }
 }

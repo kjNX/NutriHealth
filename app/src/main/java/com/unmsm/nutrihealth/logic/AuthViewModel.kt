@@ -3,10 +3,14 @@ package com.unmsm.nutrihealth.logic
 import androidx.lifecycle.ViewModel
 import com.google.android.gms.tasks.Task
 import com.google.firebase.Firebase
+import com.google.firebase.auth.FacebookAuthProvider
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthException
+import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
 import com.unmsm.nutrihealth.data.model.User
 import com.unmsm.nutrihealth.data.model.UserData
@@ -41,14 +45,6 @@ class AuthViewModel : ViewModel() {
                     val userDoc = firestore.collection("users").document(User.id)
                     val userData = userDoc.collection("data")
 
-                    val throwMe = { dbTask: Task<Void> ->
-                        if(!dbTask.isSuccessful) throw RuntimeException()
-                    }
-
-                    val write = { document: DocumentReference, obj: Any ->
-                        document.set(obj).addOnCompleteListener(throwMe)
-                    }
-
                     try {
                         // Creating new entries
                         // I hate callback hell
@@ -58,8 +54,8 @@ class AuthViewModel : ViewModel() {
 //                        write(userData.document("stats"), UserStatTrak)
 
                         onResult(true, "")
-                    } catch(_: RuntimeException) {
-                        onResult(false, "Error al guardar datos del usuario.")
+                    } catch (e: Exception) {
+                        onResult(false, "Error al guardar los datos del usuario.")
                     }
 
                 } else {
@@ -81,18 +77,6 @@ class AuthViewModel : ViewModel() {
 
                     val userDoc = firestore.collection("users").document(User.id)
                     val userData = userDoc.collection("data")
-
-                    val throwMe = { dbTask: Task<DocumentSnapshot> ->
-                    }
-
-                    val read = { ref: DocumentReference, exec: (DocumentSnapshot) -> Unit ->
-                        ref.get().addOnCompleteListener { dbTask ->
-                            val result = dbTask.result
-                            if(!dbTask.isSuccessful || !result.exists())
-                                throw RuntimeException()
-                            exec(result)
-                        }
-                    }
 
                     try {
                         read(userDoc) { res ->
@@ -123,22 +107,54 @@ class AuthViewModel : ViewModel() {
 //                            User.StatTrak.avgSpeed = data?.get("avgSpeed").toString().toFloat()
 //                        }
                         onResult(true, "")
-                    } catch (_: RuntimeException) {
-                        onResult(false, "Verificación de integridad fallida. Contacte al administrador")
+                    } catch (e: Exception) {
+                        onResult(false, "Error al obtener los datos del usuario.")
                     }
-/*
-                    firestore.collection("users").document(User.id).get()
-                        .addOnSuccessListener { document ->
-                            if (document.exists()) {
-                                onResult(true, "")
-                            } else {
-                                auth.signOut()
-                                onResult(false, "Este usuario no está registrado en NutriHealth.")
-                            }
-                        }
-                        .addOnFailureListener {
-                            onResult(false, "No se pudo verificar el usuario en la base de datos.")
-                        }*/
+                } else {
+                    val errorMessage = getFriendlyError(task.exception)
+                    onResult(false, errorMessage)
+                }
+            }
+    }
+
+    // Método para iniciar sesión con Google
+    fun loginWithGoogle(idToken: String, onResult: (Boolean, String) -> Unit) {
+        val credential = GoogleAuthProvider.getCredential(idToken, null)
+        auth.signInWithCredential(credential)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val user = auth.currentUser
+                    onResult(true, "Autenticación exitosa con Google.")
+                } else {
+                    val errorMessage = getFriendlyError(task.exception)
+                    onResult(false, errorMessage)
+                }
+            }
+    }
+
+    // Función para escribir datos en Firestore
+    private fun write(document: DocumentReference, obj: Any) {
+        document.set(obj).addOnCompleteListener {
+            if (!it.isSuccessful) throw RuntimeException()
+        }
+    }
+
+    // Función para leer datos desde Firestore
+    private fun read(ref: DocumentReference, exec: (DocumentSnapshot) -> Unit) {
+        ref.get().addOnCompleteListener { task ->
+            val result = task.result
+            if (!task.isSuccessful || result == null || !result.exists()) throw RuntimeException()
+            exec(result)
+        }
+    }
+    // Método para iniciar sesión con Facebook
+    fun loginWithFacebook(token: String, onResult: (Boolean, String) -> Unit) {
+        val credential = FacebookAuthProvider.getCredential(token)
+        auth.signInWithCredential(credential)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val user = auth.currentUser
+                    onResult(true, "Autenticación exitosa con Facebook.")
                 } else {
                     val errorMessage = getFriendlyError(task.exception)
                     onResult(false, errorMessage)

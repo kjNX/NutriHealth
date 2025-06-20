@@ -14,8 +14,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.*
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.unmsm.nutrihealth.data.model.Contact
+
+// Definir color verde claro
+val LightGreen = Color(0xFF81C784)
 
 @Composable
 fun ContactList(
@@ -41,7 +45,9 @@ fun ContactListItem(
         modifier = modifier
             .clickable(onClick = onClick)
             .fillMaxWidth()
-            .padding(12.dp),
+            .padding(12.dp)
+            .background(LightGreen.copy(alpha = 0.1f)) // Fondo verde claro suave
+            .clip(RoundedCornerShape(12.dp)),
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Avatar con inicial
@@ -49,7 +55,7 @@ fun ContactListItem(
             modifier = Modifier
                 .size(48.dp)
                 .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primary),
+                .background(LightGreen), // Avatar en verde claro
             contentAlignment = Alignment.Center
         ) {
             Text(
@@ -84,7 +90,8 @@ fun ResourceCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp),
+            .padding(horizontal = 8.dp)
+            .background(LightGreen.copy(alpha = 0.05f)), // Fondo verde claro suave en la tarjeta
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
@@ -108,8 +115,30 @@ fun ResourceCard(
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                 contentDescription = "Ir",
-                tint = MaterialTheme.colorScheme.primary
+                tint = LightGreen // Ícono de flecha en verde claro
             )
         }
     }
+}
+
+// Vista previa de la lista de contactos
+@Preview(showBackground = true)
+@Composable
+fun PreviewContactList() {
+    val sampleContacts = listOf(
+        Contact(name = "Juan Pérez", description = "Desarrollador de Software"),
+        Contact(name = "María López", description = "Diseñadora UX/UI"),
+        Contact(name = "Carlos García", description = "Gerente de Producto")
+    )
+    ContactList(onSelect = {}, contacts = sampleContacts)
+}
+
+// Vista previa de la tarjeta de recursos
+@Preview(showBackground = true)
+@Composable
+fun PreviewResourceCard() {
+    ResourceCard(
+        title = "Recurso Educativo",
+        description = "Una descripción detallada del recurso educativo disponible."
+    )
 }

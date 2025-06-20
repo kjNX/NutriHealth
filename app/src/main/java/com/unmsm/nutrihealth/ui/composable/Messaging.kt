@@ -1,4 +1,4 @@
-/*package com.unmsm.nutrihealth.ui.composable
+package com.unmsm.nutrihealth.ui.composable
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -8,7 +8,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
-import androidx.compose.material.icons.filled.KeyboardVoice
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
@@ -26,6 +25,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
 fun Messaging(contact: Contact, onNavigate: () -> Unit, viewModel: ChatViewModel = viewModel()) {
+    // Observar los mensajes del ViewModel
     val messages by viewModel.messages.collectAsState()
     var userInput by remember { mutableStateOf("") }
 
@@ -37,8 +37,9 @@ fun Messaging(contact: Contact, onNavigate: () -> Unit, viewModel: ChatViewModel
                 onMessageChange = { userInput = it },
                 onSend = {
                     if (userInput.isNotBlank()) {
+                        // Enviar el mensaje del usuario al ViewModel
                         viewModel.sendMessage(userInput)
-                        userInput = ""
+                        userInput = "" // Limpiar la entrada después de enviar
                     }
                 }
             )
@@ -54,16 +55,15 @@ fun Messaging(contact: Contact, onNavigate: () -> Unit, viewModel: ChatViewModel
             items(messages) { msg ->
                 MessageItem(
                     contact = contact,
-                    message = Message(msg.content, msg.timestamp, msg.isUser)
+                    message = msg // Mostrar el contenido del mensaje, con timestamp y propiedad de usuario
                 )
             }
         }
     }
 }
 
-
 @Composable
-fun MessageItem(contact: Contact, message: Message, modifier: Modifier = Modifier) {
+fun MessageItem(contact: Contact, message: com.unmsm.nutrihealth.data.model.Message, modifier: Modifier = Modifier) {
     val isUser = message.isOwned
     Row(
         modifier = modifier
@@ -73,10 +73,10 @@ fun MessageItem(contact: Contact, message: Message, modifier: Modifier = Modifie
         verticalAlignment = Alignment.Bottom
     ) {
         if (!isUser) {
-            // Avatar del contacto
+            // Avatar for the contact
             Box(
                 modifier = Modifier
-                    .size(36.dp)
+                    .size(40.dp)
                     .clip(CircleShape)
                     .background(MaterialTheme.colorScheme.primary),
                 contentAlignment = Alignment.Center
@@ -84,7 +84,7 @@ fun MessageItem(contact: Contact, message: Message, modifier: Modifier = Modifie
                 Text(
                     text = contact.name.first().toString(),
                     color = Color.White,
-                    style = MaterialTheme.typography.labelLarge
+                    style = MaterialTheme.typography.bodyLarge
                 )
             }
             Spacer(Modifier.width(8.dp))
@@ -96,34 +96,21 @@ fun MessageItem(contact: Contact, message: Message, modifier: Modifier = Modifie
                     color = if (isUser) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
                     shape = RoundedCornerShape(16.dp)
                 )
-                .padding(horizontal = 12.dp, vertical = 8.dp)
-                .widthIn(max = 250.dp)
+                .padding(horizontal = 16.dp, vertical = 12.dp)
+                .widthIn(max = 280.dp)
         ) {
             Text(
                 text = message.content,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurface
             )
             Text(
-                text = message.time,
-                style = MaterialTheme.typography.labelSmall,
+                text = message.time, // Mostrar la marca de tiempo
+                style = MaterialTheme.typography.bodySmall,
                 color = Color.Gray,
                 textAlign = TextAlign.End,
                 modifier = Modifier.fillMaxWidth()
             )
-        }
-    }
-}
-
-@Composable
-fun MessageLog(contact: Contact, messages: List<Message>, modifier: Modifier = Modifier) {
-    LazyColumn(
-        modifier = modifier
-            .background(MaterialTheme.colorScheme.background)
-            .padding(vertical = 8.dp)
-    ) {
-        items(messages) { message ->
-            MessageItem(contact = contact, message = message)
         }
     }
 }
@@ -138,16 +125,14 @@ fun MessageBar(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(8.dp),
+            .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        IconButton(onClick = { /* Acción de voz opcional */ }) {
-            Icon(imageVector = Icons.Default.KeyboardVoice, contentDescription = "Voice")
-        }
+        // Eliminamos el icono de voz para simplificar la UI
         TextField(
             value = message,
             onValueChange = onMessageChange,
-            placeholder = { Text("Escribe un mensaje...") },
+            placeholder = { Text("Escribe un mensaje...", style = MaterialTheme.typography.bodyLarge) },
             modifier = Modifier
                 .weight(1f)
                 .padding(horizontal = 8.dp),
@@ -167,14 +152,12 @@ fun MessageBar(
     }
 }
 
-
 @Preview
 @Composable
 private fun MessagingPreview() {
     val contact = Contact("ML", "")
 
     NutriHealthTheme {
-        Messaging(contact,onNavigate = {})
+        Messaging(contact, onNavigate = {})
     }
 }
-*/
