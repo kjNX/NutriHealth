@@ -32,6 +32,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.unmsm.nutrihealth.R
 import com.unmsm.nutrihealth.data.model.User
+import com.unmsm.nutrihealth.data.model.UserPhysicalStat
 
 @Composable
 fun TrackingDisplay(modifier: Modifier = Modifier) {
@@ -71,7 +72,7 @@ fun TrackerCard(modifier: Modifier = Modifier) {
                 .padding(bottom = 16.dp)
         ) {
             Column {
-                Text(text = User.StatTrak.parseTime(), style = MaterialTheme.typography.headlineLarge)
+                Text(text = UserPhysicalStat.parseTime(), style = MaterialTheme.typography.headlineLarge)
                 Text(text = "Completa tu objetivo", style = MaterialTheme.typography.labelSmall)
             }
             Button(onClick = {}) {
@@ -81,21 +82,21 @@ fun TrackerCard(modifier: Modifier = Modifier) {
         Row {
             StatCard(
                 icon = Icons.AutoMirrored.Filled.DirectionsRun,
-                value = User.StatTrak.mileage.toString(),
+                value = UserPhysicalStat.mileage.toString(),
                 measure = "km",
                 modifier = Modifier.weight(1f)
             )
             Spacer(Modifier.width(8.dp))
             StatCard(
                 icon = Icons.Default.LocalFireDepartment,
-                value = User.StatTrak.cal.toString(),
+                value = UserPhysicalStat.cal.toString(),
                 measure = "cal",
                 modifier = Modifier.weight(1f)
             )
             Spacer(Modifier.width(8.dp))
             StatCard(
                 icon = Icons.Default.Speed,
-                value = User.StatTrak.avgSpeed.toString(),
+                value = UserPhysicalStat.avgSpeed.toString(),
                 measure = "km/h",
                 modifier = Modifier.weight(1f)
             )

@@ -25,6 +25,7 @@ espressoCore = "3.5.1"
 lifecycleRuntimeKtx = "2.6.1"
 datstore = "1.0.0"
 lifecycle = "2.6.1"
+firebaseStorage = "21.0.2"
 
 
 [plugins]
@@ -95,3 +96,4 @@ androidx-datastore-preferences = { module = "androidx.datastore:datastore-prefer
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
+firebase-storage = { group = "com.google.firebase", name = "firebase-storage", version.ref = "firebaseStorage" }
