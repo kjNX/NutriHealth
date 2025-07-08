@@ -212,7 +212,7 @@ fun EssentialData(
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier) {
-        Text(text = "Datos personales", style = MaterialTheme.typography.titleLarge)
+        Text(text = "Datos personales", style = MaterialTheme.typography.headlineMedium)
         Text(text = "Información básica para calcular tus necesidades")
         ButtonField("Género", genderIndex, genderOptions, onGenderChange)
         InputField("Edad actual", age, onAgeChange, "años")
@@ -232,7 +232,7 @@ fun TargetData(
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier) {
-        Text(text = "Detalles de objetivo", style = MaterialTheme.typography.titleLarge)
+        Text(text = "Detalles de objetivo", style = MaterialTheme.typography.headlineMedium)
         Text(text = "Define tu meta específica")
         FormField(label = "Peso objetivo") {
             TextField(
@@ -262,7 +262,7 @@ fun Confirmation(
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier) {
-        Text(text = "Resumen y análisis", style = MaterialTheme.typography.titleLarge)
+        Text(text = "Resumen y análisis", style = MaterialTheme.typography.headlineMedium)
         Text(text = "Basado en tus datos, hemos calculado lo siguiente")
         FormField(label = "Metabolismo basal") {
             Text(text = "$tmb kcal", style = MaterialTheme.typography.headlineMedium)
@@ -296,17 +296,18 @@ fun Confirmation(
                     modifier = Modifier.weight(1f)
                 )
             }
+            FormField(label = "Tiempo estimado para alcanzar su objetivo") {
+                Text(text = "$timeToReach semanas", style = MaterialTheme.typography.headlineMedium)
+            }
+            Text(text = "Al hacer clic en \"Comenzar a utilizar NutriHealth\", usted acepta los Términos y Condiciones del Servicio.")
+            Button(onClick = onNext, modifier = Modifier.fillMaxWidth()) { Text(text = "Comenzar a utilizar NutriHealth") }
         }
     }
-    FormField(label = "Tiempo estimado para alcanzar su objetivo") {
-        Text(text = "$timeToReach semanas", style = MaterialTheme.typography.headlineMedium)
-    }
-    Text(text = "Al hacer clic en \"Comenzar a utilizar NutriHealth\", usted acepta los Términos y Condiciones del Servicio.")
-    Button(onClick = onNext, modifier = Modifier.fillMaxWidth()) { Text(text = "Comenzar a utilizar NutriHealth") }
 }
 
 @Composable
 fun AccountSetupDisplay(
+    onSetupFinish: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: AccountSetupViewModel = viewModel()
 ) {
@@ -314,7 +315,7 @@ fun AccountSetupDisplay(
     var coroutineScope = rememberCoroutineScope()
     var uiState = viewModel.uiState.collectAsState()
 
-    Column {
+    Column(modifier = modifier.padding(8.dp)) {
         ScreenTracker(pagerState.currentPage, 3)
         HorizontalPager(state = pagerState) { i ->
             when(i) {
@@ -326,23 +327,28 @@ fun AccountSetupDisplay(
                         age = uiState.value.age,
                         height = uiState.value.height,
                         weight = uiState.value.weight,
-                        onGenderChange = { TODO() },
-                        onAgeChange = { TODO() },
-                        onHeightChange = { TODO() },
-                        onWeightChange = { uiState.value.copy(weight = it) },
-                        onIntensityChange = { uiState.value.copy(intensity = it) },
+                        onGenderChange = viewModel::setGenderIndex,
+                        onAgeChange = viewModel::setAge,
+                        onHeightChange = viewModel::setHeight,
+                        onWeightChange = viewModel::setWeight,
+                        onIntensityChange = viewModel::setIntensity,
                         onNext = {
                             viewModel.submitData()
                             coroutineScope.launch { pagerState.animateScrollToPage(1) }
-                        }
+                        },
+                        modifier = Modifier.fillMaxSize()
                     )
                 }
                 1 -> {
                     TargetData(
                         targetWeight = uiState.value.targetWeight,
-                        onWeightChange = { TODO() },
-                        onGoalChange = { TODO() },
-                        onNext = { TODO() }
+                        onWeightChange = viewModel::setTargetWeight,
+                        onGoalChange = viewModel::setMainGoal,
+                        onNext = {
+                            viewModel.submitTarget()
+                            coroutineScope.launch { pagerState.animateScrollToPage(2) }
+                        },
+                        modifier = Modifier.fillMaxSize()
                     )
                 }
                 2 -> {
@@ -353,7 +359,11 @@ fun AccountSetupDisplay(
                         carbs = uiState.value.carbs,
                         fats = uiState.value.fats,
                         timeToReach = uiState.value.timeToReach,
-                        onNext = {}
+                        onNext = {
+                            viewModel.confirm()
+                            onSetupFinish()
+                        },
+                        modifier = Modifier.fillMaxSize()
                     )
                 }
                 else -> {}
@@ -366,6 +376,6 @@ fun AccountSetupDisplay(
 @Composable
 private fun Preview() {
     NutriHealthTheme {
-        AccountSetupDisplay()
+        AccountSetupDisplay({})
     }
 }

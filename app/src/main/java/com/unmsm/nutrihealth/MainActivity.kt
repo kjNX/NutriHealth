@@ -45,7 +45,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import androidx.activity.viewModels
 
 enum class MainScreen {
-    Onboarding, Auth, Main, Scan, History, Profile, Messaging
+    Onboarding, Auth, Setup, Main, Scan, History, Profile, Messaging
 }
 
 @AndroidEntryPoint
@@ -112,11 +112,10 @@ class MainActivity : ComponentActivity() {
 
 
 
-
-
                 NavHost(
                     navController = navController,
                     startDestination = if (showOnboarding) MainScreen.Onboarding.name else MainScreen.Auth.name
+//                        MainScreen.Setup.name
                 ) {
                     composable(MainScreen.Onboarding.name) {
                         OnboardingScreen {
@@ -129,6 +128,11 @@ class MainActivity : ComponentActivity() {
                             onLogin = login,
                             onRegister = register,
                             onGoogleAccess = onGoogleAccess,
+                        )
+                    }
+                    composable(MainScreen.Setup.name) {
+                        AccountSetupDisplay(
+                            onSetupFinish = { }
                         )
                     }
                     composable(MainScreen.Main.name) {

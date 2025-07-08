@@ -8,19 +8,11 @@ object UserTarget {
     @PrimaryKey
     var id: Int = 0
     var targetWeight: Float = 0f
-    var dailyCal: Int = 0
-    var protein: Int = 0
-    var carbs: Int = 0
-    var fats: Int = 0
     var priority: Priority = Priority.Health
 
     fun reset() {
         id = 0
         targetWeight = 0f
-        dailyCal = 0
-        protein = 0
-        carbs = 0
-        fats = 0
     }
 
     enum class Priority(val description: String) {

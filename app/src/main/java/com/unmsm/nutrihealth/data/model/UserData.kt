@@ -21,8 +21,8 @@ object UserData {
         name = ""
         email = ""
     }
-    enum class Gender(int: Int, icon: ImageVector) {
-        Male(0, Icons.Default.Male),
-        Female(1, Icons.Default.Female)
+    enum class Gender(val int: Int, val icon: ImageVector, val bonus: Int) {
+        Male(0, Icons.Default.Male, 5),
+        Female(1, Icons.Default.Female, -161)
     }
 }
