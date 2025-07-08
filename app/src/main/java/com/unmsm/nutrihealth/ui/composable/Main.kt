@@ -1,13 +1,17 @@
 package com.unmsm.nutrihealth.ui.composable
 
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.unmsm.nutrihealth.data.model.Contact
@@ -41,6 +45,7 @@ fun Composite(
     }
 }
 
+
 @Composable
 fun MainDisplay(
     navController: NavController,
@@ -56,7 +61,7 @@ fun MainDisplay(
 
     Scaffold(
         topBar = { MainTopBar(onTopBarClick) },
-        bottomBar = { NavBar(pagerState) }, // usa scrollToPage para navegar
+        bottomBar = { NavBar(pagerState) },
         floatingActionButton = {
             if (pagerState.currentPage != 2) {
                 EntryFABs(
@@ -75,6 +80,8 @@ fun MainDisplay(
                 .padding(innerPadding)
         )
 
+
+
         if (showDialog) {
             TypeAddDialog(
                 onDismiss = hideDialog,
@@ -88,3 +95,4 @@ fun MainDisplay(
         }
     }
 }
+

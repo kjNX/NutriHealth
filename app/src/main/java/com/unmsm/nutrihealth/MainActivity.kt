@@ -55,6 +55,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var callbackManager: CallbackManager
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
     private lateinit var gotoAfterLogin: (String) -> Unit
+
     // Usar viewModels() para inyectar AuthViewModel
     private val authViewModel: AuthViewModel by viewModels()
 
@@ -109,17 +110,7 @@ class MainActivity : ComponentActivity() {
                     googleSignInLauncher.launch(intent)
                 }
 
-                // Facebook login via lambda
-                val onFacebookAccess = { token: String ->
-                    authViewModel.loginWithFacebook(token) { success, msg ->
-                        if (success) {
-                            Toast.makeText(this@MainActivity, "Bienvenido", Toast.LENGTH_SHORT).show()
-                            gotoAfterLogin(MainScreen.Main.name)
-                        } else {
-                            Toast.makeText(this@MainActivity, msg, Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                }
+
 
 
 
@@ -138,7 +129,6 @@ class MainActivity : ComponentActivity() {
                             onLogin = login,
                             onRegister = register,
                             onGoogleAccess = onGoogleAccess,
-                            onFacebookAccess = { signInWithFacebook() }
                         )
                     }
                     composable(MainScreen.Main.name) {
@@ -154,10 +144,17 @@ class MainActivity : ComponentActivity() {
                             }
                         )
                     }
+
                     composable(MainScreen.Scan.name) { Scan(onNavigate = navigate) }
                     composable(MainScreen.History.name) {
-                        HistoryScreen(navController = navController)}
-                    composable(MainScreen.Profile.name) { Profile(onNavigate = navigate, onLogout = logout) }
+                        HistoryScreen(navController = navController)
+                    }
+                    composable(MainScreen.Profile.name) {
+                        Profile(
+                            onNavigate = navigate,
+                            onLogout = logout
+                        )
+                    }
                     composable("${MainScreen.Messaging.name}/{contactName}") { backStack ->
                         val name = backStack.arguments?.getString("contactName") ?: ""
                         val contact = getContacts().find { it.name == name } ?: Contact(name, "")
@@ -172,6 +169,7 @@ class MainActivity : ComponentActivity() {
         super.onActivityResult(requestCode, resultCode, data)
         callbackManager.onActivityResult(requestCode, resultCode, data)
     }
+
     // Lanzador de Google
     val googleSignInLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -182,7 +180,11 @@ class MainActivity : ComponentActivity() {
                     // Asegurarse de que idToken no es null antes de pasarlo
                     authViewModel.loginWithGoogle(idToken) { success, msg ->
                         if (success) {
-                            Toast.makeText(this, "Bienvenido, ${account.displayName}", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(
+                                this,
+                                "Bienvenido, ${account.displayName}",
+                                Toast.LENGTH_SHORT
+                            ).show()
                             gotoAfterLogin(MainScreen.Main.name)
                         } else {
                             Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
@@ -197,7 +199,6 @@ class MainActivity : ComponentActivity() {
                 Toast.makeText(this, "Error de inicio con Google", Toast.LENGTH_SHORT).show()
             }
         }
-
 
 
     // Función para iniciar sesión con Facebook
@@ -297,6 +298,7 @@ class MainActivity : ComponentActivity() {
                 PermissionUtils.locationPermissions.any {
                     ActivityCompat.shouldShowRequestPermissionRationale(activity, it)
                 } -> showRationale = true
+
                 else -> permissionLauncher.launch(PermissionUtils.allPermissions)
             }
         }

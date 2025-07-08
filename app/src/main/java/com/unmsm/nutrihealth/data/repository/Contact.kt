@@ -1,9 +1,8 @@
 package com.unmsm.nutrihealth.data.repository
 
 import com.unmsm.nutrihealth.data.model.Contact
-
 fun getContacts() = listOf(
-    Contact("ML", "Tu asistente inteligente"),
-    Contact("Dra. Maria Lopez", "Nutricionista"),
-    Contact("Carlos Rodriguez", "Entrenador personal")
+    Contact("Asesor de Bienestar", "Recomendaciones personalizadas de salud y bienestar"),
+    Contact("Nutrición", "Planificación de dieta y asesoría nutricional"),
+    Contact("Entrenamiento Personal", "Planes de entrenamiento personalizados")
 )

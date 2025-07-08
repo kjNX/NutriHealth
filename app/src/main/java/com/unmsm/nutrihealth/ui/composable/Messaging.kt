@@ -37,8 +37,10 @@ fun Messaging(contact: Contact, onNavigate: () -> Unit, viewModel: ChatViewModel
                 onMessageChange = { userInput = it },
                 onSend = {
                     if (userInput.isNotBlank()) {
+                        // Especifica el tipo de experto que el usuario ha seleccionado
+                        val expertType = "Nutrición"  // Cambia esto dependiendo de la selección del usuario
                         // Enviar el mensaje del usuario al ViewModel
-                        viewModel.sendMessage(userInput)
+                        viewModel.sendMessage(expertType, userInput)
                         userInput = "" // Limpiar la entrada después de enviar
                     }
                 }

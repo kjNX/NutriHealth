@@ -77,7 +77,6 @@ fun AuthDisplay(
     onLogin: (String, String) -> Unit,
     onRegister: (String, String, String) -> Unit,
     onGoogleAccess: () -> Unit,
-    onFacebookAccess: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     var isLoggingIn by remember { mutableStateOf(true) }
@@ -152,18 +151,17 @@ fun AuthDisplay(
             ) {
                 Text(text = if (isLoggingIn) "Iniciar sesión" else "Registrarse")
             }
-            SocialLoginButton(
-                icon = R.drawable.google,
-                networkName = "Google",
-                onClick = onGoogleAccess,
-                modifier = Modifier.fillMaxWidth()
-            )
-            SocialLoginButton(
-                icon = R.drawable.facebook,
-                networkName = "Facebook",
-                onClick = onFacebookAccess,
-                modifier = Modifier.fillMaxWidth()
-            )
+
+            // Solo mostrar SocialLogin para iniciar sesión (isLoggingIn)
+            if (isLoggingIn) {
+                SocialLoginButton(
+                    icon = R.drawable.google,
+                    networkName = "Google",
+                    onClick = onGoogleAccess,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -179,3 +177,4 @@ fun AuthDisplay(
         }
     }
 }
+
