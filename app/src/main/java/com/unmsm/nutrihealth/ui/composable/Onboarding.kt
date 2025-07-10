@@ -5,144 +5,206 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.unmsm.nutrihealth.R
-import com.unmsm.nutrihealth.ui.theme.NutriHealthTheme
-import kotlinx.coroutines.launch
 
-// i'm putting everything on the same file because no other file cares about the onboarding
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.graphics.Color
 
-data class OnboardingData(
-    @DrawableRes val image: Int,
-    val title: String,
-    val description: String
-)
+import androidx.compose.ui.text.font.FontWeight
 
-val onboardingList = listOf(
-    OnboardingData(
-        title = "Bienvenido a NutriHealth",
-        description = "Tu asistente personal para alcanzar tus objetivos de salud y fitness",
-        image = R.drawable.logo_nutrihealth
-    ),
-    OnboardingData(
-        title = "Seguimiento completo",
-        description = "Registra tu alimentación, actividad física y progreso en un solo lugar",
-        image = R.drawable.logo_nutrihealth
-    ),
-    OnboardingData(
-        title = "Personalizado para ti",
-        description = "Recibe recomendaciones adaptadas a tus objetivos y preferencias",
-        image = R.drawable.logo_nutrihealth
+import androidx.compose.ui.unit.sp
+import com.unmsm.nutrihealth.data.model.CurrentUser
+import com.unmsm.nutrihealth.data.model.UserInitial
+import com.unmsm.nutrihealth.data.model.UserPlan
+import com.unmsm.nutrihealth.data.model.UserTarget
 
-    )
-)
+import com.unmsm.nutrihealth.logic.AuthViewModel
+
+
+// ✅ REFACTORED Onboarding Compose Flow – recolectar información paso a paso sin pantalla de bienvenida
 
 @Composable
-fun OnboardingPage(onboardingData: OnboardingData, modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Image(
-            painter = painterResource(onboardingData.image),
-            contentDescription = null
-        )
-        Text(
-            text = onboardingData.title,
-            style = MaterialTheme.typography.titleLarge
-        )
-        Text(
-            text = onboardingData.description,
-            style = MaterialTheme.typography.bodyMedium,
-            textAlign = TextAlign.Center
-        )
-    }
-}
-
-@Composable
-fun OnboardingScreen(
-    modifier: Modifier = Modifier,
+fun OnboardingFlow(
+    viewModel: AuthViewModel,
     onFinish: () -> Unit
 ) {
-    val pagerState = rememberPagerState { onboardingList.size }
-    val coroutineScope = rememberCoroutineScope()
-    val isFirstPage = pagerState.currentPage == 0
-    val isLastPage = pagerState.currentPage == pagerState.pageCount - 1
+    var step by remember { mutableStateOf(0) }
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        // 👉 Botón SALTAR arriba a la derecha
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 8.dp),
-            horizontalArrangement = Arrangement.End
-        ) {
-            TextButton(onClick = onFinish) {
-                Text("Saltar")
-            }
-        }
+    val gender = remember { mutableStateOf("") }
+    val age = remember { mutableStateOf("") }
+    val height = remember { mutableStateOf("") }
+    val weight = remember { mutableStateOf("") }
+    val activity = remember { mutableStateOf("") }
+    val goal = remember { mutableStateOf("") }
 
-        // 👉 Páginas del onboarding
-        HorizontalPager(state = pagerState, modifier = Modifier.weight(1f)) { page ->
-            OnboardingPage(onboardingList[page])
-        }
+    when (step) {
+        0 -> UserInfoScreen(
+            gender = gender.value,
+            age = age.value,
+            height = height.value,
+            weight = weight.value,
+            onGenderChange = { gender.value = it },
+            onAgeChange = { age.value = it },
+            onHeightChange = { height.value = it },
+            onWeightChange = { weight.value = it },
+            onNext = { step++ }
+        )
+        1 -> ActivityLevelScreen(
+            selected = activity.value,
+            onSelect = { activity.value = it },
+            onNext = { step++ }
+        )
+        2 -> GoalSelectionScreen(
+            selected = goal.value,
+            onSelect = { goal.value = it },
+            onSetupFinish = {
+                val userInitial = UserInitial(
+                    userId = CurrentUser.user?.id ?: "",
+                    edad = age.value.toIntOrNull() ?: 0,
+                    altura = height.value.toFloatOrNull() ?: 0f,
+                    pesoInicial = weight.value.toFloatOrNull() ?: 0f,
+                    genero = gender.value
+                )
 
-        // 👉 Botones de navegación
-        Row(
-            horizontalArrangement = if (isFirstPage) Arrangement.End else Arrangement.SpaceBetween,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            if (!isFirstPage) {
-                Button(onClick = {
-                    coroutineScope.launch {
-                        pagerState.animateScrollToPage(pagerState.currentPage - 1)
+                val userTarget = UserTarget(
+                    id = 1,
+                    targetWeight = weight.value.toDoubleOrNull() ?: 0.0,
+                    priority = when (goal.value) {
+                        "Bajar de peso" -> UserTarget.Priority.Weight
+                        "Ganar masa muscular" -> UserTarget.Priority.Muscle
+                        else -> UserTarget.Priority.Health
                     }
-                }) {
-                    Text("Regresar")
-                }
-            }
+                )
 
-            Button(onClick = {
-                if (isLastPage) {
-                    onFinish()
-                } else {
-                    coroutineScope.launch {
-                        pagerState.animateScrollToPage(pagerState.currentPage + 1)
-                    }
-                }
-            }) {
-                Text(if (isLastPage) "Comenzar" else "Siguiente")
+                val userPlan = UserPlan(
+                    userId = CurrentUser.user?.id ?: "",
+                    tmb = 1600f,
+                    energia = 2000f,
+                    proteinas = 100f,
+                    grasas = 70f,
+                    agua = 2.5f
+                )
+
+//                viewModel.signup(
+//                    name = CurrentUser.user?.name ?: "",
+//                    email = CurrentUser.user?.email ?: "",
+//                    password = "temporal",
+//                    userInitial = userInitial,
+//                    userTarget = userTarget,
+//                    userPlan = userPlan,
+//                    onResult = { success, _ ->
+//                        if (success) {
+//                            onFinish() // Te lleva a Main.name después del onboarding
+//                        }
+//                    }
+//                )
             }
-        }
+        )
     }
 }
 
-
-@Preview(showBackground = true)
 @Composable
-fun OnboardingScreenPreview() {
-    NutriHealthTheme {
-        OnboardingScreen(onFinish = {})
+fun UserInfoScreen(
+    gender: String,
+    age: String,
+    height: String,
+    weight: String,
+    onGenderChange: (String) -> Unit,
+    onAgeChange: (String) -> Unit,
+    onHeightChange: (String) -> Unit,
+    onWeightChange: (String) -> Unit,
+    onNext: () -> Unit
+) {
+    Column(modifier = Modifier.fillMaxSize().padding(24.dp)) {
+        Text("Hablemos sobre ti", style = MaterialTheme.typography.headlineSmall)
+        DropdownMenuBox("Género", gender, listOf("Masculino", "Femenino", "Otro"), onGenderChange)
+        OutlinedTextField(value = age, onValueChange = { onAgeChange(it) }, label = { Text("Edad") })
+        OutlinedTextField(value = height, onValueChange = { onHeightChange(it) }, label = { Text("Altura (cm)") })
+        OutlinedTextField(value = weight, onValueChange = { onWeightChange(it) }, label = { Text("Peso (kg)") })
+        Button(onClick = onNext, modifier = Modifier.align(Alignment.End)) { Text("Siguiente") }
+    }
+}
+
+@Composable
+fun ActivityLevelScreen(
+    selected: String,
+    onSelect: (String) -> Unit,
+    onNext: () -> Unit
+) {
+    val options = listOf("Sedentario", "Moderado", "Activo", "Muy activo")
+
+    Column(modifier = Modifier.fillMaxSize().padding(24.dp)) {
+        Text("¿Cuál es tu nivel de actividad?", style = MaterialTheme.typography.headlineSmall)
+        options.forEach {
+            Button(
+                onClick = { onSelect(it) },
+                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (selected == it) MaterialTheme.colorScheme.primary else Color.LightGray
+                )
+            ) { Text(it) }
+        }
+        Button(onClick = onNext, modifier = Modifier.align(Alignment.End)) { Text("Siguiente") }
+    }
+}
+
+@Composable
+fun GoalSelectionScreen(
+    selected: String,
+    onSelect: (String) -> Unit,
+    onSetupFinish: () -> Unit
+) {
+    val goals = listOf("Bajar de peso", "Tonificar", "Ganar masa muscular", "Mejorar hábitos")
+
+    Column(modifier = Modifier.fillMaxSize().padding(24.dp)) {
+        Text("¿Cuál es tu objetivo?", style = MaterialTheme.typography.headlineSmall)
+        goals.forEach {
+            Button(
+                onClick = { onSelect(it) },
+                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (selected == it) MaterialTheme.colorScheme.primary else Color.LightGray
+                )
+            ) { Text(it) }
+        }
+        Button(onClick = onSetupFinish, modifier = Modifier.align(Alignment.End)) { Text("Finalizar") }
+    }
+}
+
+@Composable
+fun DropdownMenuBox(label: String, value: String, options: List<String>, onValueSelected: (String) -> Unit) {
+    var expanded by remember { mutableStateOf(false) }
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(text = label, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+        Box(modifier = Modifier.fillMaxWidth().background(Color.LightGray, RoundedCornerShape(8.dp)).padding(12.dp)) {
+            Text(text = if (value.isEmpty()) "Selecciona..." else value)
+            DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                options.forEach {
+                    DropdownMenuItem(text = { Text(it) }, onClick = {
+                        onValueSelected(it)
+                        expanded = false
+                    })
+                }
+            }
+        }
     }
 }

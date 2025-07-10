@@ -9,15 +9,12 @@ import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.firestore
 import com.unmsm.nutrihealth.data.model.User
-import com.unmsm.nutrihealth.data.model.UserData
-import com.unmsm.nutrihealth.data.model.UserTarget
 
 class AuthViewModel : ViewModel() {
     private val auth = Firebase.auth
     private val firestore = Firebase.firestore
 
     fun signup(name: String, email: String, password: String, onResult: (Boolean, String) -> Unit) {
-
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener {
                 if (it.isSuccessful) {
@@ -25,17 +22,19 @@ class AuthViewModel : ViewModel() {
                     User.name = name
                     User.email = email
 
-                    val userDoc = firestore.collection("users").document(User.id)
+                    val userDoc = firestore.collection("user").document(User.id)
                     val userData = userDoc.collection("data")
 
-                    try {
-                        write(userDoc, User)
-                        write(userData.document("goal"), UserData)
-                        write(userData.document("plan"), UserTarget)
-
-                        onResult(true, "")
-                    } catch (e: Exception) {
-                        onResult(false, "Error al guardar los datos del usuario.")
+                    val data = hashMapOf(
+                        "name" to name,
+                        "email" to email
+                    )
+                    userDoc.set(data).addOnCompleteListener { writeTask ->
+                        if (writeTask.isSuccessful) {
+                            onResult(true, "Registro exitoso")
+                        } else {
+                            onResult(false, "Error al guardar los datos del usuario.")
+                        }
                     }
 
                 } else {
@@ -51,30 +50,25 @@ class AuthViewModel : ViewModel() {
                 if (task.isSuccessful) {
                     User.id = auth.currentUser?.uid ?: return@addOnCompleteListener
 
-                    val userDoc = firestore.collection("users").document(User.id)
+                    val userDoc = firestore.collection("user").document(User.id)
                     val userData = userDoc.collection("data")
 
-                    try {
-                        read(userDoc) { res ->
+                    read(userDoc) { res ->
+                        if (res != null) {
                             val data = res.data
-                            User.name = data?.get("name").toString()
-                            User.email = data?.get("email").toString()
-                        }
-                        read(userData.document("goal")) { res ->
-                            val data = res.data
-                        }
-                        read(userData.document("plan")) { res ->
-                            val data = res.data
-                            UserTarget.dailyCal = data?.get("dailyCal").toString().toDouble()
-                            UserTarget.protein = data?.get("protein").toString().toDouble()
-                            UserTarget.carbs = data?.get("carbs").toString().toDouble()
-                            UserTarget.fat = data?.get("fat").toString().toDouble()
-                        }
+                            User.name = data?.get("name")?.toString() ?: ""
+                            User.email = data?.get("email")?.toString() ?: ""
 
-                        onResult(true, "")
-                    } catch (e: Exception) {
-                        onResult(false, "Error al obtener los datos del usuario.")
+                            read(userData.document("goal")) { goalRes ->
+                                // Puedes mapear más campos si los necesitas aquí
+                                onResult(true, "")
+                            }
+
+                        } else {
+                            onResult(false, "No se encontraron los datos del usuario.")
+                        }
                     }
+
                 } else {
                     val errorMessage = getFriendlyError(task.exception)
                     onResult(false, errorMessage)
@@ -89,7 +83,6 @@ class AuthViewModel : ViewModel() {
                 if (task.isSuccessful) {
                     val user = auth.currentUser
                     user?.let {
-                        // Asignamos los valores a User para tenerlos disponibles
                         User.id = it.uid
                         User.name = it.displayName ?: "Nombre desconocido"
                         User.email = it.email ?: "Correo desconocido"
@@ -97,13 +90,11 @@ class AuthViewModel : ViewModel() {
                         val userDoc = firestore.collection("users").document(it.uid)
                         userDoc.get().addOnCompleteListener { readTask ->
                             if (readTask.isSuccessful && readTask.result != null && readTask.result.exists()) {
-                                // Si el usuario ya existe, recuperamos sus datos
                                 val userData = readTask.result?.data
-                                User.name = userData?.get("name").toString()
-                                User.email = userData?.get("email").toString()
+                                User.name = userData?.get("name")?.toString() ?: ""
+                                User.email = userData?.get("email")?.toString() ?: ""
                                 onResult(true, "Datos recuperados exitosamente.")
                             } else {
-                                // Si el usuario no existe, lo creamos en Firestore
                                 val userData = hashMapOf(
                                     "email" to it.email,
                                     "name" to it.displayName,
@@ -127,25 +118,18 @@ class AuthViewModel : ViewModel() {
             }
     }
 
-
-
-    // Función para escribir datos en Firestore
-    private fun write(document: DocumentReference, obj: Any) {
-        document.set(obj).addOnCompleteListener {
-            if (!it.isSuccessful) throw RuntimeException()
-        }
-    }
-
-    // Función para leer datos desde Firestore
-    private fun read(ref: DocumentReference, exec: (DocumentSnapshot) -> Unit) {
+    // 🔐 Función para leer datos sin lanzar excepción
+    private fun read(ref: DocumentReference, exec: (DocumentSnapshot?) -> Unit) {
         ref.get().addOnCompleteListener { task ->
-            val result = task.result
-            if (!task.isSuccessful || result == null || !result.exists()) throw RuntimeException()
-            exec(result)
+            if (task.isSuccessful && task.result != null && task.result.exists()) {
+                exec(task.result)
+            } else {
+                exec(null)
+            }
         }
     }
 
-    // Traduce errores técnicos a mensajes más amigables
+    // 🧠 Traduce errores FirebaseAuth a mensajes entendibles
     private fun getFriendlyError(exception: Exception?): String {
         return when ((exception as? FirebaseAuthException)?.errorCode) {
             "ERROR_INVALID_EMAIL" -> "El correo electrónico no es válido."

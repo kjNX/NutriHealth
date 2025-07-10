@@ -15,6 +15,7 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
@@ -32,6 +33,8 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import com.unmsm.nutrihealth.MainScreen
 import com.unmsm.nutrihealth.data.model.UserTarget
 import com.unmsm.nutrihealth.logic.AccountSetupViewModel
 import com.unmsm.nutrihealth.ui.composable.pages.profile.ValueCard
@@ -113,7 +116,7 @@ fun RadioGroup(
                     .fillMaxWidth()
                     .selectable(
                         selected = i == selected,
-                        onClick = { onTap(selected) },
+                        onClick = { onTap(i) }, // <- corregido aquí
                         role = Role.RadioButton
                     )
                     .padding(horizontal = 8.dp, vertical = 8.dp),
@@ -158,6 +161,7 @@ fun ButtonField(
     }
 }
 
+
 @Composable
 fun InputField(
     label: String,
@@ -167,11 +171,12 @@ fun InputField(
     modifier: Modifier = Modifier
 ) {
     FormField(label = label, modifier = modifier) {
-        TextField(
+        OutlinedTextField( // Cambiado a OutlinedTextField por mejor UX
             value = value,
             onValueChange = onValueChange,
             placeholder = { Text(placeholder) },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true
         )
     }
 }
@@ -252,6 +257,7 @@ fun TargetData(
 
 @Composable
 fun Confirmation(
+    navController: NavController,
     tmb: Int,
     recommendedKcal: Int,
     protein: Int,
@@ -300,13 +306,23 @@ fun Confirmation(
                 Text(text = "$timeToReach semanas", style = MaterialTheme.typography.headlineMedium)
             }
             Text(text = "Al hacer clic en \"Comenzar a utilizar NutriHealth\", usted acepta los Términos y Condiciones del Servicio.")
-            Button(onClick = onNext, modifier = Modifier.fillMaxWidth()) { Text(text = "Comenzar a utilizar NutriHealth") }
+            Button(
+                onClick = {
+                    navController.navigate(MainScreen.Main.name) {
+                        popUpTo(MainScreen.Setup.name) { inclusive = true }
+                    }
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(text = "Comenzar a utilizar NutriHealth")
+            }
         }
     }
 }
 
 @Composable
 fun AccountSetupDisplay(
+    navController: NavController,
     onSetupFinish: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: AccountSetupViewModel = viewModel()
@@ -353,6 +369,7 @@ fun AccountSetupDisplay(
                 }
                 2 -> {
                     Confirmation(
+                        navController = navController,
                         tmb = uiState.value.tmb,
                         recommendedKcal = uiState.value.recommendedKcal,
                         protein = uiState.value.protein,
@@ -360,8 +377,8 @@ fun AccountSetupDisplay(
                         fats = uiState.value.fats,
                         timeToReach = uiState.value.timeToReach,
                         onNext = {
-                            viewModel.confirm()
-                            onSetupFinish()
+                            viewModel.confirm() // Guardas localmente o remotamente
+                            onSetupFinish()     // Aquí navegas al Main
                         },
                         modifier = Modifier.fillMaxSize()
                     )
@@ -370,12 +387,6 @@ fun AccountSetupDisplay(
             }
         }
     }
+
 }
 
-@Preview(showSystemUi = true)
-@Composable
-private fun Preview() {
-    NutriHealthTheme {
-        AccountSetupDisplay({})
-    }
-}

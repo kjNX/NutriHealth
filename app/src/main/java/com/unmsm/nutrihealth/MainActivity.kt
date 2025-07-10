@@ -44,10 +44,11 @@ import com.unmsm.nutrihealth.ui.compose.component.LocationPermissionRequestDialo
 import com.unmsm.nutrihealth.ui.theme.NutriHealthTheme
 import dagger.hilt.android.AndroidEntryPoint
 import androidx.activity.viewModels
+import androidx.hilt.navigation.compose.hiltViewModel
 import javax.inject.Inject
 
 enum class MainScreen {
-    Onboarding, Auth, Setup, Main, Scan, History, Profile, Messaging
+    Onboarding, Auth, Setup, Main, Scan, History, Profile, Messaging,Welcome
 }
 
 @AndroidEntryPoint
@@ -89,7 +90,7 @@ class MainActivity : ComponentActivity() {
 
                 val login = { email: String, password: String ->
                     authViewModel.login(email, password) { success, msg ->
-                        if (success) goto(MainScreen.Main.name)
+                        if (success) goto(MainScreen.Setup.name)
                         else Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
                     }
                 }
@@ -97,7 +98,7 @@ class MainActivity : ComponentActivity() {
 
                 val register = { name: String, email: String, password: String ->
                     authViewModel.signup(name, email, password) { success, msg ->
-                        if (success) goto(MainScreen.Main.name)
+                        if (success) goto(MainScreen.Setup.name)
                         else Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
                     }
                 }
@@ -117,14 +118,19 @@ class MainActivity : ComponentActivity() {
 
                 NavHost(
                     navController = navController,
-                    startDestination = if (showOnboarding) MainScreen.Onboarding.name else MainScreen.Auth.name
-//                        MainScreen.Setup.name
-                ) {
+                    startDestination = MainScreen.Welcome.name
+                ){
+                    composable(MainScreen.Welcome.name) {
+                        WelcomeScreen(
+                            onStart = { navController.navigate(MainScreen.Auth.name) },
+                            onLogin = { navController.navigate(MainScreen.Auth.name) }
+                        )
+                    }
                     composable(MainScreen.Onboarding.name) {
-                        OnboardingScreen {
-                            showOnboarding = false
-                            goto(MainScreen.Auth.name)
-                        }
+                        OnboardingFlow(
+                            viewModel = hiltViewModel(),
+                            onFinish = { navController.navigate(MainScreen.Auth.name) }
+                        )
                     }
                     composable(MainScreen.Auth.name) {
                         AuthDisplay(
@@ -135,7 +141,12 @@ class MainActivity : ComponentActivity() {
                     }
                     composable(MainScreen.Setup.name) {
                         AccountSetupDisplay(
-                            onSetupFinish = { }
+                            navController = navController, // ← aquí lo pasas
+                            onSetupFinish = {
+                                navController.navigate(MainScreen.Main.name) {
+                                    popUpTo(MainScreen.Setup.name) { inclusive = true }
+                                }
+                            }
                         )
                     }
                     composable(MainScreen.Main.name) {

@@ -1,5 +1,6 @@
 package com.unmsm.nutrihealth.logic
 
+import android.util.Log
 import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.ViewModel
 import com.google.firebase.Firebase
@@ -20,18 +21,30 @@ class AccountSetupViewModel: ViewModel() {
 
     fun setGenderIndex(i: Int) = _uiState.update { it.copy(genderIndex = i) }
     fun setIntensity(i: Float) = _uiState.update { it.copy(intensity = i) }
-    fun setAge(i: String) = {
-        if(i == "" || i.toIntOrNull() != null) _uiState.update { it.copy(age = i) }
+    fun setAge(i: String) {
+        if(i == "" || i.toIntOrNull() != null) {
+            _uiState.update { it.copy(age = i) }
+        }
     }
-    fun setHeight(i: String) = {
-        if(i == "" || i.toIntOrNull() != null) _uiState.update { it.copy(height = i) }
+
+    fun setHeight(i: String) {
+        if(i == "" || i.toIntOrNull() != null) {
+            _uiState.update { it.copy(height = i) }
+        }
     }
-    fun setWeight(i: String) = {
-        if(i == "" || i.toFloatOrNull() != null) _uiState.update { it.copy(weight = i) }
+
+    fun setWeight(i: String) {
+        if(i == "" || i.toFloatOrNull() != null) {
+            _uiState.update { it.copy(weight = i) }
+        }
     }
-    fun setTargetWeight(i: String) = {
-        if(i == "" || i.toFloatOrNull() != null) _uiState.update { it.copy(targetWeight = i) }
+
+    fun setTargetWeight(i: String) {
+        if(i == "" || i.toFloatOrNull() != null) {
+            _uiState.update { it.copy(targetWeight = i) }
+        }
     }
+
     fun setMainGoal(i: UserTarget.Priority) = _uiState.update { it.copy(mainGoal = i) }
 
     fun submitData(): Unit {
@@ -39,7 +52,7 @@ class AccountSetupViewModel: ViewModel() {
         UserData.height = _uiState.value.height.toIntOrNull() ?: 0
         UserData.weight = _uiState.value.weight.toFloatOrNull() ?: 0f
         UserData.gender = if(_uiState.value.genderIndex == 0) UserData.Gender.Male else UserData.Gender.Female
-        firestore.collection("users")
+        firestore.collection("user")
             .document(User.id)
             .collection("setup_data")
             .document("base_data")
@@ -48,18 +61,27 @@ class AccountSetupViewModel: ViewModel() {
         advanceStage()
     }
 
-    fun submitTarget(): Unit {
-        UserTarget.targetWeight = (_uiState.value.targetWeight.toFloatOrNull() as Double? ?: 0f) as Double
-        UserTarget.priority = _uiState.value.mainGoal
-        firestore.collection("users")
+    fun submitTarget() {
+        val userTarget = com.unmsm.nutrihealth.data.model.UserTarget(
+            targetWeight = _uiState.value.targetWeight.toFloatOrNull()?.toDouble() ?: 0.0,
+            priority = _uiState.value.mainGoal
+        )
+
+        firestore.collection("user")
             .document(User.id)
             .collection("setup_data")
             .document("target_data")
-            .set(UserTarget)
-
-        calcPlan()
-        advanceStage()
+            .set(userTarget)
+            .addOnSuccessListener {
+                calcPlan()
+                advanceStage()
+            }
+            .addOnFailureListener {
+                Log.e("Firestore", "Error al guardar target: ${it.message}")
+            }
     }
+
+
 
     fun calcPlan(): Unit {
         UserObjective.tmb = ((10 * UserData.weight) + (6.25 * UserData.height) - (5 * UserData.age) + UserData.gender.bonus).toInt()
@@ -79,7 +101,7 @@ class AccountSetupViewModel: ViewModel() {
     }
 
     fun confirm(): Unit {
-        firestore.collection("users")
+        firestore.collection("user")
             .document(User.id)
             .collection("setup_data")
             .document("objective_data")
@@ -89,7 +111,7 @@ class AccountSetupViewModel: ViewModel() {
 
     fun advanceStage(): Unit {
         ++User.stage
-        firestore.collection("users")
+        firestore.collection("user")
             .document(User.id)
             .update("stage", User.stage)
     }
