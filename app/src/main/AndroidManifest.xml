@@ -20,9 +20,15 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
-    <!-- 📷 Permiso opcional -->
+    <!-- 📷 Camera feature declaration -->
     <uses-feature
         android:name="android.hardware.camera"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.camera.any"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.camera.autofocus"
         android:required="false" />
 
     <application
@@ -44,6 +50,14 @@
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
 
+        <!-- Facebook Configuration -->
+        <meta-data
+            android:name="com.facebook.sdk.ApplicationId"
+            android:value="@string/facebook_app_id" />
+        <meta-data
+            android:name="com.facebook.sdk.ClientToken"
+            android:value="@string/facebook_client_token" />
+
         <!-- Configuración de attributionTag -->
         <meta-data
             android:name="android.app.attributionTag"
@@ -51,7 +65,7 @@
 
         <provider
             android:name="androidx.core.content.FileProvider"
-            android:authorities="com.unmsm.nutrihealth.fileprovider"
+            android:authorities="${applicationId}.fileprovider"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data
@@ -84,13 +98,5 @@
             </intent-filter>
         </activity>
 
-        <meta-data android:name="com.facebook.sdk.ApplicationId" android:value="@string/facebook_app_id"/>
-        <meta-data android:name="com.facebook.sdk.ClientToken" android:value="@string/facebook_client_token"/>
-
-        <!-- 🔑 Google Maps API Key -->
-        <meta-data
-            android:name="com.google.android.geo.API_KEY"
-            android:value="${MAPS_API_KEY}" />
     </application>
-
 </manifest>

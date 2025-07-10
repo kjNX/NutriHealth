@@ -213,7 +213,7 @@ fun CameraOrGalleryPicker(
                     }
                 }
                 permissionsMap.containsKey(Manifest.permission.READ_MEDIA_IMAGES) ||
-                permissionsMap.containsKey(Manifest.permission.READ_EXTERNAL_STORAGE) -> {
+                        permissionsMap.containsKey(Manifest.permission.READ_EXTERNAL_STORAGE) -> {
                     galleryLauncher.launch("image/*")
                 }
             }
@@ -221,7 +221,7 @@ fun CameraOrGalleryPicker(
             val permanentlyDenied = permissionsMap.any { (permission, granted) ->
                 !granted && !(activity?.shouldShowRequestPermissionRationale(permission) ?: true)
             }
-            
+
             if (permanentlyDenied) {
                 coroutineScope.launch {
                     snackbarHostState.showSnackbar(
@@ -281,7 +281,7 @@ fun CameraOrGalleryPicker(
             if (showDialog) {
                 AlertDialog(
                     onDismissRequest = { showDialog = false },
-                    title = { 
+                    title = {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -359,7 +359,7 @@ fun CameraOrGalleryPicker(
 
         AlertDialog(
             onDismissRequest = { showSaveDialog = false },
-            title = { 
+            title = {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -413,7 +413,7 @@ fun CameraOrGalleryPicker(
                                 modifier = Modifier.fillMaxWidth(0.9f)
                             ) {
                                 DropdownMenuItem(
-                                    text = { 
+                                    text = {
                                         Row(
                                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                                             verticalAlignment = Alignment.CenterVertically
@@ -427,10 +427,10 @@ fun CameraOrGalleryPicker(
                                         expanded = false
                                     }
                                 )
-                                
+
                                 currentPrediction?.platos_especificos?.forEachIndexed { index, plato ->
                                     DropdownMenuItem(
-                                        text = { 
+                                        text = {
                                             Row(
                                                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                                                 verticalAlignment = Alignment.CenterVertically
@@ -468,7 +468,7 @@ fun CameraOrGalleryPicker(
                                         isPortionError = false
                                     }
                                 },
-                                label = { 
+                                label = {
                                     Row(
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.spacedBy(4.dp)
@@ -568,7 +568,7 @@ fun CameraOrGalleryPicker(
                                         fats = nutricion.grasa * multiplier,
                                         water = nutricion.agua * multiplier
                                     )
-                                    
+
                                     viewModel.savePredictedFood(food) { success, message ->
                                         coroutineScope.launch {
                                             snackbarHostState.showSnackbar(message)
