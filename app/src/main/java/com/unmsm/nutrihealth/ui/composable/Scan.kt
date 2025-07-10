@@ -54,6 +54,7 @@ fun ScanDisplay(
     var foodPrediction by remember { mutableStateOf<FoodPrediction?>(null) }
     var isScanning by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    val foodViewModel: FoodViewModel = viewModel()
 
     Box(
         modifier = modifier
@@ -75,7 +76,8 @@ fun ScanDisplay(
                         errorMessage = error
                         isScanning = false
                         showPicker = false
-                    }
+                    },
+                    viewModel = foodViewModel
                 )
             }
 
@@ -237,7 +239,7 @@ fun FoodPredictionResult(
                             name = prediction.name,
                             energy = prediction.plato_general.nutricion.energia,
                             protein = prediction.plato_general.nutricion.proteinas,
-                            fat = prediction.plato_general.nutricion.grasa,
+                            fats = prediction.plato_general.nutricion.grasa,
                             water = prediction.plato_general.nutricion.agua,
                             timestamp = java.util.Date()
                         )

@@ -32,7 +32,7 @@ fun TypeAddDialog(
                     name = name,
                     energy = energy.toDoubleOrNull() ?: 0.0,
                     protein = protein.toDoubleOrNull() ?: 0.0,
-                    fat = fat.toDoubleOrNull() ?: 0.0,
+                    fats = fat.toDoubleOrNull() ?: 0.0,
                     water = water.toDoubleOrNull() ?: 0.0,
                     timestamp = Date()
                 )

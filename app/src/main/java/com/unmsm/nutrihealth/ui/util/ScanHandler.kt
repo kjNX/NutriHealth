@@ -8,26 +8,21 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
+import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.KeyboardOptions
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
-import com.unmsm.nutrihealth.data.model.FoodPrediction
+import com.unmsm.nutrihealth.data.model.*
 import com.unmsm.nutrihealth.data.repository.FoodPredictionService
+import com.unmsm.nutrihealth.logic.FoodViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -37,24 +32,24 @@ import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.File
 import java.io.FileOutputStream
 import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
-import android.provider.Settings
-import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarResult
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.fillMaxWidth
+import java.util.*
+
 
 @Composable
 fun CameraOrGalleryPicker(
     context: Context,
     foodPredictionService: FoodPredictionService,
     onImageProcessed: (FoodPrediction) -> Unit,
-    onError: (String) -> Unit
+    onError: (String) -> Unit,
+    viewModel: FoodViewModel
 ) {
     var showDialog by remember { mutableStateOf(false) }
     var photoUri by remember { mutableStateOf<Uri?>(null) }
     var photoFile by remember { mutableStateOf<File?>(null) }
+    var currentPrediction by remember { mutableStateOf<FoodPrediction?>(null) }
+    var showSaveDialog by remember { mutableStateOf(false) }
+    var selectedPlateIndex by remember { mutableStateOf(0) } // 0 para plato general, 1+ para específicos
+    var expanded by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
     val activity = LocalContext.current as? Activity
@@ -114,7 +109,8 @@ fun CameraOrGalleryPicker(
 
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful && response.body() != null) {
-                        onImageProcessed(response.body()!!)
+                        currentPrediction = response.body()!!
+                        showSaveDialog = true
                     } else {
                         onError("Error al procesar la imagen: ${response.message()}")
                     }
@@ -308,6 +304,151 @@ fun CameraOrGalleryPicker(
                 )
             }
         }
+    }
+
+    if (showSaveDialog && currentPrediction != null) {
+        var portion by remember { mutableStateOf("100") }
+        var isPortionError by remember { mutableStateOf(false) }
+
+        AlertDialog(
+            onDismissRequest = { showSaveDialog = false },
+            title = { Text("Guardar alimento") },
+            text = {
+                Column(
+                    modifier = Modifier.padding(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Box(
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        OutlinedButton(
+                            onClick = { expanded = true },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                when (selectedPlateIndex) {
+                                    0 -> "Plato General: ${currentPrediction?.plato_general?.nombre ?: ""}"
+                                    else -> "Variante: ${currentPrediction?.platos_especificos?.getOrNull(selectedPlateIndex - 1)?.nombre_preparacion ?: ""}"
+                                }
+                            )
+                        }
+
+                        DropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false },
+                            modifier = Modifier.fillMaxWidth(0.9f)
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("General: ${currentPrediction?.plato_general?.nombre ?: ""}") },
+                                onClick = {
+                                    selectedPlateIndex = 0
+                                    expanded = false
+                                }
+                            )
+                            
+                            currentPrediction?.platos_especificos?.forEachIndexed { index, plato ->
+                                DropdownMenuItem(
+                                    text = { Text("Variante: ${plato.nombre_preparacion}") },
+                                    onClick = {
+                                        selectedPlateIndex = index + 1
+                                        expanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+
+                    // Campo para la porción
+                    OutlinedTextField(
+                        value = portion,
+                        onValueChange = { newValue ->
+                            // Solo permitir números
+                            if (newValue.isEmpty() || newValue.all { it.isDigit() }) {
+                                portion = newValue
+                                isPortionError = false
+                            }
+                        },
+                        label = { Text("Porción (gramos)") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        isError = isPortionError,
+                        supportingText = if (isPortionError) {
+                            { Text("Por favor ingrese un valor válido mayor a 0") }
+                        } else {
+                            { Text("Valores nutricionales por ${portion}g") }
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    val nutricionInfo = when (selectedPlateIndex) {
+                        0 -> currentPrediction?.plato_general?.nutricion
+                        else -> currentPrediction?.platos_especificos?.getOrNull(selectedPlateIndex - 1)?.nutricion
+                    }
+
+                    nutricionInfo?.let { info ->
+                        val multiplier = portion.toFloatOrNull()?.div(100f) ?: 1f
+                        Text("Calorías: ${String.format("%.1f", info.energia * multiplier)} kcal")
+                        Text("Proteínas: ${String.format("%.1f", info.proteinas * multiplier)}g")
+                        Text("Grasas: ${String.format("%.1f", info.grasa * multiplier)}g")
+                        Text("Agua: ${String.format("%.1f", info.agua * multiplier)}g")
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val portionValue = portion.toFloatOrNull() ?: 0f
+                        if (portionValue <= 0) {
+                            isPortionError = true
+                            return@Button
+                        }
+
+                        coroutineScope.launch {
+                            val selectedPlate = when (selectedPlateIndex) {
+                                0 -> currentPrediction?.plato_general
+                                else -> currentPrediction?.platos_especificos?.getOrNull(selectedPlateIndex - 1)
+                            }
+
+                            selectedPlate?.let { plate ->
+                                val nutricionInfo = when (plate) {
+                                    is PlatoGeneral -> plate.nutricion
+                                    is PlatoEspecifico -> plate.nutricion
+                                    else -> null
+                                }
+
+                                nutricionInfo?.let { nutricion ->
+                                    val multiplier = portionValue / 100f
+                                    val food = Food(
+                                        name = when (plate) {
+                                            is PlatoGeneral -> "${plate.nombre} (${portion}g)"
+                                            is PlatoEspecifico -> "${plate.nombre_preparacion} (${portion}g)"
+                                            else -> ""
+                                        },
+                                        energy = nutricion.energia * multiplier,
+                                        protein = nutricion.proteinas * multiplier,
+                                        fats = nutricion.grasa * multiplier,
+                                        water = nutricion.agua * multiplier
+                                    )
+                                    
+                                    viewModel.savePredictedFood(food) { success, message ->
+                                        coroutineScope.launch {
+                                            snackbarHostState.showSnackbar(message)
+                                        }
+                                    }
+                                }
+                            }
+                            showSaveDialog = false
+                        }
+                    }
+                ) {
+                    Text("Guardar")
+                }
+            },
+            dismissButton = {
+                Button(onClick = { showSaveDialog = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
     }
 
     LaunchedEffect(Unit) {

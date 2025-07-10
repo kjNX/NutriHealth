@@ -81,7 +81,7 @@ class FoodViewModel : ViewModel() {
             "name" to food.name,
             "energy" to food.energy,
             "protein" to food.protein,
-            "fat" to food.fat,
+            "fats" to food.fats,
             "water" to food.water,
             "timestamp" to Date()
         )
