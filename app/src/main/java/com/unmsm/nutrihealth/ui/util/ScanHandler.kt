@@ -12,6 +12,8 @@ import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -59,7 +61,8 @@ fun CameraOrGalleryPicker(
     onImageProcessed: (FoodPrediction) -> Unit,
     onError: (String) -> Unit,
     viewModel: FoodViewModel,
-    onNavigateToHome: () -> Unit
+    onNavigateToHome: () -> Unit,
+    isAIScan: Boolean = false
 ) {
     var showDialog by remember { mutableStateOf(false) }
     var photoUri by remember { mutableStateOf<Uri?>(null) }
@@ -121,16 +124,48 @@ fun CameraOrGalleryPicker(
                 }
 
                 val requestFile = fileToUse.asRequestBody("image/*".toMediaTypeOrNull())
-                val body = MultipartBody.Part.createFormData("image", fileToUse.name, requestFile)
-
-                val response = foodPredictionService.predictFood(body)
+                val body = MultipartBody.Part.createFormData(
+                    if (isAIScan) "photo" else "image",
+                    fileToUse.name,
+                    requestFile
+                )
 
                 withContext(Dispatchers.Main) {
-                    if (response.isSuccessful && response.body() != null) {
-                        currentPrediction = response.body()!!
-                        showSaveDialog = true
-                    } else {
-                        onError("Error al procesar la imagen: ${response.message()}")
+                    try {
+                        if (isAIScan) {
+                            val aiResponse = foodPredictionService.predictFoodWithAI(body)
+                            if (aiResponse.isSuccessful && aiResponse.body() != null) {
+                                val aiPrediction = aiResponse.body()!!
+                                // Crear un FoodPrediction a partir de AIFoodPrediction
+                                currentPrediction = FoodPrediction(
+                                    categoria_detectada = aiPrediction.name,
+                                    categoria_general = "",
+                                    plato_general = PlatoGeneral(
+                                        nombre = aiPrediction.name,
+                                        nutricion = NutricionInfo(
+                                            energia = aiPrediction.energy.toDouble(),
+                                            proteinas = aiPrediction.protein.toDouble(),
+                                            grasa = aiPrediction.fats.toDouble(),
+                                            agua = aiPrediction.water.toDouble()
+                                        )
+                                    ),
+                                    platos_especificos = emptyList()
+                                )
+                                showSaveDialog = true
+                            } else {
+                                onError("Error al procesar la imagen con IA: ${aiResponse.message() ?: "Error desconocido"}")
+                            }
+                        } else {
+                            val regularResponse = foodPredictionService.predictFood(body)
+                            if (regularResponse.isSuccessful && regularResponse.body() != null) {
+                                currentPrediction = regularResponse.body()
+                                showSaveDialog = true
+                            } else {
+                                onError("Error al procesar la imagen: ${regularResponse.message() ?: "Error desconocido"}")
+                            }
+                        }
+                    } catch (e: Exception) {
+                        onError("Error al procesar la respuesta: ${e.message}")
                     }
                 }
 
@@ -410,13 +445,16 @@ fun CameraOrGalleryPicker(
                             DropdownMenu(
                                 expanded = expanded,
                                 onDismissRequest = { expanded = false },
-                                modifier = Modifier.fillMaxWidth(0.9f)
+                                modifier = Modifier
+                                    .fillMaxWidth(0.9f)
+                                    .heightIn(max = 200.dp)
                             ) {
                                 DropdownMenuItem(
                                     text = {
                                         Row(
                                             horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                            verticalAlignment = Alignment.CenterVertically
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier.height(48.dp)
                                         ) {
                                             Icon(Icons.Default.Restaurant, null)
                                             Text("General: ${currentPrediction?.plato_general?.nombre ?: ""}")
@@ -433,7 +471,8 @@ fun CameraOrGalleryPicker(
                                         text = {
                                             Row(
                                                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                                verticalAlignment = Alignment.CenterVertically
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                modifier = Modifier.height(48.dp)
                                             ) {
                                                 Icon(Icons.Default.RestaurantMenu, null)
                                                 Text("Variante: ${plato.nombre_preparacion}")

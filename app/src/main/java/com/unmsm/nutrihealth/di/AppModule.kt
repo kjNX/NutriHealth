@@ -34,6 +34,13 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Singleton
+import okhttp3.MultipartBody
+import retrofit2.Response
+import com.unmsm.nutrihealth.data.model.FoodPrediction
+import retrofit2.http.Multipart
+import retrofit2.http.POST
+import retrofit2.http.Part
+import com.unmsm.nutrihealth.data.model.AIFoodPrediction
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -102,6 +109,7 @@ object NetworkModule {
             .build()
     }
 
+    @RegularRetrofit
     @Provides
     @Singleton
     fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit {
@@ -112,9 +120,50 @@ object NetworkModule {
             .build()
     }
 
+    @AIRetrofit
     @Provides
     @Singleton
-    fun provideFoodPredictionService(retrofit: Retrofit): FoodPredictionService {
-        return retrofit.create(FoodPredictionService::class.java)
+    fun provideAIRetrofit(okHttpClient: OkHttpClient): Retrofit {
+        return Retrofit.Builder()
+            .baseUrl(FoodPredictionService.AI_BASE_URL)
+            .client(okHttpClient)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+    }
+
+    interface RegularFoodService {
+        @Multipart
+        @POST("predict")
+        suspend fun predictFood(
+            @Part image: MultipartBody.Part
+        ): Response<FoodPrediction>
+    }
+
+    interface AIFoodService {
+        @Multipart
+        @POST("estimate/dish")
+        suspend fun predictFoodWithAI(
+            @Part photo: MultipartBody.Part
+        ): Response<AIFoodPrediction>
+    }
+
+    @Provides
+    @Singleton
+    fun provideFoodPredictionService(
+        @RegularRetrofit retrofit: Retrofit,
+        @AIRetrofit aiRetrofit: Retrofit
+    ): FoodPredictionService {
+        val regularService = retrofit.create(RegularFoodService::class.java)
+        val aiService = aiRetrofit.create(AIFoodService::class.java)
+
+        return object : FoodPredictionService {
+            override suspend fun predictFood(image: MultipartBody.Part): Response<FoodPrediction> {
+                return regularService.predictFood(image)
+            }
+
+            override suspend fun predictFoodWithAI(photo: MultipartBody.Part): Response<AIFoodPrediction> {
+                return aiService.predictFoodWithAI(photo)
+            }
+        }
     }
 }

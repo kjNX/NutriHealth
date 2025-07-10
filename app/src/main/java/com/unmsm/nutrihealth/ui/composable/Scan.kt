@@ -56,6 +56,7 @@ fun ScanDisplay(
     var foodPrediction by remember { mutableStateOf<FoodPrediction?>(null) }
     var isScanning by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    var isAIScan by remember { mutableStateOf(false) }
     val foodViewModel: FoodViewModel = viewModel()
 
     Box(
@@ -80,7 +81,8 @@ fun ScanDisplay(
                         showPicker = false
                     },
                     viewModel = foodViewModel,
-                    onNavigateToHome = onNavigate
+                    onNavigateToHome = onNavigate,
+                    isAIScan = isAIScan
                 )
             }
 
@@ -99,7 +101,16 @@ fun ScanDisplay(
             }
 
             foodPrediction == null -> {
-                EmptyScanPrompt(onScan = { showPicker = true })
+                EmptyScanPrompt(
+                    onScan = { 
+                        isAIScan = false
+                        showPicker = true 
+                    },
+                    onScanWithAI = {
+                        isAIScan = true
+                        showPicker = true
+                    }
+                )
             }
 
             else -> {
@@ -149,7 +160,7 @@ fun ErrorMessage(
 }
 
 @Composable
-fun EmptyScanPrompt(onScan: () -> Unit) {
+fun EmptyScanPrompt(onScan: () -> Unit, onScanWithAI: () -> Unit) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
@@ -200,21 +211,30 @@ fun EmptyScanPrompt(onScan: () -> Unit) {
                 contentDescription = null,
                 modifier = Modifier.size(24.dp)
             )
-            Spacer(modifier = Modifier.width(12.dp))
-            Text(
-                "Escanear comida",
-                style = MaterialTheme.typography.titleMedium
-            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Escanear comida")
         }
-        
+
         Spacer(modifier = Modifier.height(16.dp))
-        
-        Text(
-            text = "Asegúrate de tomar la foto con buena iluminación",
-            style = MaterialTheme.typography.bodyMedium,
-            textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-        )
+
+        Button(
+            onClick = onScanWithAI,
+            modifier = Modifier
+                .fillMaxWidth(0.8f)
+                .height(56.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.secondary
+            ),
+            shape = MaterialTheme.shapes.medium
+        ) {
+            Icon(
+                imageVector = Icons.Default.CameraAlt,
+                contentDescription = null,
+                modifier = Modifier.size(24.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Escanear comida con IA")
+        }
     }
 }
 
