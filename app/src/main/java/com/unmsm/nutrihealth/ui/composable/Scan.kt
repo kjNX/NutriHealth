@@ -3,82 +3,56 @@ package com.unmsm.nutrihealth.ui.composable
 import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
-import androidx.compose.material.icons.filled.MotionPhotosOn
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.unmsm.nutrihealth.R
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.unmsm.nutrihealth.data.model.Food
+import com.unmsm.nutrihealth.data.model.FoodPrediction
+import com.unmsm.nutrihealth.data.repository.FoodPredictionService
 import com.unmsm.nutrihealth.ui.composable.blocks.SubsectionTopBar
-import com.unmsm.nutrihealth.ui.theme.NutriHealthTheme
 import com.unmsm.nutrihealth.ui.util.CameraOrGalleryPicker
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 @Composable
-fun Scan(onNavigate: () -> Unit) {
-    Scaffold(topBar = { SubsectionTopBar(
-        title = "Escanear comida",
-        onNavigate = onNavigate
-    ) }) { innerPadding ->
-        ScanDisplay(modifier = Modifier.padding(innerPadding))
+fun Scan(
+    foodPredictionService: FoodPredictionService,
+    onNavigate: () -> Unit
+) {
+    Scaffold(
+        topBar = { 
+            SubsectionTopBar(
+                title = "Escanear comida",
+                onNavigate = onNavigate
+            ) 
+        }
+    ) { innerPadding ->
+        ScanDisplay(
+            modifier = Modifier.padding(innerPadding),
+            foodPredictionService = foodPredictionService
+        )
     }
 }
 
 @Composable
-fun ScanDisplay(modifier: Modifier = Modifier) {
+fun ScanDisplay(
+    modifier: Modifier = Modifier,
+    foodPredictionService: FoodPredictionService
+) {
     val context = LocalContext.current
     var showPicker by remember { mutableStateOf(false) }
-    var foodScanned by remember { mutableStateOf<Food?>(null) }
+    var foodPrediction by remember { mutableStateOf<FoodPrediction?>(null) }
     var isScanning by remember { mutableStateOf(false) }
-
-    val coroutineScope = rememberCoroutineScope()
-    val fakeFood = Food("Hamburguesa con queso", 520, 28f, 42f, 26f)
-
-    val onImagePicked: (Uri) -> Unit = {
-        showPicker = false
-        isScanning = true // inicia escaneo
-
-        coroutineScope.launch {
-            delay(2000) // simula escaneo
-            foodScanned = fakeFood
-            isScanning = false
-        }
-    }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
 
     Box(
         modifier = modifier
@@ -88,27 +62,53 @@ fun ScanDisplay(modifier: Modifier = Modifier) {
     ) {
         when {
             showPicker -> {
-                CameraOrGalleryPicker(context, onImagePicked)
+                CameraOrGalleryPicker(
+                    context = context,
+                    foodPredictionService = foodPredictionService,
+                    onImageProcessed = { prediction ->
+                        foodPrediction = prediction
+                        isScanning = false
+                        showPicker = false
+                    },
+                    onError = { error ->
+                        errorMessage = error
+                        isScanning = false
+                        showPicker = false
+                    }
+                )
             }
 
             isScanning -> {
                 ScanningAnimation()
             }
 
-            foodScanned == null -> {
+            errorMessage != null -> {
+                ErrorMessage(
+                    message = errorMessage!!,
+                    onDismiss = { 
+                        errorMessage = null
+                        showPicker = true 
+                    }
+                )
+            }
+
+            foodPrediction == null -> {
                 EmptyScanPrompt(onScan = { showPicker = true })
             }
 
             else -> {
-                ScannedFoodCard(
-                    food = foodScanned!!,
-                    onCancel = { foodScanned = null },
-                    onAdd = { foodScanned = null }
+                FoodPredictionResult(
+                    prediction = foodPrediction!!,
+                    onNewScan = {
+                        foodPrediction = null
+                        showPicker = true
+                    }
                 )
             }
         }
     }
 }
+
 @Composable
 fun ScanningAnimation() {
     Column(
@@ -126,10 +126,37 @@ fun ScanningAnimation() {
 }
 
 @Composable
+fun ErrorMessage(
+    message: String,
+    onDismiss: () -> Unit
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        modifier = Modifier.padding(16.dp)
+    ) {
+        Text(
+            text = "Error",
+            style = MaterialTheme.typography.headlineMedium,
+            color = Color.Red
+        )
+        Text(
+            text = message,
+            style = MaterialTheme.typography.bodyMedium,
+            textAlign = TextAlign.Center
+        )
+        Button(onClick = onDismiss) {
+            Text("Intentar de nuevo")
+        }
+    }
+}
+
+@Composable
 fun EmptyScanPrompt(onScan: () -> Unit) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        modifier = Modifier.padding(16.dp)
     ) {
         Icon(
             imageVector = Icons.Default.CameraAlt,
@@ -154,91 +181,46 @@ fun EmptyScanPrompt(onScan: () -> Unit) {
 }
 
 @Composable
-fun ScannedFoodCard(
-    food: Food,
-    onCancel: () -> Unit,
-    onAdd: () -> Unit
+fun FoodPredictionResult(
+    prediction: FoodPrediction,
+    onNewScan: () -> Unit
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .padding(16.dp)
-            .background(Color(0xFFFDFDFE), shape = MaterialTheme.shapes.large)
-            .padding(24.dp)
-            .fillMaxWidth()
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        modifier = Modifier.padding(16.dp)
     ) {
-        // Título con subtítulo
         Text(
-            text = food.name,
-            style = MaterialTheme.typography.headlineSmall,
-            color = Color(0xFF333333)
+            text = prediction.plato_general.nombre,
+            style = MaterialTheme.typography.headlineMedium
         )
-        Text(
-            text = "1 unidad (180g)",
-            style = MaterialTheme.typography.bodyMedium,
-            color = Color.Gray
-        )
-
-        Spacer(Modifier.height(16.dp))
-
-        // Valores con íconos y colores pastel
-        Row(
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            modifier = Modifier.fillMaxWidth()
+        
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFE8F5E9))
         ) {
-            NutrientItem("🔥", "${food.calories}", "kcal", Color(0xFFFFE0B2))
-            NutrientItem("🍗", "${food.protein}g", "Proteínas", Color(0xFFDCEDC8))
-            NutrientItem("🍞", "${food.carbs}g", "Carbos", Color(0xFFB3E5FC))
-            NutrientItem("🧈", "${food.fats}g", "Grasas", Color(0xFFF8BBD0))
-        }
-
-        Spacer(Modifier.height(20.dp))
-
-        // Botones redondeados
-        Row(
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Button(
-                onClick = onCancel,
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF9FA8DA)),
-                shape = MaterialTheme.shapes.large
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text("Cancelar", color = Color.White)
-            }
-            Button(
-                onClick = onAdd,
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7986CB)),
-                shape = MaterialTheme.shapes.large
-            ) {
-                Text("Añadir", color = Color.White)
+                Text(
+                    text = "Información Nutricional",
+                    style = MaterialTheme.typography.titleMedium
+                )
+                prediction.plato_general.nutricion?.let { nutricion ->
+                    Text("Energía: ${String.format("%.1f", nutricion.energia ?: 0.0)} kcal")
+                    Text("Proteínas: ${String.format("%.2f", nutricion.proteinas ?: 0.0)}g")
+                    Text("Grasas: ${String.format("%.2f", nutricion.grasa ?: 0.0)}g")
+                    Text("Agua: ${String.format("%.1f", nutricion.agua ?: 0.0)}%")
+                } ?: Text("Información nutricional no disponible")
             }
         }
-    }
-}
 
-
-@Composable
-fun NutrientItem(icon: String, value: String, label: String, bgColor: Color) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .background(bgColor.copy(alpha = 0.3f), shape = MaterialTheme.shapes.medium)
-            .padding(vertical = 8.dp, horizontal = 12.dp)
-    ) {
-        Text(text = icon, fontSize = MaterialTheme.typography.bodyLarge.fontSize)
-        Text(text = value, style = MaterialTheme.typography.titleMedium, color = Color.Black)
-        Text(text = label, style = MaterialTheme.typography.bodySmall, color = Color.DarkGray)
-    }
-}
-
-
-@Preview(showBackground = true)
-@Composable
-private fun Preview() {
-    NutriHealthTheme {
-        Scaffold(topBar = { SubsectionTopBar(title = "Escanear comida", {}) }) { innerPadding ->
-            ScanDisplay(modifier = Modifier.padding(innerPadding))
+        Button(
+            onClick = onNewScan,
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
+        ) {
+            Text("Escanear otro plato", color = Color.White)
         }
     }
 }

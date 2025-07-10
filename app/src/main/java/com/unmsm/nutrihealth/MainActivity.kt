@@ -31,6 +31,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.*
 import com.unmsm.nutrihealth.data.model.Contact
+import com.unmsm.nutrihealth.data.repository.FoodPredictionService
 import com.unmsm.nutrihealth.data.repository.getContacts
 import com.unmsm.nutrihealth.logic.AuthViewModel
 import com.unmsm.nutrihealth.logic.extension.hasAllPermission
@@ -43,6 +44,7 @@ import com.unmsm.nutrihealth.ui.compose.component.LocationPermissionRequestDialo
 import com.unmsm.nutrihealth.ui.theme.NutriHealthTheme
 import dagger.hilt.android.AndroidEntryPoint
 import androidx.activity.viewModels
+import javax.inject.Inject
 
 enum class MainScreen {
     Onboarding, Auth, Setup, Main, Scan, History, Profile, Messaging
@@ -51,6 +53,9 @@ enum class MainScreen {
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
+    @Inject
+    lateinit var foodPredictionService: FoodPredictionService
+    
     private lateinit var googleSignInClient: GoogleSignInClient
     private lateinit var callbackManager: CallbackManager
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
@@ -110,8 +115,6 @@ class MainActivity : ComponentActivity() {
                     googleSignInLauncher.launch(intent)
                 }
 
-
-
                 NavHost(
                     navController = navController,
                     startDestination = if (showOnboarding) MainScreen.Onboarding.name else MainScreen.Auth.name
@@ -149,7 +152,12 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
-                    composable(MainScreen.Scan.name) { Scan(onNavigate = navigate) }
+                    composable(MainScreen.Scan.name) { 
+                        Scan(
+                            onNavigate = navigate,
+                            foodPredictionService = foodPredictionService
+                        ) 
+                    }
                     composable(MainScreen.History.name) {
                         HistoryScreen(navController = navController)
                     }
