@@ -26,8 +26,10 @@ class AuthViewModel : ViewModel() {
                     val userData = userDoc.collection("data")
 
                     val data = hashMapOf(
+                        "authID" to User.id,
+                        "email" to email,
                         "name" to name,
-                        "email" to email
+                        "stage" to 0
                     )
                     userDoc.set(data).addOnCompleteListener { writeTask ->
                         if (writeTask.isSuccessful) {
@@ -87,7 +89,7 @@ class AuthViewModel : ViewModel() {
                         User.name = it.displayName ?: "Nombre desconocido"
                         User.email = it.email ?: "Correo desconocido"
 
-                        val userDoc = firestore.collection("users").document(it.uid)
+                        val userDoc = firestore.collection("user").document(it.uid)
                         userDoc.get().addOnCompleteListener { readTask ->
                             if (readTask.isSuccessful && readTask.result != null && readTask.result.exists()) {
                                 val userData = readTask.result?.data
@@ -96,9 +98,10 @@ class AuthViewModel : ViewModel() {
                                 onResult(true, "Datos recuperados exitosamente.")
                             } else {
                                 val userData = hashMapOf(
+                                    "authID" to it.uid,
                                     "email" to it.email,
                                     "name" to it.displayName,
-                                    "photoUrl" to it.photoUrl.toString()
+                                    "stage" to 0
                                 )
                                 userDoc.set(userData)
                                     .addOnCompleteListener { writeTask ->

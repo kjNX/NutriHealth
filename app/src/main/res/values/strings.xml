@@ -5,5 +5,6 @@
     <string name="facebook_app_id">3185588448289510</string>
     <string name="fb_login_protocol_scheme">fb3185588448289510</string>
     <string name="facebook_client_token">afe6cd0cb4bc54108e197513cdee2ac7</string>
+    <string name="google_maps_key">AIzaSyDKRMZ2AFFWf-F0A8YuPhNl17PW_7XBfr8</string>
 
 </resources>
