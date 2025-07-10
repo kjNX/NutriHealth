@@ -39,7 +39,8 @@ fun Scan(
     ) { innerPadding ->
         ScanDisplay(
             modifier = Modifier.padding(innerPadding),
-            foodPredictionService = foodPredictionService
+            foodPredictionService = foodPredictionService,
+            onNavigate = onNavigate
         )
     }
 }
@@ -47,7 +48,8 @@ fun Scan(
 @Composable
 fun ScanDisplay(
     modifier: Modifier = Modifier,
-    foodPredictionService: FoodPredictionService
+    foodPredictionService: FoodPredictionService,
+    onNavigate: () -> Unit
 ) {
     val context = LocalContext.current
     var showPicker by remember { mutableStateOf(false) }
@@ -77,7 +79,8 @@ fun ScanDisplay(
                         isScanning = false
                         showPicker = false
                     },
-                    viewModel = foodViewModel
+                    viewModel = foodViewModel,
+                    onNavigateToHome = onNavigate
                 )
             }
 
@@ -150,22 +153,68 @@ fun EmptyScanPrompt(onScan: () -> Unit) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
-        modifier = Modifier.padding(16.dp)
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(32.dp)
     ) {
+        Icon(
+            imageVector = Icons.Default.CameraAlt,
+            contentDescription = null,
+            modifier = Modifier
+                .size(120.dp)
+                .padding(bottom = 24.dp),
+            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+        )
+        
+        Text(
+            text = "Escanea tu comida",
+            style = MaterialTheme.typography.headlineMedium,
+            textAlign = TextAlign.Center,
+            color = MaterialTheme.colorScheme.primary
+        )
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        Text(
+            text = "Toma una foto de tu plato para obtener información nutricional detallada",
+            style = MaterialTheme.typography.bodyLarge,
+            textAlign = TextAlign.Center,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = 24.dp)
+        )
+        
+        Spacer(modifier = Modifier.height(32.dp))
+        
         Button(
             onClick = onScan,
+            modifier = Modifier
+                .fillMaxWidth(0.8f)
+                .height(56.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.primary
-            )
+            ),
+            shape = MaterialTheme.shapes.medium
         ) {
             Icon(
                 imageVector = Icons.Default.CameraAlt,
                 contentDescription = null,
                 modifier = Modifier.size(24.dp)
             )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text("Escanear comida")
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                "Escanear comida",
+                style = MaterialTheme.typography.titleMedium
+            )
         }
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        Text(
+            text = "Asegúrate de tomar la foto con buena iluminación",
+            style = MaterialTheme.typography.bodyMedium,
+            textAlign = TextAlign.Center,
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+        )
     }
 }
 

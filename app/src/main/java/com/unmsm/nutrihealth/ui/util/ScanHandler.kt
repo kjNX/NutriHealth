@@ -12,27 +12,44 @@ import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.KeyboardOptions
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import com.unmsm.nutrihealth.data.model.*
 import com.unmsm.nutrihealth.data.repository.FoodPredictionService
 import com.unmsm.nutrihealth.logic.FoodViewModel
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
+import java.io.*
+import java.text.SimpleDateFormat
+import java.util.*
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+
+import androidx.compose.material.icons.filled.LocalFireDepartment
+
+import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material.icons.filled.PhotoLibrary
+import androidx.compose.material.icons.filled.Restaurant
+import androidx.compose.material.icons.filled.RestaurantMenu
+import androidx.compose.material.icons.filled.Scale
+import androidx.compose.material.icons.filled.Egg
+import androidx.compose.material.icons.filled.WaterDrop
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Save
+import androidx.compose.ui.graphics.vector.ImageVector
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
-import java.io.File
-import java.io.FileOutputStream
-import java.text.SimpleDateFormat
-import java.util.*
 
 
 @Composable
@@ -41,7 +58,8 @@ fun CameraOrGalleryPicker(
     foodPredictionService: FoodPredictionService,
     onImageProcessed: (FoodPrediction) -> Unit,
     onError: (String) -> Unit,
-    viewModel: FoodViewModel
+    viewModel: FoodViewModel,
+    onNavigateToHome: () -> Unit
 ) {
     var showDialog by remember { mutableStateOf(false) }
     var photoUri by remember { mutableStateOf<Uri?>(null) }
@@ -263,13 +281,27 @@ fun CameraOrGalleryPicker(
             if (showDialog) {
                 AlertDialog(
                     onDismissRequest = { showDialog = false },
-                    title = { Text("Seleccionar imagen") },
+                    title = { 
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.PhotoCamera,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                            Text("Seleccionar imagen", style = MaterialTheme.typography.titleLarge)
+                        }
+                    },
                     text = {
                         Column(
-                            modifier = Modifier.padding(8.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                            modifier = Modifier
+                                .padding(8.dp)
+                                .fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            Button(
+                            ElevatedButton(
                                 onClick = {
                                     val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                                         arrayOf(Manifest.permission.CAMERA)
@@ -281,11 +313,19 @@ fun CameraOrGalleryPicker(
                                     }
                                     requestPermissionWithRationale(permissions, "camera")
                                 },
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier.fillMaxWidth(),
+                                contentPadding = PaddingValues(16.dp)
                             ) {
-                                Text("Tomar Foto")
+                                Icon(
+                                    imageVector = Icons.Default.PhotoCamera,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Tomar Foto", style = MaterialTheme.typography.bodyLarge)
                             }
-                            Button(
+
+                            ElevatedButton(
                                 onClick = {
                                     val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                                         arrayOf(Manifest.permission.READ_MEDIA_IMAGES)
@@ -294,9 +334,16 @@ fun CameraOrGalleryPicker(
                                     }
                                     requestPermissionWithRationale(permissions, "gallery")
                                 },
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier.fillMaxWidth(),
+                                contentPadding = PaddingValues(16.dp)
                             ) {
-                                Text("Elegir de la Galería")
+                                Icon(
+                                    imageVector = Icons.Default.PhotoLibrary,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Elegir de la Galería", style = MaterialTheme.typography.bodyLarge)
                             }
                         }
                     },
@@ -312,84 +359,177 @@ fun CameraOrGalleryPicker(
 
         AlertDialog(
             onDismissRequest = { showSaveDialog = false },
-            title = { Text("Guardar alimento") },
+            title = { 
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Restaurant,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Text("Guardar alimento", style = MaterialTheme.typography.titleLarge)
+                }
+            },
             text = {
                 Column(
-                    modifier = Modifier.padding(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    modifier = Modifier
+                        .padding(8.dp)
+                        .fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    Box(
+                    // Selector de plato
+                    OutlinedCard(
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        OutlinedButton(
-                            onClick = { expanded = true },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
                             Text(
-                                when (selectedPlateIndex) {
-                                    0 -> "Plato General: ${currentPrediction?.plato_general?.nombre ?: ""}"
-                                    else -> "Variante: ${currentPrediction?.platos_especificos?.getOrNull(selectedPlateIndex - 1)?.nombre_preparacion ?: ""}"
-                                }
+                                "Tipo de plato",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.primary
                             )
-                        }
-
-                        DropdownMenu(
-                            expanded = expanded,
-                            onDismissRequest = { expanded = false },
-                            modifier = Modifier.fillMaxWidth(0.9f)
-                        ) {
-                            DropdownMenuItem(
-                                text = { Text("General: ${currentPrediction?.plato_general?.nombre ?: ""}") },
-                                onClick = {
-                                    selectedPlateIndex = 0
-                                    expanded = false
-                                }
-                            )
-                            
-                            currentPrediction?.platos_especificos?.forEachIndexed { index, plato ->
-                                DropdownMenuItem(
-                                    text = { Text("Variante: ${plato.nombre_preparacion}") },
-                                    onClick = {
-                                        selectedPlateIndex = index + 1
-                                        expanded = false
+                            Spacer(modifier = Modifier.height(8.dp))
+                            OutlinedButton(
+                                onClick = { expanded = true },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Restaurant,
+                                    contentDescription = null
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    when (selectedPlateIndex) {
+                                        0 -> "Plato General: ${currentPrediction?.plato_general?.nombre ?: ""}"
+                                        else -> "Variante: ${currentPrediction?.platos_especificos?.getOrNull(selectedPlateIndex - 1)?.nombre_preparacion ?: ""}"
                                     }
                                 )
                             }
+
+                            DropdownMenu(
+                                expanded = expanded,
+                                onDismissRequest = { expanded = false },
+                                modifier = Modifier.fillMaxWidth(0.9f)
+                            ) {
+                                DropdownMenuItem(
+                                    text = { 
+                                        Row(
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Icon(Icons.Default.Restaurant, null)
+                                            Text("General: ${currentPrediction?.plato_general?.nombre ?: ""}")
+                                        }
+                                    },
+                                    onClick = {
+                                        selectedPlateIndex = 0
+                                        expanded = false
+                                    }
+                                )
+                                
+                                currentPrediction?.platos_especificos?.forEachIndexed { index, plato ->
+                                    DropdownMenuItem(
+                                        text = { 
+                                            Row(
+                                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Icon(Icons.Default.RestaurantMenu, null)
+                                                Text("Variante: ${plato.nombre_preparacion}")
+                                            }
+                                        },
+                                        onClick = {
+                                            selectedPlateIndex = index + 1
+                                            expanded = false
+                                        }
+                                    )
+                                }
+                            }
                         }
                     }
 
-                    // Campo para la porción
-                    OutlinedTextField(
-                        value = portion,
-                        onValueChange = { newValue ->
-                            // Solo permitir números
-                            if (newValue.isEmpty() || newValue.all { it.isDigit() }) {
-                                portion = newValue
-                                isPortionError = false
-                            }
-                        },
-                        label = { Text("Porción (gramos)") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        isError = isPortionError,
-                        supportingText = if (isPortionError) {
-                            { Text("Por favor ingrese un valor válido mayor a 0") }
-                        } else {
-                            { Text("Valores nutricionales por ${portion}g") }
-                        },
+                    // Campo de porción
+                    OutlinedCard(
                         modifier = Modifier.fillMaxWidth()
-                    )
-
-                    val nutricionInfo = when (selectedPlateIndex) {
-                        0 -> currentPrediction?.plato_general?.nutricion
-                        else -> currentPrediction?.platos_especificos?.getOrNull(selectedPlateIndex - 1)?.nutricion
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(
+                                "Porción",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            OutlinedTextField(
+                                value = portion,
+                                onValueChange = { newValue ->
+                                    if (newValue.isEmpty() || newValue.all { it.isDigit() }) {
+                                        portion = newValue
+                                        isPortionError = false
+                                    }
+                                },
+                                label = { 
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                    ) {
+                                        Icon(Icons.Default.Scale, null, Modifier.size(16.dp))
+                                        Text("Gramos")
+                                    }
+                                },
+                                isError = isPortionError,
+                                supportingText = if (isPortionError) {
+                                    { Text("Por favor ingrese un valor válido mayor a 0") }
+                                } else {
+                                    { Text("Valores nutricionales por ${portion}g") }
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                singleLine = true
+                            )
+                        }
                     }
 
-                    nutricionInfo?.let { info ->
-                        val multiplier = portion.toFloatOrNull()?.div(100f) ?: 1f
-                        Text("Calorías: ${String.format("%.1f", info.energia * multiplier)} kcal")
-                        Text("Proteínas: ${String.format("%.1f", info.proteinas * multiplier)}g")
-                        Text("Grasas: ${String.format("%.1f", info.grasa * multiplier)}g")
-                        Text("Agua: ${String.format("%.1f", info.agua * multiplier)}g")
+                    // Información nutricional
+                    OutlinedCard(
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(
+                                "Información nutricional",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            val nutricionInfo = when (selectedPlateIndex) {
+                                0 -> currentPrediction?.plato_general?.nutricion
+                                else -> currentPrediction?.platos_especificos?.getOrNull(selectedPlateIndex - 1)?.nutricion
+                            }
+
+                            nutricionInfo?.let { info ->
+                                val multiplier = portion.toFloatOrNull()?.div(100f) ?: 1f
+                                NutritionRow(
+                                    icon = Icons.Default.LocalFireDepartment,
+                                    label = "Calorías",
+                                    value = String.format("%.1f kcal", info.energia * multiplier)
+                                )
+                                NutritionRow(
+                                    icon = Icons.Default.FoodBank,  // Cambiado de Egg a FoodBank
+                                    label = "Proteínas",
+                                    value = String.format("%.1f g", info.proteinas * multiplier)
+                                )
+                                NutritionRow(
+                                    icon = Icons.Default.Opacity,  // Cambiado de Oil a Opacity
+                                    label = "Grasas",
+                                    value = String.format("%.1f g", info.grasa * multiplier)
+                                )
+                                NutritionRow(
+                                    icon = Icons.Default.WaterDrop,
+                                    label = "Agua",
+                                    value = String.format("%.1f g", info.agua * multiplier)
+                                )
+                            }
+                        }
                     }
                 }
             },
@@ -432,19 +572,30 @@ fun CameraOrGalleryPicker(
                                     viewModel.savePredictedFood(food) { success, message ->
                                         coroutineScope.launch {
                                             snackbarHostState.showSnackbar(message)
+                                            if (success) {
+                                                showSaveDialog = false
+                                                onNavigateToHome()
+                                            }
                                         }
                                     }
                                 }
                             }
-                            showSaveDialog = false
                         }
-                    }
+                    },
+                    modifier = Modifier.fillMaxWidth()
                 ) {
+                    Icon(Icons.Default.Save, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
                     Text("Guardar")
                 }
             },
             dismissButton = {
-                Button(onClick = { showSaveDialog = false }) {
+                OutlinedButton(
+                    onClick = { showSaveDialog = false },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Default.Close, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
                     Text("Cancelar")
                 }
             }
@@ -455,5 +606,38 @@ fun CameraOrGalleryPicker(
         if (!showDialog) {
             showDialog = true
         }
+    }
+}
+
+@Composable
+private fun NutritionRow(
+    icon: ImageVector,
+    label: String,
+    value: String
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp),
+                tint = MaterialTheme.colorScheme.primary
+            )
+            Text(label)
+        }
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.primary
+        )
     }
 }
