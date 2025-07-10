@@ -49,7 +49,7 @@ class AccountSetupViewModel: ViewModel() {
     }
 
     fun submitTarget(): Unit {
-        UserTarget.targetWeight = _uiState.value.targetWeight.toFloatOrNull() ?: 0f
+        UserTarget.targetWeight = (_uiState.value.targetWeight.toFloatOrNull() as Double? ?: 0f) as Double
         UserTarget.priority = _uiState.value.mainGoal
         firestore.collection("users")
             .document(User.id)

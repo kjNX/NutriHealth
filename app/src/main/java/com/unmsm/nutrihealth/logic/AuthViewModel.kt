@@ -65,10 +65,10 @@ class AuthViewModel : ViewModel() {
                         }
                         read(userData.document("plan")) { res ->
                             val data = res.data
-                            UserTarget.dailyCal = data?.get("dailyCal").toString().toInt()
-                            UserTarget.protein = data?.get("protein").toString().toInt()
-                            UserTarget.carbs = data?.get("carbs").toString().toInt()
-                            UserTarget.fats = data?.get("fats").toString().toInt()
+                            UserTarget.dailyCal = data?.get("dailyCal").toString().toDouble()
+                            UserTarget.protein = data?.get("protein").toString().toDouble()
+                            UserTarget.carbs = data?.get("carbs").toString().toDouble()
+                            UserTarget.fat = data?.get("fat").toString().toDouble()
                         }
 
                         onResult(true, "")

@@ -7,12 +7,22 @@ import androidx.room.PrimaryKey
 object UserTarget {
     @PrimaryKey
     var id: Int = 0
-    var targetWeight: Float = 0f
+    var targetWeight: Double = 0.0
     var priority: Priority = Priority.Health
+
+    // Propiedades requeridas por AuthViewModel
+    var dailyCal: Double = 0.0
+    var protein: Double = 0.0
+    var carbs: Double = 0.0
+    var fat: Double = 0.0
 
     fun reset() {
         id = 0
-        targetWeight = 0f
+        targetWeight = 0.0
+        dailyCal = 0.0
+        protein = 0.0
+        carbs = 0.0
+        fat = 0.0
     }
 
     enum class Priority(val description: String) {
