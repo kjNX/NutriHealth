@@ -62,10 +62,10 @@ fun HistoryItem(food: Food, modifier: Modifier = Modifier) {
     ) {
         Text(text = food.name, style = MaterialTheme.typography.headlineMedium)
         Column {
-            Text(text = "${food.calories} calorías", style = MaterialTheme.typography.labelMedium)
-            Text(text = "${food.carbs} carbohidratos", style = MaterialTheme.typography.labelMedium)
-            Text(text = "${food.protein} proteínas", style = MaterialTheme.typography.labelMedium)
-            Text(text = "${food.fats} grasas", style = MaterialTheme.typography.labelMedium)
+            Text(text = "${food.energy} kcal", style = MaterialTheme.typography.labelMedium)
+            Text(text = "${food.protein}g proteínas", style = MaterialTheme.typography.labelMedium)
+            Text(text = "${food.fat}g grasas", style = MaterialTheme.typography.labelMedium)
+            Text(text = "${food.water}% agua", style = MaterialTheme.typography.labelMedium)
         }
     }
 }

@@ -18,10 +18,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.unmsm.nutrihealth.data.model.Food
 import com.unmsm.nutrihealth.data.model.FoodPrediction
 import com.unmsm.nutrihealth.data.repository.FoodPredictionService
+import com.unmsm.nutrihealth.logic.FoodViewModel
 import com.unmsm.nutrihealth.ui.composable.blocks.SubsectionTopBar
 import com.unmsm.nutrihealth.ui.util.CameraOrGalleryPicker
-import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
+import android.widget.Toast
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
 fun Scan(
@@ -130,52 +131,38 @@ fun ErrorMessage(
     message: String,
     onDismiss: () -> Unit
 ) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        modifier = Modifier.padding(16.dp)
-    ) {
-        Text(
-            text = "Error",
-            style = MaterialTheme.typography.headlineMedium,
-            color = Color.Red
-        )
-        Text(
-            text = message,
-            style = MaterialTheme.typography.bodyMedium,
-            textAlign = TextAlign.Center
-        )
-        Button(onClick = onDismiss) {
-            Text("Intentar de nuevo")
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Error") },
+        text = { Text(message) },
+        confirmButton = {
+            Button(onClick = onDismiss) {
+                Text("Intentar de nuevo")
+            }
         }
-    }
+    )
 }
 
 @Composable
 fun EmptyScanPrompt(onScan: () -> Unit) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        verticalArrangement = Arrangement.Center,
         modifier = Modifier.padding(16.dp)
     ) {
-        Icon(
-            imageVector = Icons.Default.CameraAlt,
-            contentDescription = null,
-            tint = Color(0xFF9E9E9E),
-            modifier = Modifier.size(96.dp)
-        )
-        Text("Escanea tu comida", style = MaterialTheme.typography.titleLarge)
-        Text(
-            "Toma una foto de tu comida para identificarla automáticamente",
-            style = MaterialTheme.typography.bodyMedium,
-            color = Color.Gray,
-            textAlign = TextAlign.Center
-        )
         Button(
             onClick = onScan,
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primary
+            )
         ) {
-            Text("Abrir cámara", color = Color.White)
+            Icon(
+                imageVector = Icons.Default.CameraAlt,
+                contentDescription = null,
+                modifier = Modifier.size(24.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Escanear comida")
         }
     }
 }
@@ -183,44 +170,106 @@ fun EmptyScanPrompt(onScan: () -> Unit) {
 @Composable
 fun FoodPredictionResult(
     prediction: FoodPrediction,
-    onNewScan: () -> Unit
+    onNewScan: () -> Unit,
+    foodViewModel: FoodViewModel = viewModel()
 ) {
+    var isSaving by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+
     Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        modifier = Modifier.padding(16.dp)
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = prediction.plato_general.nombre,
-            style = MaterialTheme.typography.headlineMedium
+            text = prediction.name,
+            style = MaterialTheme.typography.headlineMedium,
+            textAlign = TextAlign.Center
         )
-        
+
+        if (prediction.categoria_general.isNotEmpty()) {
+            Text(
+                text = "Categoría: ${prediction.categoria_general}",
+                style = MaterialTheme.typography.bodyLarge,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+        }
+
         Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFFE8F5E9))
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.secondaryContainer
+            )
         ) {
             Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
             ) {
                 Text(
                     text = "Información Nutricional",
-                    style = MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
                 )
-                prediction.plato_general.nutricion?.let { nutricion ->
-                    Text("Energía: ${String.format("%.1f", nutricion.energia ?: 0.0)} kcal")
-                    Text("Proteínas: ${String.format("%.2f", nutricion.proteinas ?: 0.0)}g")
-                    Text("Grasas: ${String.format("%.2f", nutricion.grasa ?: 0.0)}g")
-                    Text("Agua: ${String.format("%.1f", nutricion.agua ?: 0.0)}%")
-                } ?: Text("Información nutricional no disponible")
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                val nutricion = prediction.plato_general.nutricion
+                Text("Energía: ${String.format("%.1f", nutricion.energia)} kcal")
+                Text("Proteínas: ${String.format("%.1f", nutricion.proteinas)}g")
+                Text("Grasas: ${String.format("%.1f", nutricion.grasa)}g")
+                Text("Agua: ${String.format("%.1f", nutricion.agua)}%")
             }
         }
 
-        Button(
-            onClick = onNewScan,
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            Text("Escanear otro plato", color = Color.White)
+            Button(
+                onClick = {
+                    isSaving = true
+                    foodViewModel.savePredictedFood(
+                        Food(
+                            name = prediction.name,
+                            energy = prediction.plato_general.nutricion.energia,
+                            protein = prediction.plato_general.nutricion.proteinas,
+                            fat = prediction.plato_general.nutricion.grasa,
+                            water = prediction.plato_general.nutricion.agua,
+                            timestamp = java.util.Date()
+                        )
+                    ) { success, message ->
+                        isSaving = false
+                        Toast.makeText(
+                            context,
+                            message,
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                },
+                enabled = !isSaving
+            ) {
+                if (isSaving) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                } else {
+                    Text("Guardar")
+                }
+            }
+
+            Button(
+                onClick = onNewScan,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.secondary
+                )
+            ) {
+                Text("Nuevo escaneo")
+            }
         }
     }
 }

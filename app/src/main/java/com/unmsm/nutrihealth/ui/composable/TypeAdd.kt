@@ -10,6 +10,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import com.unmsm.nutrihealth.data.model.Food
 import androidx.compose.runtime.*
+import java.util.Date
 
 @Composable
 fun TypeAddDialog(
@@ -18,10 +19,10 @@ fun TypeAddDialog(
     onConfirm: (Food) -> Unit
 ) {
     var name by remember { mutableStateOf("") }
-    var calories by remember { mutableStateOf("") }
+    var energy by remember { mutableStateOf("") }
     var protein by remember { mutableStateOf("") }
-    var carbs by remember { mutableStateOf("") }
-    var fats by remember { mutableStateOf("") }
+    var fat by remember { mutableStateOf("") }
+    var water by remember { mutableStateOf("") }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -29,10 +30,11 @@ fun TypeAddDialog(
             TextButton(onClick = {
                 val food = Food(
                     name = name,
-                    calories = calories.toIntOrNull() ?: 0,
-                    protein = protein.toFloatOrNull() ?: 0f,
-                    carbs = carbs.toFloatOrNull() ?: 0f,
-                    fats = fats.toFloatOrNull() ?: 0f
+                    energy = energy.toDoubleOrNull() ?: 0.0,
+                    protein = protein.toDoubleOrNull() ?: 0.0,
+                    fat = fat.toDoubleOrNull() ?: 0.0,
+                    water = water.toDoubleOrNull() ?: 0.0,
+                    timestamp = Date()
                 )
                 onConfirm(food)
             }) {
@@ -48,10 +50,10 @@ fun TypeAddDialog(
         text = {
             Column {
                 TextField(value = name, onValueChange = { name = it }, label = { Text("Nombre") })
-                TextField(value = calories, onValueChange = { calories = it }, label = { Text("Calorías") })
-                TextField(value = protein, onValueChange = { protein = it }, label = { Text("Proteínas") })
-                TextField(value = carbs, onValueChange = { carbs = it }, label = { Text("Carbohidratos") })
-                TextField(value = fats, onValueChange = { fats = it }, label = { Text("Grasas") })
+                TextField(value = energy, onValueChange = { energy = it }, label = { Text("Energía (kcal)") })
+                TextField(value = protein, onValueChange = { protein = it }, label = { Text("Proteínas (g)") })
+                TextField(value = fat, onValueChange = { fat = it }, label = { Text("Grasas (g)") })
+                TextField(value = water, onValueChange = { water = it }, label = { Text("Agua (%)") })
             }
         }
     )

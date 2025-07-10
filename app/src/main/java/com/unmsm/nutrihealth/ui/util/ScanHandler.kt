@@ -39,6 +39,11 @@ import java.io.FileOutputStream
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import android.provider.Settings
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarResult
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.fillMaxWidth
 
 @Composable
 fun CameraOrGalleryPicker(
@@ -158,54 +163,100 @@ fun CameraOrGalleryPicker(
         showDialog = false
     }
 
+    // Launcher para permisos múltiples
     val multiplePermissionsLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissions ->
-        when {
-            permissions.getOrDefault(Manifest.permission.CAMERA, false) -> {
-                if (!checkCameraHardware()) {
-                    coroutineScope.launch {
-                        snackbarHostState.showSnackbar("Este dispositivo no tiene cámara disponible")
+    ) { permissionsMap ->
+        val allGranted = permissionsMap.entries.all { it.value }
+        if (allGranted) {
+            when {
+                permissionsMap.containsKey(Manifest.permission.CAMERA) -> {
+                    if (!checkCameraHardware()) {
+                        coroutineScope.launch {
+                            snackbarHostState.showSnackbar("Este dispositivo no tiene cámara disponible")
+                        }
+                        return@rememberLauncherForActivityResult
                     }
-                    return@rememberLauncherForActivityResult
-                }
-
-                try {
-                    photoUri = getPhotoFileUri()
-                    val takePictureIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE).apply {
-                        putExtra(MediaStore.EXTRA_OUTPUT, photoUri)
-                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                        addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
-                    }
-
-                    // Verificar que hay una aplicación de cámara disponible
-                    activity?.let { act ->
-                        takePictureIntent.resolveActivity(act.packageManager)?.let {
-                            cameraResultLauncher.launch(takePictureIntent)
-                        } ?: run {
-                            coroutineScope.launch {
-                                snackbarHostState.showSnackbar("No hay aplicación de cámara disponible")
+                    try {
+                        photoUri = getPhotoFileUri()
+                        val takePictureIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE).apply {
+                            putExtra(MediaStore.EXTRA_OUTPUT, photoUri)
+                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+                        }
+                        activity?.let { act ->
+                            takePictureIntent.resolveActivity(act.packageManager)?.let {
+                                cameraResultLauncher.launch(takePictureIntent)
                             }
                         }
+                    } catch (ex: Exception) {
+                        coroutineScope.launch {
+                            snackbarHostState.showSnackbar("Error al iniciar la cámara: ${ex.message}")
+                        }
+                        photoFile?.delete()
+                        photoFile = null
+                        photoUri = null
                     }
-                } catch (ex: Exception) {
-                    coroutineScope.launch {
-                        snackbarHostState.showSnackbar("Error al iniciar la cámara: ${ex.message}")
-                    }
-                    photoFile?.delete()
-                    photoFile = null
-                    photoUri = null
+                }
+                permissionsMap.containsKey(Manifest.permission.READ_MEDIA_IMAGES) ||
+                permissionsMap.containsKey(Manifest.permission.READ_EXTERNAL_STORAGE) -> {
+                    galleryLauncher.launch("image/*")
                 }
             }
-            permissions.getOrDefault(if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
-                Manifest.permission.READ_MEDIA_IMAGES else Manifest.permission.READ_EXTERNAL_STORAGE, false) -> {
-                galleryLauncher.launch("image/*")
+        } else {
+            val permanentlyDenied = permissionsMap.any { (permission, granted) ->
+                !granted && !(activity?.shouldShowRequestPermissionRationale(permission) ?: true)
             }
-            else -> {
+            
+            if (permanentlyDenied) {
                 coroutineScope.launch {
-                    snackbarHostState.showSnackbar("Permisos necesarios denegados")
+                    snackbarHostState.showSnackbar(
+                        message = "Para usar esta función, necesitas habilitar los permisos en la configuración",
+                        actionLabel = "Ir a Configuración",
+                        duration = SnackbarDuration.Long
+                    ).let { result ->
+                        if (result == SnackbarResult.ActionPerformed) {
+                            val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                                data = Uri.fromParts("package", context.packageName, null)
+                            }
+                            context.startActivity(intent)
+                        }
+                    }
+                }
+            } else {
+                coroutineScope.launch {
+                    snackbarHostState.showSnackbar(
+                        message = "Se necesitan permisos para continuar",
+                        duration = SnackbarDuration.Short
+                    )
                 }
             }
+        }
+    }
+
+    // Función para solicitar permisos con explicación
+    fun requestPermissionWithRationale(permissions: Array<String>, action: String) {
+        val shouldShowRationale = permissions.any { permission ->
+            activity?.shouldShowRequestPermissionRationale(permission) ?: false
+        }
+
+        if (shouldShowRationale) {
+            coroutineScope.launch {
+                snackbarHostState.showSnackbar(
+                    message = when (action) {
+                        "camera" -> "Necesitamos acceso a la cámara para tomar fotos de los alimentos"
+                        else -> "Necesitamos acceso a la galería para seleccionar fotos de alimentos"
+                    },
+                    actionLabel = "Permitir",
+                    duration = SnackbarDuration.Long
+                ).let { result ->
+                    if (result == SnackbarResult.ActionPerformed) {
+                        multiplePermissionsLauncher.launch(permissions)
+                    }
+                }
+            }
+        } else {
+            multiplePermissionsLauncher.launch(permissions)
         }
     }
 
@@ -216,49 +267,44 @@ fun CameraOrGalleryPicker(
             if (showDialog) {
                 AlertDialog(
                     onDismissRequest = { showDialog = false },
-                    confirmButton = {},
-                    title = { Text("Selecciona fuente de imagen") },
+                    title = { Text("Seleccionar imagen") },
                     text = {
-                        Column {
+                        Column(
+                            modifier = Modifier.padding(8.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
                             Button(
                                 onClick = {
-                                    if (!checkCameraHardware()) {
-                                        coroutineScope.launch {
-                                            snackbarHostState.showSnackbar("Este dispositivo no tiene cámara disponible")
-                                        }
-                                        return@Button
-                                    }
-                                    multiplePermissionsLauncher.launch(
+                                    val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                        arrayOf(Manifest.permission.CAMERA)
+                                    } else {
                                         arrayOf(
                                             Manifest.permission.CAMERA,
-                                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                                Manifest.permission.READ_MEDIA_IMAGES
-                                            } else {
-                                                Manifest.permission.READ_EXTERNAL_STORAGE
-                                            }
+                                            Manifest.permission.WRITE_EXTERNAL_STORAGE
                                         )
-                                    )
-                                }
+                                    }
+                                    requestPermissionWithRationale(permissions, "camera")
+                                },
+                                modifier = Modifier.fillMaxWidth()
                             ) {
                                 Text("Tomar Foto")
                             }
-
-                            Spacer(modifier = Modifier.height(8.dp))
-
                             Button(
                                 onClick = {
-                                    val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                        Manifest.permission.READ_MEDIA_IMAGES
+                                    val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                        arrayOf(Manifest.permission.READ_MEDIA_IMAGES)
                                     } else {
-                                        Manifest.permission.READ_EXTERNAL_STORAGE
+                                        arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
                                     }
-                                    multiplePermissionsLauncher.launch(arrayOf(permission))
-                                }
+                                    requestPermissionWithRationale(permissions, "gallery")
+                                },
+                                modifier = Modifier.fillMaxWidth()
                             ) {
                                 Text("Elegir de la Galería")
                             }
                         }
-                    }
+                    },
+                    confirmButton = { }
                 )
             }
         }
