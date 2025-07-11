@@ -47,26 +47,33 @@ class AccountSetupViewModel: ViewModel() {
 
     fun setMainGoal(i: UserTarget.Priority) = _uiState.update { it.copy(mainGoal = i) }
 
-    fun submitData(): Unit {
-        Log.d("FirestoreDebug", "📤 submitData() con User.id = ${User.id}")
-        UserData.age = _uiState.value.age.toIntOrNull() ?: 0
-        UserData.height = _uiState.value.height.toIntOrNull() ?: 0
-        UserData.weight = _uiState.value.weight.toFloatOrNull() ?: 0f
-        UserData.gender = if(_uiState.value.genderIndex == 0) UserData.Gender.Male else UserData.Gender.Female
+    fun submitData(): Boolean {
+        val edad = _uiState.value.age.toIntOrNull()
+        val altura = _uiState.value.height.toIntOrNull()
+        val peso = _uiState.value.weight.toFloatOrNull()
+        val generoIndex = _uiState.value.genderIndex
+
+        if (edad == null || edad !in 10..120) return false
+        if (altura == null || altura !in 50..250) return false
+        if (peso == null || peso !in 20f..300f) return false
+        if (generoIndex != 0 && generoIndex != 1) return false
+
+        // Si todo está bien, guarda
+        UserData.age = edad
+        UserData.height = altura
+        UserData.weight = peso
+        UserData.gender = if (generoIndex == 0) UserData.Gender.Male else UserData.Gender.Female
+
         firestore.collection("user")
             .document(User.id)
             .collection("setup_data")
             .document("base_data")
             .set(UserData)
-            .addOnSuccessListener {
-                Log.d("FirestoreDebug", "✅ base_data guardado correctamente para ${User.id}")
-            }
-            .addOnFailureListener {
-                Log.e("FirestoreDebug", "❌ Error guardando base_data: ${it.message}")
-            }
 
         advanceStage()
+        return true
     }
+
 
     fun submitTarget() {
         Log.d("FirestoreDebug", "📤 submitData() con User.id = ${User.id}")
@@ -99,16 +106,24 @@ class AccountSetupViewModel: ViewModel() {
         UserObjective.protein = (UserObjective.tmb * .3).toInt()
         UserObjective.carbs = (UserObjective.tmb * .45).toInt()
         UserObjective.fats = (UserObjective.tmb * .25).toInt()
+
+        val pesoActual = UserData.weight
+        val pesoMeta = _uiState.value.targetWeight.toFloatOrNull() ?: pesoActual
+        val diferencia = kotlin.math.abs(pesoMeta - pesoActual)
+        val semanas = (diferencia * 0.5).toInt().coerceIn(8, 12) // entre 2 a 3 meses
+
         _uiState.update {
             it.copy(
                 tmb = UserObjective.tmb,
                 recommendedKcal = UserObjective.dailyCal,
                 protein = UserObjective.protein,
                 carbs = UserObjective.carbs,
-                fats = UserObjective.fats
+                fats = UserObjective.fats,
+                timeToReach = semanas // ✅ Aquí se corrige
             )
         }
     }
+
 
     fun confirm(): Unit {
         Log.d("FirestoreDebug", "📤 confirm() con User.id = ${User.id}")
