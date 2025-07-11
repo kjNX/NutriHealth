@@ -15,12 +15,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.unmsm.nutrihealth.data.model.Food
 import com.unmsm.nutrihealth.data.model.Run
-import com.unmsm.nutrihealth.data.model.UserObjective
 import com.unmsm.nutrihealth.ui.composable.dashboard.ActivityCard
 import com.unmsm.nutrihealth.ui.composable.dashboard.NutrientDistribution
 import com.unmsm.nutrihealth.ui.composable.dashboard.NutrientsCard
@@ -98,13 +98,39 @@ fun filterRunByDay(runList: List<Run>, history: Int = 7): List<List<Run>> {
 }
 
 @Composable
+fun NoFoodScreen(modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text("No has escaneado comida")
+        Text("¡Comienza a escanear tu comida para obtener información!.")
+    }
+}
+
+@Composable
+fun NoRunScreen(modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text("No has registrado caminatas")
+        Text("¡Comienza a caminar con NutriHealth para obtener información!.")
+    }
+}
+
+@Composable
 fun StartDisplay(
     foodList: List<Food>,
     runList: List<Run>,
-    extraWater: Int,
     modifier: Modifier = Modifier
 ) {
-    val todayFood = filterFoodByDay(foodList, 7)
 
     Column(
         modifier = modifier
@@ -112,40 +138,47 @@ fun StartDisplay(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        CaloriesCard(todayFood.last().sumOf { it.energy }.toInt())
+        if(foodList.isEmpty()) NoFoodScreen()
+        else {
+            val todayFood = filterFoodByDay(foodList)
+            CaloriesCard(todayFood.last().sumOf { it.energy }.toInt())
 //        Spacer(modifier = Modifier.height(16.dp))
 //        MacronutrientCard()
 //        Spacer(modifier = Modifier.height(16.dp))
-        WaterCard(todayFood.last().sumOf { it.water }.toInt())
+            WaterCard(todayFood.last().sumOf { it.water }.toInt())
 //        Spacer(modifier = Modifier.height(16.dp))
 //        StepsCard()
 //        Spacer(modifier = Modifier.height(16.dp))
 //        RemindersCard {}
 //        Spacer(modifier = Modifier.height(16.dp))
-        /*TrendsCard(
-            todayFood.map { i: List<Food> ->
-                i.sumOf { it.water }.toInt()
-            },
-            todayFood.map { i: List<Food> ->
-                i.sumOf { it.energy }.toInt()
-            },
-            todayFood.map { i: List<Food> ->
-                i.sumOf { it.protein }.toInt()
-            },
-            todayFood.map { i: List<Food> ->
-                i.sumOf { it.fats }.toInt()
-            },
-            historyData = getNutrientsData(foodList)
-        )*/
-        NutrientDistribution(foodList)
-        ActivityCard(historyData = getActivityData(foodList, runList))
-        NutrientsCard(historyData = getNutrientsData(foodList))
+            /*TrendsCard(
+                todayFood.map { i: List<Food> ->
+                    i.sumOf { it.water }.toInt()
+                },
+                todayFood.map { i: List<Food> ->
+                    i.sumOf { it.energy }.toInt()
+                },
+                todayFood.map { i: List<Food> ->
+                    i.sumOf { it.protein }.toInt()
+                },
+                todayFood.map { i: List<Food> ->
+                    i.sumOf { it.fats }.toInt()
+                },
+                historyData = getNutrientsData(foodList)
+            )*/
+            NutrientDistribution(foodList)
+            NutrientsCard(historyData = getNutrientsData(foodList))
+            if(runList.isEmpty()) NoRunScreen()
+            else ActivityCard(historyData = getActivityData(foodList, runList))
+            }
+        }
+
     }
 }
 
 @Composable
 fun CaloriesCard(aggregateCalories: Int) {
-    val animatedProgress by animateFloatAsState(targetValue = aggregateCalories / UserObjective.dailyCal.toFloat())
+    val animatedProgress by animateFloatAsState(targetValue = aggregateCalories / 2500f)
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -154,7 +187,7 @@ fun CaloriesCard(aggregateCalories: Int) {
     ) {
         Column(Modifier.padding(16.dp)) {
             Text("🔥 Calorías de hoy", style = MaterialTheme.typography.titleMedium)
-            Text("${aggregateCalories} de ${UserObjective.dailyCal} kcal", style = MaterialTheme.typography.bodyLarge)
+            Text("$aggregateCalories de 2500 kcal", style = MaterialTheme.typography.bodyLarge)
             LinearProgressIndicator(
                 progress = { animatedProgress },
                 color = Color(0xFFFF7043),
@@ -168,7 +201,7 @@ fun CaloriesCard(aggregateCalories: Int) {
 
 @Composable
 fun WaterCard(waterAmount: Int) {
-    val animatedProgress by animateFloatAsState(targetValue = waterAmount / 2500f)
+    val animatedProgress by animateFloatAsState(targetValue = waterAmount / 1200f)
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -177,7 +210,7 @@ fun WaterCard(waterAmount: Int) {
     ) {
         Column(Modifier.padding(16.dp)) {
             Text("💧 Agua", style = MaterialTheme.typography.titleMedium)
-            Text("${waterAmount}ml de 2500ml", style = MaterialTheme.typography.bodyLarge)
+            Text("${waterAmount}ml de 1200ml", style = MaterialTheme.typography.bodyLarge)
             LinearProgressIndicator(
                 progress = animatedProgress,
                 modifier = Modifier
