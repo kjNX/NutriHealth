@@ -1,82 +1,112 @@
-package com.unmsm.nutrihealth_app.ui.settings
+package com.unmsm.nutrihealth.ui.composable.settings
 
-import android.util.Patterns
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
 import com.google.firebase.auth.FirebaseAuth
+import com.unmsm.nutrihealth.data.model.User
+import com.unmsm.nutrihealth.data.repository.preferences.PreferencesRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 const val MEASURE_TYPE = "measure_type"
 const val NOTIFICATIONS = "notifications"
-/*
-class SettingsViewModel() : ViewModel() {
+
+data class SettingsUiState(
+    val name: String = "",
+    val email: String = "",
+    val updateEnabled: Boolean = false,
+    val exitEnabled: Boolean = true,
+    val measureType: Boolean = false,
+    val notifications: Boolean = false
+)
+
+@HiltViewModel
+class SettingsViewModel @Inject constructor(
+    private val preferencesRepository: PreferencesRepository
+) : ViewModel() {
     var uiState by mutableStateOf(SettingsUiState())
-    lateinit var user: User
 
     init {
-        viewModelScope.launch {
-            user = databaseRepository.getUser(authRepository.currentSession)!!
-            uiState = uiState.copy(name = user.name, email = user.email)
-        }
+        // Initialize with current user data
+        uiState = uiState.copy(
+            name = User.name,
+            email = User.email
+        )
 
+        // Load preferences
         viewModelScope.launch {
-            uiState = uiState.copy(
-                measureType = preferencesRepository.getValue(MEASURE_TYPE, false),
-                notifications = preferencesRepository.getValue(NOTIFICATIONS, false)
-            )
+            try {
+                val measureType = preferencesRepository.getValue(MEASURE_TYPE, false)
+                val notifications = preferencesRepository.getValue(NOTIFICATIONS, false)
+                uiState = uiState.copy(
+                    measureType = measureType,
+                    notifications = notifications
+                )
+            } catch (e: Exception) {
+                // Handle error
+            }
         }
     }
 
-    fun updateName(name: String) { uiState = uiState.copy(name = name, updateEnabled = name != user.name) }
-    fun updateEmail(email: String) { uiState = uiState.copy(email = email, updateEnabled = email != user.email) }
-//    fun updatePhoneNumber(phoneNumber: String)
-//    { if(phoneNumber.all { it.isDigit() }) uiState = uiState.copy(phoneNumber = phoneNumber) }
+    fun updateName(name: String) { 
+        uiState = uiState.copy(
+            name = name, 
+            updateEnabled = name != User.name
+        ) 
+    }
 
-    suspend fun updateMeasureType()
-    { uiState = uiState.copy(measureType = preferencesRepository.getValue(MEASURE_TYPE, false)) }
-    suspend fun updateNotifications()
-    { uiState = uiState.copy(notifications = preferencesRepository.getValue(NOTIFICATIONS, false)) }
+    fun updateEmail(email: String) { 
+        uiState = uiState.copy(
+            email = email, 
+            updateEnabled = email != User.email
+        ) 
+    }
 
     fun toggleMeasureType(measureType: Boolean) {
         viewModelScope.launch {
-            preferencesRepository.setValue(MEASURE_TYPE, measureType)
-            updateMeasureType()
+            try {
+                preferencesRepository.setValue(MEASURE_TYPE, measureType)
+                uiState = uiState.copy(measureType = measureType)
+            } catch (e: Exception) {
+                // Handle error
+            }
         }
     }
+
     fun toggleNotifications(notifications: Boolean) {
         viewModelScope.launch {
-            preferencesRepository.setValue(NOTIFICATIONS, notifications)
-            updateNotifications()
+            try {
+                preferencesRepository.setValue(NOTIFICATIONS, notifications)
+                uiState = uiState.copy(notifications = notifications)
+            } catch (e: Exception) {
+                // Handle error
+            }
         }
     }
 
     fun commitUserChanges() {
-        val updatedName = uiState.name
-        val updatedEmail = uiState.email
-        var update = user
         viewModelScope.launch {
             uiState = uiState.copy(exitEnabled = false)
-            if(updatedName != user.name) update = update.copy(name = updatedName)
-            if(updatedEmail != user.email && Patterns.EMAIL_ADDRESS.matcher(uiState.email).matches()) {
-                update = update.copy(email = updatedEmail)
-                authRepository.updateEmail(updatedEmail)
-            }
-            databaseRepository.setUser(
-                uid = authRepository.currentSession,
-                user = update
+
+            // Update User object directly since it's a singleton
+            User.name = uiState.name
+            User.email = uiState.email
+
+            // In a real app, you would update Firebase here
+
+            uiState = uiState.copy(
+                updateEnabled = false,
+                exitEnabled = true
             )
-            uiState = uiState.copy(exitEnabled = true)
         }
-        user = update
     }
 
-    fun logout() { FirebaseAuth.getInstance().signOut() }
+    fun logout() { 
+        FirebaseAuth.getInstance().signOut() 
+        User.reset()
+    }
 }
-*/

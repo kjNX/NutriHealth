@@ -1,4 +1,4 @@
-package com.unmsm.nutrihealth_app.ui.settings
+package com.unmsm.nutrihealth.ui.composable.settings
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
@@ -46,30 +46,34 @@ fun SettingsComposite(
     var pagerState = rememberPagerState { nameList.size }
     var coroutineScope = rememberCoroutineScope()
     val tabList = listOf(
-        @Composable { modifier: Modifier -> AccountPage(
-            updateEnabled = updateEnabled,
-            exitEnabled = exitEnabled,
-            name = name,
-            onNameChange = onNameChange,
-            email = email,
-            onEmailChange = onEmailChange,
+        @Composable { modifier: Modifier ->
+            AccountPage(
+                updateEnabled = updateEnabled,
+                exitEnabled = exitEnabled,
+                name = name,
+                onNameChange = onNameChange,
+                email = email,
+                onEmailChange = onEmailChange,
 //            phoneNumber = phoneNumber,
 //            onPhoneNumberChange = onPhoneNumberChange,
-            onCommit = onCommit,
-            onPasswordChangeRequest = onPasswordChangeRequest,
-            modifier = modifier
-        ) },
-        @Composable { modifier: Modifier -> AppliPage(
-            exitEnabled = exitEnabled,
-            measureType = measureType,
-            onMeasureTypeToggle = onMeasureTypeToggle,
-            notifications = notifications,
-            onNotificationsToggle = onNotificationsToggle,
+                onCommit = onCommit,
+                onPasswordChangeRequest = onPasswordChangeRequest,
+                modifier = modifier
+            )
+        },
+        @Composable { modifier: Modifier ->
+            AppliPage(
+                exitEnabled = exitEnabled,
+                measureType = measureType,
+                onMeasureTypeToggle = onMeasureTypeToggle,
+                notifications = notifications,
+                onNotificationsToggle = onNotificationsToggle,
 //            onExportRequest = onExportRequest,
-            onDeleteRequest = onDeleteRequest,
-            onLogout = onLogout,
-            modifier = modifier
-        ) }
+                onDeleteRequest = onDeleteRequest,
+                onLogout = onLogout,
+                modifier = modifier
+            )
+        }
     )
 
     Column(modifier = modifier) {

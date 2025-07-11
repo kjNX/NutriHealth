@@ -1,4 +1,4 @@
-package com.unmsm.nutrihealth_app.data.database
+package com.unmsm.nutrihealth.data.repository.database
 
 import com.unmsm.nutrihealth_app.model.live.Actor
 import com.unmsm.nutrihealth_app.model.live.Food

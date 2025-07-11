@@ -1,4 +1,4 @@
-package com.unmsm.nutrihealth_app.data.auth
+package com.unmsm.nutrihealth.data.repository.auth
 
 interface AuthRepository {
     val currentSession : String // returns the uid of the current session or an empty string

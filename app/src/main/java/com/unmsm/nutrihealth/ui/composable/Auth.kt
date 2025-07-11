@@ -89,7 +89,7 @@ fun AuthDisplay(
     onGoogleAccess: () -> Unit,
     isLoginStart: Boolean = true, // <- NUEVO PARÁMETRO
     modifier: Modifier = Modifier,
-    viewModel: AuthViewModel = viewModel()
+    viewModel: AuthViewModel = viewModel(),
 ) {
     var showRecoveryDialog by remember { mutableStateOf(false) }
     var recoveryEmail by remember { mutableStateOf("") }

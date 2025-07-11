@@ -1,4 +1,4 @@
-package com.unmsm.nutrihealth_app.data.preferences
+package com.unmsm.nutrihealth.data.repository.preferences
 
 import android.content.Context
 import androidx.datastore.core.DataStore

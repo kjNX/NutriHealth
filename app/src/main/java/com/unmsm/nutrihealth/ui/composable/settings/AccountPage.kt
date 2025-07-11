@@ -1,4 +1,4 @@
-package com.unmsm.nutrihealth_app.ui.settings
+package com.unmsm.nutrihealth.ui.composable.settings
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement

@@ -1,5 +1,5 @@
-package com.unmsm.nutrihealth_app.ui.settings
-
+package com.unmsm.nutrihealth.ui.composable.settings
+/*
 data class SettingsUiState(
     var name: String = "",
     var email: String = "",
@@ -9,3 +9,4 @@ data class SettingsUiState(
     var measureType: Boolean = false,
     var notifications: Boolean = false
 )
+ */

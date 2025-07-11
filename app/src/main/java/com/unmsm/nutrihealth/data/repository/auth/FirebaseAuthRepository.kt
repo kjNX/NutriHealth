@@ -1,4 +1,4 @@
-package com.unmsm.nutrihealth_app.data.auth
+package com.unmsm.nutrihealth.data.repository.auth
 
 import android.util.Log
 import com.google.firebase.auth.FirebaseAuth

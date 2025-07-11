@@ -14,6 +14,7 @@ import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottom
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberStart
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLine
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
+import com.patrykandpatrick.vico.compose.cartesian.marker.rememberDefaultCartesianMarker
 import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
 import com.patrykandpatrick.vico.compose.cartesian.rememberVicoScrollState
 import com.patrykandpatrick.vico.compose.common.fill
@@ -26,6 +27,7 @@ import com.patrykandpatrick.vico.core.cartesian.data.CartesianValueFormatter
 import com.patrykandpatrick.vico.core.cartesian.data.lineSeries
 import com.patrykandpatrick.vico.core.cartesian.layer.LineCartesianLayer
 import com.patrykandpatrick.vico.core.cartesian.marker.DefaultCartesianMarker
+import com.patrykandpatrick.vico.core.common.component.TextComponent
 import com.patrykandpatrick.vico.core.common.shader.ShaderProvider
 import java.text.DecimalFormat
 
@@ -61,7 +63,7 @@ private fun JetpackComposeElectricCarSales(
             ),
             startAxis = VerticalAxis.rememberStart(valueFormatter = StartAxisValueFormatter),
             bottomAxis = HorizontalAxis.rememberBottom(),
-//            marker = rememberMarkerState(MarkerValueFormatter),
+            marker = rememberDefaultCartesianMarker(label = TextComponent(), valueFormatter = MarkerValueFormatter),
         ),
         modelProducer,
         modifier.height(220.dp),
@@ -73,7 +75,8 @@ private val x = (2010..2023).toList()
 private val y = listOf<Number>(0.28, 1.4, 3.1, 5.8, 15, 22, 29, 39, 49, 56, 75, 86, 89, 93)
 
 @Composable
-fun JetpackComposeElectricCarSales(modifier: Modifier = Modifier) {
+@Preview(showBackground = true)
+private fun Preview() {
     val modelProducer = remember { CartesianChartModelProducer() }
     LaunchedEffect(Unit) {
         modelProducer.runTransaction {
@@ -81,11 +84,5 @@ fun JetpackComposeElectricCarSales(modifier: Modifier = Modifier) {
             lineSeries { series(x, y) }
         }
     }
-    JetpackComposeElectricCarSales(modelProducer, modifier)
-}
-
-@Composable
-@Preview
-private fun Preview() {
-    JetpackComposeElectricCarSales()
+    JetpackComposeElectricCarSales(modelProducer)
 }

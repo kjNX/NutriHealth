@@ -1,22 +1,22 @@
-package com.unmsm.nutrihealth_app.ui.settings
+package com.unmsm.nutrihealth.ui.composable.settings
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.unmsm.nutrihealth.ui.composable.blocks.SubsectionTopBar
-/*
+import com.unmsm.nutrihealth.ui.composable.settings.SettingsComposite
+
 @Composable
 fun SettingsExport(
     onBack: () -> Unit,
     onLogout: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: SettingsViewModel = viewModel(factory = SettingsViewModel.Factory)
+    viewModel: SettingsViewModel = hiltViewModel()
 ) {
-    var uiState = viewModel.uiState
+    val uiState = viewModel.uiState
 
     Scaffold(
         topBar = { SubsectionTopBar(title = "Ajustes", onNavigate = onBack) }
@@ -41,9 +41,8 @@ fun SettingsExport(
             onLogout = {
                 viewModel.logout()
                 onLogout()
-                       },
+            },
             modifier = modifier.fillMaxSize().padding(innerPadding)
         )
     }
 }
- */

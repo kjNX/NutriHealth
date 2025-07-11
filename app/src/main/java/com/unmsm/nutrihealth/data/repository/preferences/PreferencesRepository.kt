@@ -1,4 +1,4 @@
-package com.unmsm.nutrihealth_app.data.preferences
+package com.unmsm.nutrihealth.data.repository.preferences
 
 interface PreferencesRepository {
     suspend fun<T> getValue(key: String, defaultValue: T) : T

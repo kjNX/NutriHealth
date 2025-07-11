@@ -3,7 +3,6 @@ package com.unmsm.nutrihealth
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
-import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -11,11 +10,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.ActivityCompat
 import androidx.navigation.compose.NavHost
@@ -28,7 +24,6 @@ import com.facebook.login.LoginResult
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.*
 import com.unmsm.nutrihealth.data.model.Contact
 import com.unmsm.nutrihealth.data.repository.FoodPredictionService
@@ -41,12 +36,14 @@ import com.unmsm.nutrihealth.logic.utils.PermissionUtils
 import com.unmsm.nutrihealth.ui.composable.*
 import com.unmsm.nutrihealth.ui.composable.pages.map.HistoryScreen
 import com.unmsm.nutrihealth.ui.compose.component.LocationPermissionRequestDialog
+import com.unmsm.nutrihealth.ui.composable.settings.SettingsExport
 import com.unmsm.nutrihealth.ui.theme.NutriHealthTheme
 import dagger.hilt.android.AndroidEntryPoint
 import androidx.activity.viewModels
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.navArgument
+import com.google.android.gms.common.api.ApiException
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
 import com.unmsm.nutrihealth.data.model.User
@@ -73,7 +70,7 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var foodPredictionService: FoodPredictionService
-    
+
     private lateinit var googleSignInClient: GoogleSignInClient
     private lateinit var callbackManager: CallbackManager
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
@@ -185,9 +182,11 @@ class MainActivity : ComponentActivity() {
                         googleSignInLauncher.launch(intent)
                     }
 
+                    val startDestination = if(FirebaseAuth.getInstance().currentUser != null) MainScreen.Main.name else MainScreen.Welcome.name
+
                     NavHost(
                         navController = navController,
-                        startDestination = MainScreen.Welcome.name
+                        startDestination = startDestination
                     ){
                         composable(MainScreen.Welcome.name) {
                             WelcomeScreen(
@@ -242,7 +241,9 @@ class MainActivity : ComponentActivity() {
                                 navController = navController,
                                 onTopBarClick = listOf(
                                     { goto(MainScreen.History.name) },
-                                    { goto(MainScreen.Profile.name) }
+                                    { goto(MainScreen.Dashboard.name) },
+                                    { goto(MainScreen.Profile.name) },
+                                    { goto(MainScreen.Settings.name) }
                                 ),
                                 onScanClick = { goto(MainScreen.Scan.name) },
                                 onContactSelect = { contact ->
@@ -272,7 +273,14 @@ class MainActivity : ComponentActivity() {
                             Messaging(contact = contact, onNavigate = navigate)
                         }
                         composable(MainScreen.Settings.name) {
-
+                            SettingsExport(
+                                onBack = { navController.navigateUp() },
+                                onLogout = {
+                                    navController.navigate(MainScreen.Auth.name) {
+                                        popUpTo(MainScreen.Main.name) { inclusive = true }
+                                    }
+                                }
+                            )
                         }
                         composable(MainScreen.Dashboard.name) {
 
