@@ -71,13 +71,18 @@ fun MainTopBar(onClick: List<() -> Unit>) {
         },
         actions = {
             Row {
-                for((idx, item) in icons.withIndex())
-                    IconButton(onClick = onClick[idx]) {
-                        Icon(
-                            imageVector = item,
-                            contentDescription = iconDescription[idx]
-                        )
+                for ((idx, item) in icons.withIndex()) {
+                    if (idx < onClick.size && idx < iconDescription.size) {
+                        IconButton(onClick = onClick[idx]) {
+                            Icon(
+                                imageVector = item,
+                                contentDescription = iconDescription[idx]
+                            )
+                        }
                     }
+                }
+
+
             }
         }
     )

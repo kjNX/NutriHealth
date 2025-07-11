@@ -45,7 +45,13 @@ import com.unmsm.nutrihealth.ui.theme.NutriHealthTheme
 import dagger.hilt.android.AndroidEntryPoint
 import androidx.activity.viewModels
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.lifecycleScope
+import androidx.navigation.navArgument
+import com.google.firebase.Firebase
+import com.google.firebase.firestore.firestore
+import com.unmsm.nutrihealth.data.model.User
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 enum class MainScreen {
@@ -76,242 +82,248 @@ class MainActivity : ComponentActivity() {
     // Usar viewModels() para inyectar AuthViewModel
     private val authViewModel: AuthViewModel by viewModels()
 
-//    val googleSignInLauncher =
-//        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-//            val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
-//            try {
-//                val account = task.getResult(ApiException::class.java)
-//                account?.idToken?.let { idToken ->
-//                    // Launch in a coroutine scope
-//                    coroutineScope.launch {
-//                        val signInResult = authViewModel.loginWithGoogle(idToken)
-//                        signInResult.fold(
-//                            onSuccess = {
-//                                Toast.makeText(
-//                                    this@MainActivity,
-//                                    "Bienvenido, ${account.displayName}",
-//                                    Toast.LENGTH_SHORT
-//                                ).show()
-//                                gotoAfterLogin(MainScreen.Main.name)
-//                            },
-//                            onFailure = {
-//                                Toast.makeText(this@MainActivity, authViewModel.errorMessage, Toast.LENGTH_SHORT).show()
-//                            }
-//                        )
-//                    }
-//                } ?: run {
-//                    Toast.makeText(this@MainActivity, "Token de Google no válido", Toast.LENGTH_SHORT).show()
-//                }
-//            } catch (e: ApiException) {
-//                Log.e("GoogleSignIn", "Error: ${e.statusCode}")
-//                Toast.makeText(this@MainActivity, "Error de inicio con Google", Toast.LENGTH_SHORT).show()
-//            }
-//        }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         enableEdgeToEdge()
 
-        // Facebook SDK Init
-        FacebookSdk.sdkInitialize(applicationContext)
+
         AppEventsLogger.activateApp(application)
         callbackManager = CallbackManager.Factory.create()
+        val currentUser = Firebase.auth.currentUser
+        //RR
+        var startDestination = MainScreen.Welcome.name
 
-        setContent {
-            val coroutineScope = rememberCoroutineScope()
-            PermissionRequester() // Permisos ubicación
+        if (currentUser != null) {
+            lifecycleScope.launch {
+                try {
+                    val doc = Firebase.firestore.collection("user").document(currentUser.uid).get().await()
+                    val stage = (doc.get("stage") as? Long)?.toInt() ?: 0
+                    User.id = currentUser.uid
+                    User.stage = stage
 
+                    // ⚠️ Establece startDestination basado en stage
+                    startDestination = if (stage == 0) MainScreen.Setup.name else MainScreen.Main.name
 
-            NutriHealthTheme {
-                val navController = rememberNavController()
-                var showOnboarding by remember { mutableStateOf(true) }
-
-                val goto = { path: String -> navController.navigate(path) }
-                gotoAfterLogin = goto
-                val navigate = { navController.navigate(MainScreen.Main.name) }
-                val logout = { navController.navigate(MainScreen.Auth.name) }
-                // Login con correo y contraseña
-
-                val login = { email: String, password: String ->
-                    coroutineScope.launch {
-                        val result = authViewModel.login(email, password)
-                        result.fold(
-                            onSuccess = { goto(MainScreen.Setup.name) },
-                            onFailure = { Toast.makeText(baseContext, authViewModel.errorMessage, Toast.LENGTH_SHORT).show() }
-                        )
-                    }
+                    // ⚠️ Ahora sí llama a setContent (dentro del launch)
+                    launchUI(startDestination)
+                } catch (e: Exception) {
+                    Log.e("MainActivity", "Error obteniendo usuario", e)
+                    launchUI(MainScreen.Welcome.name) // fallback si falla
                 }
-                // Registro con correo y contraseña
+            }
+        } else {
+            launchUI(MainScreen.Welcome.name)
+        }}
 
-                val register = { name: String, email: String, password: String ->
-//                    authViewModel.signup(name, email, password) { success, msg ->
-//                        if (success) goto(MainScreen.Setup.name)
-//                        else Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
-//                    }
-                    coroutineScope.launch {
-                        val result = authViewModel.signup(name, email, password)
-                        result.fold(
-                            onSuccess = { goto(MainScreen.Setup.name) },
-                            onFailure = {
-                                Toast.makeText(baseContext, authViewModel.errorMessage, Toast.LENGTH_SHORT).show() }
-                        )
-                    }
-
-                }
+        private fun launchUI(startDestination: String) {
+            setContent {
+                val coroutineScope = rememberCoroutineScope()
+                PermissionRequester() // Permisos ubicación
 
 
-                // Google SignIn config
-                val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                    .requestIdToken(getString(R.string.web_client))
-                    .requestEmail()
-                    .build()
-                googleSignInClient = GoogleSignIn.getClient(this, gso)
+                NutriHealthTheme {
+                    val navController = rememberNavController()
+                    var showOnboarding by remember { mutableStateOf(true) }
 
-                val onGoogleAccess = {
-                    val intent = googleSignInClient.signInIntent
-//                    googleSignInLauncher.launch(intent)
-                }
+                    val goto = { path: String -> navController.navigate(path) }
+                    gotoAfterLogin = goto
+                    val navigate = { navController.navigate(MainScreen.Main.name) }
+                    val logout = { navController.navigate(MainScreen.Auth.name) }
+                    // Login con correo y contraseña
 
-                NavHost(
-                    navController = navController,
-                    startDestination = MainScreen.Welcome.name
-                ){
-                    composable(MainScreen.Welcome.name) {
-                        WelcomeScreen(
-                            onStart = { navController.navigate(MainScreen.Auth.name) },
-                            onLogin = { navController.navigate(MainScreen.Auth.name) }
-                        )
-                    }
-                    composable(MainScreen.Onboarding.name) {
-                        OnboardingFlow(
-                            viewModel = hiltViewModel(),
-                            onFinish = { navController.navigate(MainScreen.Auth.name) }
-                        )
-                    }
-                    composable(MainScreen.Auth.name) {
-                        AuthDisplay(
-                            onLogin = login,
-                            onRegister = register,
-                            onGoogleAccess = onGoogleAccess,
-                        )
-                    }
-                    composable(MainScreen.Setup.name) {
-                        AccountSetupDisplay(
-                            navController = navController, // ← aquí lo pasas
-                            onSetupFinish = {
-                                navController.navigate(MainScreen.Main.name) {
-                                    popUpTo(MainScreen.Setup.name) { inclusive = true }
+                    val login = { email: String, password: String ->
+                        coroutineScope.launch {
+                            val result = authViewModel.login(email, password)
+                            result.fold(
+                                onSuccess = {
+                                    Log.d("LOGIN_FLOW", "stage = ${User.stage}, navegando a pantalla")
+                                    if (User.stage == 0) {
+                                        goto(MainScreen.Setup.name)
+                                    } else {
+                                        goto(MainScreen.Main.name)
+                                    }
+                                },
+                                onFailure = {
+                                    Toast.makeText(baseContext, authViewModel.errorMessage, Toast.LENGTH_SHORT).show()
                                 }
-                            }
-                        )
-                    }
-                    composable(MainScreen.Main.name) {
-                        MainDisplay(
-                            navController = navController,
-                            onTopBarClick = listOf(
-                                { goto(MainScreen.History.name) },
-                                { goto(MainScreen.Profile.name) }
-                            ),
-                            onScanClick = { goto(MainScreen.Scan.name) },
-                            onContactSelect = { contact ->
-                                goto("${MainScreen.Messaging.name}/${contact.name}")
-                            }
-                        )
+                            )
+                        }
                     }
 
-                    composable(MainScreen.Scan.name) {
-                        Scan(
-                            onNavigate = navigate,
-                            foodPredictionService = foodPredictionService
-                        )
+                    val register = { name: String, email: String, password: String ->
+                        coroutineScope.launch {
+                            val result = authViewModel.signup(name, email, password)
+                            result.fold(
+                                onSuccess = {
+                                    if (User.stage == 0) {
+                                        goto(MainScreen.Setup.name)
+                                    } else {
+                                        goto(MainScreen.Main.name)
+                                    }
+                                },
+                                onFailure = {
+                                    Toast.makeText(baseContext, authViewModel.errorMessage, Toast.LENGTH_SHORT).show()
+                                }
+                            )
+                        }
                     }
-                    composable(MainScreen.History.name) {
-                        HistoryScreen(navController = navController)
-                    }
-                    composable(MainScreen.Profile.name) {
-                        Profile(
-                            onNavigate = navigate,
-                            onLogout = logout
-                        )
-                    }
-                    composable("${MainScreen.Messaging.name}/{contactName}") { backStack ->
-                        val name = backStack.arguments?.getString("contactName") ?: ""
-                        val contact = getContacts().find { it.name == name } ?: Contact(name, "")
-                        Messaging(contact = contact, onNavigate = navigate)
-                    }
-                    composable(MainScreen.Settings.name) {
 
-                    }
-                    composable(MainScreen.Dashboard.name) {
 
+
+                    // Google SignIn config
+                    val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                        .requestIdToken(getString(R.string.web_client))
+                        .requestEmail()
+                        .build()
+                    googleSignInClient = GoogleSignIn.getClient(this, gso)
+
+                    val onGoogleAccess = {
+                        val intent = googleSignInClient.signInIntent
+                        googleSignInLauncher.launch(intent)
+                    }
+
+                    NavHost(
+                        navController = navController,
+                        startDestination = MainScreen.Welcome.name
+                    ){
+                        composable(MainScreen.Welcome.name) {
+                            WelcomeScreen(
+                                onStart = { navController.navigate("${MainScreen.Auth.name}?mode=register") },
+                                onLogin = { navController.navigate("${MainScreen.Auth.name}?mode=login") }
+                            )
+                        }
+                        composable(MainScreen.Onboarding.name) {
+                            OnboardingFlow(
+                                viewModel = hiltViewModel(),
+                                onFinish = { navController.navigate(MainScreen.Auth.name) }
+                            )
+                        }
+                        composable(
+                            route = "${MainScreen.Auth.name}?mode={mode}",
+                            arguments = listOf(
+                                navArgument("mode") { defaultValue = "login" }
+                            )
+                        ) { backStackEntry ->
+                            val mode = backStackEntry.arguments?.getString("mode") ?: "login"
+                            val isLogin = mode == "login"
+
+                            AuthDisplay(
+                                onLogin = login,
+                                onRegister = register,
+                                onGoogleAccess = onGoogleAccess,
+                                isLoginStart = isLogin
+                            )
+                        }
+                        composable(MainScreen.Setup.name) {
+                            AccountSetupDisplay(
+                                navController = navController,
+                                onSetupFinish = {
+                                    val firestore = Firebase.firestore
+                                    firestore.collection("user").document(User.id)
+                                        .update("stage", 1)
+                                        .addOnSuccessListener {
+                                            User.stage = 1
+                                            navController.navigate(MainScreen.Main.name) {
+                                                popUpTo(MainScreen.Setup.name) { inclusive = true }
+                                            }
+                                        }
+                                        .addOnFailureListener {
+                                            Toast.makeText(this@MainActivity, "Error actualizando stage", Toast.LENGTH_SHORT).show()
+                                        }
+                                }
+                            )
+                        }
+
+                        composable(MainScreen.Main.name) {
+                            MainDisplay(
+                                navController = navController,
+                                onTopBarClick = listOf(
+                                    { goto(MainScreen.History.name) },
+                                    { goto(MainScreen.Profile.name) }
+                                ),
+                                onScanClick = { goto(MainScreen.Scan.name) },
+                                onContactSelect = { contact ->
+                                    goto("${MainScreen.Messaging.name}/${contact.name}")
+                                }
+                            )
+                        }
+
+                        composable(MainScreen.Scan.name) {
+                            Scan(
+                                onNavigate = navigate,
+                                foodPredictionService = foodPredictionService
+                            )
+                        }
+                        composable(MainScreen.History.name) {
+                            HistoryScreen(navController = navController)
+                        }
+                        composable(MainScreen.Profile.name) {
+                            Profile(
+                                onNavigate = navigate,
+                                onLogout = logout
+                            )
+                        }
+                        composable("${MainScreen.Messaging.name}/{contactName}") { backStack ->
+                            val name = backStack.arguments?.getString("contactName") ?: ""
+                            val contact = getContacts().find { it.name == name } ?: Contact(name, "")
+                            Messaging(contact = contact, onNavigate = navigate)
+                        }
+                        composable(MainScreen.Settings.name) {
+
+                        }
+                        composable(MainScreen.Dashboard.name) {
+
+                        }
                     }
                 }
             }
         }
-    }
+
+
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         callbackManager.onActivityResult(requestCode, resultCode, data)
     }
 
-    // Lanzador de Google
-
-
-
-    // Función para iniciar sesión con Facebook
-    private fun signInWithFacebook() {
-        LoginManager.getInstance().logInWithReadPermissions(this, listOf("email", "public_profile"))
-        LoginManager.getInstance().registerCallback(
-            callbackManager,
-            object : FacebookCallback<LoginResult> {
-                override fun onSuccess(result: LoginResult) {
-                    val credential = FacebookAuthProvider.getCredential(result.accessToken.token)
-                    auth.signInWithCredential(credential)
-                        .addOnCompleteListener(this@MainActivity) { task ->
-                            if (task.isSuccessful) {
-                                val user = auth.currentUser
+    val googleSignInLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+            try {
+                val account = task.getResult(ApiException::class.java)
+                account?.idToken?.let { idToken ->
+                    // Launch in a coroutine scope
+                    lifecycleScope.launch {
+                        val signInResult = authViewModel.loginWithGoogle(idToken)
+                        signInResult.fold(
+                            onSuccess = {
                                 Toast.makeText(
                                     this@MainActivity,
-                                    "Bienvenido, ${user?.displayName}",
+                                    "Bienvenido, ${account.displayName}",
                                     Toast.LENGTH_SHORT
                                 ).show()
-                                gotoAfterLogin(MainScreen.Main.name)
-                            } else {
-                                val e = task.exception
-                                if (e is FirebaseAuthUserCollisionException) {
-                                    Toast.makeText(
-                                        this@MainActivity,
-                                        "Cuenta ya existente. Intenta con otro método.",
-                                        Toast.LENGTH_LONG
-                                    ).show()
-                                } else {
-                                    Log.e("FacebookLogin", "Error: ", e)
-                                    Toast.makeText(
-                                        this@MainActivity,
-                                        "Error autenticando con Facebook",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                }
+                                // ✅ Redirige según el stage
+                                val nextScreen = if (User.stage == 0) MainScreen.Setup.name else MainScreen.Main.name
+                                gotoAfterLogin(nextScreen)
+                            },
+                            onFailure = {
+                                Toast.makeText(this@MainActivity, authViewModel.errorMessage, Toast.LENGTH_SHORT).show()
                             }
-                        }
+                        )
+                    }
+                } ?: run {
+                    Toast.makeText(this@MainActivity, "Token de Google no válido", Toast.LENGTH_SHORT).show()
                 }
-
-                override fun onCancel() {
-                    Toast.makeText(this@MainActivity, "Inicio cancelado", Toast.LENGTH_SHORT).show()
-                }
-
-                override fun onError(error: FacebookException) {
-                    Toast.makeText(
-                        this@MainActivity,
-                        "Error Facebook: ${error.message}",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
+            } catch (e: ApiException) {
+                Log.e("GoogleSignIn", "Error: ${e.statusCode}")
+                Toast.makeText(this@MainActivity, "Error de inicio con Google", Toast.LENGTH_SHORT).show()
             }
-        )
-    }
+        }
+
+
 
     @Composable
     private fun PermissionRequester() {
