@@ -170,9 +170,7 @@ fun StartDisplay(
             NutrientsCard(historyData = getNutrientsData(foodList))
             if(runList.isEmpty()) NoRunScreen()
             else ActivityCard(historyData = getActivityData(foodList, runList))
-            }
         }
-
     }
 }
 
