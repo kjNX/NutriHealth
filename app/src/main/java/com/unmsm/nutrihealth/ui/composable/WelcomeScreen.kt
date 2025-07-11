@@ -58,7 +58,7 @@ fun WelcomeScreen(onStart: () -> Unit, onLogin: () -> Unit) {
                 Spacer(modifier = Modifier.weight(1f)) // empuja la imagen a la derecha
 
                 Image(
-                    painter = painterResource(id = R.drawable.iamgenfondo),
+                    painter = painterResource(id = R.drawable.logo_nutrihealth),
                     contentDescription = "Decoración animada",
                     modifier = Modifier
                         .size(500.dp)

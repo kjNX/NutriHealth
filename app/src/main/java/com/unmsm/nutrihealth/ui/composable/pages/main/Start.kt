@@ -3,6 +3,7 @@ package com.unmsm.nutrihealth.ui.composable.pages.main
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -18,6 +19,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.unmsm.nutrihealth.data.model.Food
 import com.unmsm.nutrihealth.data.model.Run
@@ -101,13 +103,20 @@ fun filterRunByDay(runList: List<Run>, history: Int = 7): List<List<Run>> {
 fun NoFoodScreen(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
-            .fillMaxWidth()
-            .padding(16.dp),
+            .padding(16.dp)
+            .fillMaxSize(),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("No has escaneado comida")
-        Text("¡Comienza a escanear tu comida para obtener información!.")
+        Text(
+            text = "No has escaneado comida",
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.titleMedium
+        )
+        Text(
+            text = "¡Comienza a escanear tu comida para obtener información!",
+            textAlign = TextAlign.Center
+        )
     }
 }
 
