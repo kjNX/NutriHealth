@@ -117,17 +117,22 @@ fun MainDisplay(
 
 
 
+        val foodViewModel: FoodViewModel = viewModel()
+
+
         if (showDialog) {
             TypeAddDialog(
-                onDismiss = hideDialog,
-                onCancel = hideDialog,
-                onConfirm = { food: Food ->
-                    viewModel.addFood(food) {
+                viewModel = foodViewModel,
+                onDismiss = { showDialog = false },
+                onConfirm = { food ->
+                    foodViewModel.addFood(food) { success ->
                         showDialog = false
                     }
                 }
             )
         }
+
+
     }
 }
 
