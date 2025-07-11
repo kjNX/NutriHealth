@@ -19,13 +19,11 @@ import androidx.compose.ui.unit.dp
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottom
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberStart
-import com.patrykandpatrick.vico.compose.cartesian.layer.point
-import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLine
+import com.patrykandpatrick.vico.compose.cartesian.layer.rememberColumnCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.marker.rememberDefaultCartesianMarker
 import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
-import com.patrykandpatrick.vico.compose.cartesian.rememberVicoScrollState
-import com.patrykandpatrick.vico.compose.common.component.rememberShapeComponent
+import com.patrykandpatrick.vico.compose.common.component.rememberLineComponent
 import com.patrykandpatrick.vico.compose.common.component.rememberTextComponent
 import com.patrykandpatrick.vico.compose.common.component.shapeComponent
 import com.patrykandpatrick.vico.compose.common.fill
@@ -35,103 +33,103 @@ import com.patrykandpatrick.vico.compose.common.vicoTheme
 import com.patrykandpatrick.vico.core.cartesian.axis.HorizontalAxis
 import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
+import com.patrykandpatrick.vico.core.cartesian.data.columnSeries
 import com.patrykandpatrick.vico.core.cartesian.data.lineSeries
+import com.patrykandpatrick.vico.core.cartesian.layer.ColumnCartesianLayer
 import com.patrykandpatrick.vico.core.cartesian.layer.LineCartesianLayer
 import com.patrykandpatrick.vico.core.common.LegendItem
 import com.patrykandpatrick.vico.core.common.component.TextComponent
 import com.patrykandpatrick.vico.core.common.data.ExtraStore
 import com.patrykandpatrick.vico.core.common.shape.CorneredShape
 import com.unmsm.nutrihealth.data.model.Food
+import com.unmsm.nutrihealth.data.model.Run
 import com.unmsm.nutrihealth.ui.composable.pages.main.filterFoodByDay
+import com.unmsm.nutrihealth.ui.composable.pages.main.filterRunByDay
 
-fun getNutrientsData(foodList: List<Food>) : Map<String, Map<Int, Float>> {
-    val history = filterFoodByDay(foodList)
-    val proteinHistory = mutableMapOf<Int, Float>()
-    val energyHistory = mutableMapOf<Int, Float>()
-    val fatsHistory = mutableMapOf<Int, Float>()
-    val waterHistory = mutableMapOf<Int, Float>()
-    for(i in 0 until history.size) {
-        proteinHistory[i] = history[i].sumOf { it.protein }.toFloat()
-        energyHistory[i] = history[i].sumOf { it.energy }.toFloat()
-        fatsHistory[i] = history[i].sumOf { it.fats }.toFloat()
-        waterHistory[i] = history[i].sumOf { it.water }.toFloat()
+fun getActivityData(
+    foodList: List<Food>,
+    runList: List<Run>
+): Map<String, Map<Int, Float>> {
+    val foodHistory = filterFoodByDay(foodList)
+    val runHistory = filterRunByDay(runList)
+    val dailyAvgSpeed = mutableMapOf<Int, Float>()
+    val waterIntake = mutableMapOf<Int, Float>()
+
+    for(i in 0 until foodHistory.size) {
+        waterIntake[i] = foodHistory[i].sumOf { it.water }.toFloat()
+        if(!runHistory[i].isEmpty()) {
+            val distance = runHistory[i].sumOf { it.distanceInMeters }
+            if(distance > 0) dailyAvgSpeed[i] = distance.toFloat()
+        }
     }
     return mapOf(
-        "Proteínas" to proteinHistory.toMap(),
-        "Calorías" to energyHistory.toMap(),
-        "Grasas" to fatsHistory.toMap(),
-        "Agua" to waterHistory.toMap()
+        "Distancia recorrida" to dailyAvgSpeed.toMap(),
+        "Ingesta de agua" to waterIntake.toMap(),
     )
 }
 
 private val LegendLabelKey = ExtraStore.Key<Set<String>>()
 
 @Composable
-fun NutrientsLineGraph(
+fun ComboGraph(
     modelProducer: CartesianChartModelProducer,
     modifier: Modifier = Modifier
 ) {
-    val colors = listOf(Color(0xFFFF7043), Color(0xFF4FC3F7), Color(0xFFE57373), Color(0xFF42A5F5))
+    val colors = listOf(Color(0xFF009688), Color(0xFFE91E63))
     val legendItemLabelComponent = rememberTextComponent(vicoTheme.textColor)
 
     CartesianChartHost(
         rememberCartesianChart(
-            rememberLineCartesianLayer(
+            rememberColumnCartesianLayer( // Average speed
+                ColumnCartesianLayer.ColumnProvider.series(
+                    rememberLineComponent(fill = fill(colors[0]), thickness = 16.dp)
+                )
+            ),
+            rememberLineCartesianLayer( // Daily water intake
                 LineCartesianLayer.LineProvider.series(
-                    colors.map { color ->
-                        LineCartesianLayer.rememberLine(
-                            fill = LineCartesianLayer.LineFill.single(fill(color)),
-                            areaFill = null,
-                            pointProvider =
-                                LineCartesianLayer.PointProvider.single(
-                                    LineCartesianLayer.point(rememberShapeComponent(fill(color), CorneredShape.Pill))
-                                ),
-                        )
-                    }
+                    LineCartesianLayer.Line(LineCartesianLayer.LineFill.single(fill(colors[1])))
                 )
             ),
             startAxis = VerticalAxis.rememberStart(),
             bottomAxis = HorizontalAxis.rememberBottom(),
             marker = rememberDefaultCartesianMarker(label = TextComponent()),
-            legend =
-                rememberHorizontalLegend(
-                    items = { extraStore ->
-                        extraStore[LegendLabelKey].forEachIndexed { index, label ->
-                            add(
-                                LegendItem(
-                                    shapeComponent(fill(colors[index]), CorneredShape.Pill),
-                                    legendItemLabelComponent,
-                                    label,
-                                )
+            legend = rememberHorizontalLegend(
+                items = { extraStore ->
+                    extraStore[LegendLabelKey].forEachIndexed { index, label ->
+                        add(
+                            LegendItem(
+                                shapeComponent(fill(colors[index]), CorneredShape.Pill),
+                                legendItemLabelComponent,
+                                label,
                             )
-                        }
-                    },
-                    padding = insets(top = 16.dp),
-                )
+                        )
+                    }
+                },
+                padding = insets(top = 16.dp),
+            )
         ),
         modelProducer,
-        modifier.height(300.dp),
-        rememberVicoScrollState(scrollEnabled = false),
+        modifier,
     )
 }
 
 @Composable
-fun NutrientComparison(
-    data: Map<String, Map<Int, Float>>,
-    modifier: Modifier = Modifier
-) {
+fun WaterVActivity(historyData: Map<String, Map<Int, Float>>, modifier: Modifier = Modifier) {
     val modelProducer = remember { CartesianChartModelProducer() }
+    val speedData = historyData["Distancia recorrida"]
+    val waterData = historyData["Ingesta de agua"]
     LaunchedEffect(Unit) {
         modelProducer.runTransaction {
-            lineSeries { data.forEach { (_, map) -> series(map.keys, map.values) } }
-            extras { extraStore -> extraStore[LegendLabelKey] = data.keys }
+            columnSeries { series(waterData!!.keys, waterData.values) }
+            lineSeries { series(speedData!!.keys, speedData.values) }
+            extras { extraStore -> extraStore[LegendLabelKey] = historyData.keys }
         }
     }
-    NutrientsLineGraph(modelProducer, modifier)
+    ComboGraph(modelProducer, modifier)
 }
 
 @Composable
-fun NutrientsCard(historyData: Map<String, Map<Int, Float>>) {
+fun ActivityCard(historyData: Map<String, Map<Int, Float>>) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -144,7 +142,7 @@ fun NutrientsCard(historyData: Map<String, Map<Int, Float>>) {
                 style = MaterialTheme.typography.titleMedium
             )
             Spacer(Modifier.height(8.dp))
-            NutrientComparison(historyData)
+            WaterVActivity(historyData)
         }
     }
 }

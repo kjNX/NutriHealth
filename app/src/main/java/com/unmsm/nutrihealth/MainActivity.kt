@@ -56,7 +56,6 @@ import com.unmsm.nutrihealth.ui.composable.OnboardingFlow
 import com.unmsm.nutrihealth.ui.composable.Profile
 import com.unmsm.nutrihealth.ui.composable.Scan
 import com.unmsm.nutrihealth.ui.composable.WelcomeScreen
-import com.unmsm.nutrihealth.ui.composable.dashboard.DashboardScreen
 import com.unmsm.nutrihealth.ui.composable.pages.map.HistoryScreen
 import com.unmsm.nutrihealth.ui.composable.settings.SettingsExport
 import com.unmsm.nutrihealth.ui.compose.component.LocationPermissionRequestDialog
@@ -76,7 +75,6 @@ enum class MainScreen {
     Profile,
     Messaging,
     Welcome,
-    Dashboard,
     Settings,
 }
 
@@ -314,9 +312,6 @@ class MainActivity : ComponentActivity() {
                                     }
                                 }
                             )
-                        }
-                        composable(MainScreen.Dashboard.name) {
-                            DashboardScreen({ navController.navigateUp() })
                         }
                     }
                 }
