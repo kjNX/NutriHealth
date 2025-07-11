@@ -39,11 +39,11 @@ fun Scan(
     onNavigate: () -> Unit
 ) {
     Scaffold(
-        topBar = { 
+        topBar = {
             SubsectionTopBar(
                 title = "Escanear comida",
                 onNavigate = onNavigate
-            ) 
+            )
         }
     ) { innerPadding ->
         ScanDisplay(
@@ -109,19 +109,19 @@ fun ScanDisplay(
             errorMessage != null -> {
                 ErrorMessage(
                     message = errorMessage!!,
-                    onDismiss = { 
+                    onDismiss = {
                         errorMessage = null
-                        showPicker = true 
+                        showPicker = true
                     }
                 )
             }
 
             foodPrediction == null && labelPrediction == null -> {
                 EmptyScanPrompt(
-                    onScan = { 
+                    onScan = {
                         isAIScan = false
                         isLabelScan = false
-                        showPicker = true 
+                        showPicker = true
                     },
                     onScanWithAI = {
                         isAIScan = true
@@ -282,7 +282,14 @@ fun LabelPredictionResult(
     foodViewModel: FoodViewModel = viewModel()
 ) {
     var isSaving by remember { mutableStateOf(false) }
+    var portionPercentage by remember { mutableStateOf(100f) }
     val context = LocalContext.current
+
+    // Calcular valores nutricionales basados en la porción
+    val currentEnergy = (prediction.energy * (portionPercentage / 100f))
+    val currentProtein = (prediction.protein * (portionPercentage / 100f))
+    val currentFats = (prediction.fats * (portionPercentage / 100f))
+    val currentWater = (prediction.water * (portionPercentage / 100f))
 
     Column(
         modifier = Modifier
@@ -315,37 +322,55 @@ fun LabelPredictionResult(
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
 
+                // Porción base y slider
                 Text(
-                    text = "Porción: ${prediction.portion}",
+                    text = "Porción base: ${prediction.portion}",
                     style = MaterialTheme.typography.bodyLarge,
                     modifier = Modifier.padding(vertical = 4.dp)
                 )
 
+                Text(
+                    text = "Ajustar porción: ${portionPercentage.toInt()}%",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+
+                Slider(
+                    value = portionPercentage,
+                    onValueChange = { portionPercentage = it },
+                    valueRange = 1f..200f,
+                    steps = 199,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp)
+                )
+
                 Divider(modifier = Modifier.padding(vertical = 8.dp))
 
+                // Valores nutricionales actualizados
                 NutritionInfoRow(
                     icon = Icons.Default.LocalFireDepartment,
                     label = "Energía",
-                    value = "${prediction.energy} kcal"
+                    value = String.format("%.1f kcal", currentEnergy)
                 )
 
                 NutritionInfoRow(
                     icon = Icons.Default.Egg,
                     label = "Proteínas",
-                    value = "${prediction.protein}g"
+                    value = String.format("%.1f g", currentProtein)
                 )
 
                 NutritionInfoRow(
                     icon = Icons.Default.Opacity,
                     label = "Grasas",
-                    value = "${prediction.fats}g"
+                    value = String.format("%.1f g", currentFats)
                 )
 
                 if (prediction.water > 0) {
                     NutritionInfoRow(
                         icon = Icons.Default.WaterDrop,
                         label = "Agua",
-                        value = "${prediction.water}g"
+                        value = String.format("%.1f g", currentWater)
                     )
                 }
             }
@@ -362,11 +387,11 @@ fun LabelPredictionResult(
                     isSaving = true
                     foodViewModel.savePredictedFood(
                         Food(
-                            name = prediction.name,
-                            energy = prediction.energy,
-                            protein = prediction.protein,
-                            fats = prediction.fats,
-                            water = prediction.water,
+                            name = "${prediction.name} (${portionPercentage.toInt()}%)",
+                            energy = currentEnergy,
+                            protein = currentProtein,
+                            fats = currentFats,
+                            water = currentWater,
                             timestamp = Date()
                         )
                     ) { success, message ->
@@ -479,7 +504,7 @@ fun FoodPredictionResult(
                     color = MaterialTheme.colorScheme.onSecondaryContainer
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                
+
                 val nutricion = prediction.plato_general.nutricion
                 Text("Energía: ${String.format("%.1f", nutricion.energia)} kcal")
                 Text("Proteínas: ${String.format("%.1f", nutricion.proteinas)}g")
