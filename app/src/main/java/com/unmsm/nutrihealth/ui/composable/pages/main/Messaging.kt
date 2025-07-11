@@ -22,7 +22,7 @@ import com.unmsm.nutrihealth.data.model.Contact
 val LightGreen = Color(0xFF81C784)
 
 @Composable
-fun ContactList(
+fun MessagingContactList(
     onSelect: (Contact) -> Unit,
     contacts: List<Contact>,
     modifier: Modifier = Modifier
@@ -46,16 +46,15 @@ fun ContactListItem(
             .clickable(onClick = onClick)
             .fillMaxWidth()
             .padding(12.dp)
-            .background(LightGreen.copy(alpha = 0.1f)) // Fondo verde claro suave
+            .background(LightGreen.copy(alpha = 0.1f))
             .clip(RoundedCornerShape(12.dp)),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Avatar con inicial
         Box(
             modifier = Modifier
                 .size(48.dp)
                 .clip(CircleShape)
-                .background(LightGreen), // Avatar en verde claro
+                .background(LightGreen),
             contentAlignment = Alignment.Center
         ) {
             Text(
@@ -91,7 +90,7 @@ fun ResourceCard(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 8.dp)
-            .background(LightGreen.copy(alpha = 0.05f)), // Fondo verde claro suave en la tarjeta
+            .background(LightGreen.copy(alpha = 0.05f)),
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
@@ -115,13 +114,12 @@ fun ResourceCard(
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                 contentDescription = "Ir",
-                tint = LightGreen // Ícono de flecha en verde claro
+                tint = LightGreen
             )
         }
     }
 }
 
-// Vista previa de la lista de contactos
 @Preview(showBackground = true)
 @Composable
 fun PreviewContactList() {
@@ -130,10 +128,9 @@ fun PreviewContactList() {
         Contact(name = "María López", description = "Diseñadora UX/UI"),
         Contact(name = "Carlos García", description = "Gerente de Producto")
     )
-    ContactList(onSelect = {}, contacts = sampleContacts)
+    MessagingContactList(onSelect = {}, contacts = sampleContacts)
 }
 
-// Vista previa de la tarjeta de recursos
 @Preview(showBackground = true)
 @Composable
 fun PreviewResourceCard() {

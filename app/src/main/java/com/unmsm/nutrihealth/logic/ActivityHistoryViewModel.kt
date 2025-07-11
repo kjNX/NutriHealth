@@ -1,6 +1,7 @@
 package com.unmsm.nutrihealth.logic
 
 import androidx.lifecycle.ViewModel
+import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 import com.unmsm.nutrihealth.data.model.Run
 import com.unmsm.nutrihealth.data.model.User
@@ -13,7 +14,7 @@ class ActivityHistoryViewModel : ViewModel() {
     // Método para guardar una carrera en Firestore
     fun saveRunToFirestore(run: Run, onResult: (Boolean, String) -> Unit) {
         val activity = mapOf(
-            "timestamp" to run.timestamp,
+            "timestamp" to Timestamp(run.timestamp), // Convertir Date a Timestamp
             "avgSpeedInKMH" to run.avgSpeedInKMH,
             "distanceInMeters" to run.distanceInMeters,
             "durationInMillis" to run.durationInMillis,
@@ -40,7 +41,23 @@ class ActivityHistoryViewModel : ViewModel() {
             .get()
             .addOnSuccessListener { snapshot ->
                 val runs = snapshot.documents.mapNotNull { document ->
-                    document.toObject(Run::class.java)
+                    try {
+                        val timestamp = document.get("timestamp") as? Timestamp
+                        val avgSpeedInKMH = document.getDouble("avgSpeedInKMH")?.toFloat() ?: 0f
+                        val distanceInMeters = document.getLong("distanceInMeters")?.toInt() ?: 0
+                        val durationInMillis = document.getLong("durationInMillis") ?: 0L
+                        val caloriesBurned = document.getLong("caloriesBurned")?.toInt() ?: 0
+
+                        Run(
+                            timestamp = timestamp?.toDate() ?: Date(),
+                            avgSpeedInKMH = avgSpeedInKMH,
+                            distanceInMeters = distanceInMeters,
+                            durationInMillis = durationInMillis,
+                            caloriesBurned = caloriesBurned
+                        )
+                    } catch (e: Exception) {
+                        null
+                    }
                 }
                 onResult(runs, "Datos obtenidos correctamente de Firestore")
             }
