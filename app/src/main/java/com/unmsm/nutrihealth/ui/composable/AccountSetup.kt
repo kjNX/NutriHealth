@@ -1,5 +1,6 @@
 package com.unmsm.nutrihealth.ui.composable
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -29,6 +30,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -231,6 +233,7 @@ fun EssentialData(
 @Composable
 fun TargetData(
     targetWeight: String,
+    mainGoal: UserTarget.Priority, // 👈 Añadir este parámetro
     onWeightChange: (String) -> Unit,
     onGoalChange: (UserTarget.Priority) -> Unit,
     onNext: () -> Unit,
@@ -249,8 +252,10 @@ fun TargetData(
         }
         InputField("Peso operativo", targetWeight, onWeightChange, "kg")
         FormField(label = "Meta principal") {
-            RadioGroup(onTap = onGoalChange)
-        }
+            RadioGroup(
+                selected = mainGoal,       // ✅ usamos el valor actual
+                onTap = onGoalChange       // ✅ actualiza el estado en el ViewModel
+            )       }
         Button(onClick = onNext, modifier = Modifier.fillMaxWidth()) { Text(text = "Continuar") }
     }
 }
@@ -336,6 +341,8 @@ fun AccountSetupDisplay(
         HorizontalPager(state = pagerState) { i ->
             when(i) {
                 0 -> {
+                    val context = LocalContext.current
+
                     EssentialData(
                         genderIndex = uiState.value.genderIndex,
                         genderOptions = listOf("Hombre", "Mujer"),
@@ -349,15 +356,21 @@ fun AccountSetupDisplay(
                         onWeightChange = viewModel::setWeight,
                         onIntensityChange = viewModel::setIntensity,
                         onNext = {
-                            viewModel.submitData()
-                            coroutineScope.launch { pagerState.animateScrollToPage(1) }
+                            val success = viewModel.submitData()
+                            if (success) {
+                                coroutineScope.launch { pagerState.animateScrollToPage(1) }
+                            } else {
+                                Toast.makeText(context, "⚠️ Por favor revisa los datos ingresados", Toast.LENGTH_LONG).show()
+                            }
                         },
                         modifier = Modifier.fillMaxSize()
                     )
+
                 }
                 1 -> {
                     TargetData(
                         targetWeight = uiState.value.targetWeight,
+                        mainGoal = uiState.value.mainGoal, // 👈 Pasamos el valor actual
                         onWeightChange = viewModel::setTargetWeight,
                         onGoalChange = viewModel::setMainGoal,
                         onNext = {

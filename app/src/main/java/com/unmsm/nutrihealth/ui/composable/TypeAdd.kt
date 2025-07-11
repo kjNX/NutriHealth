@@ -51,7 +51,7 @@ fun TypeAddDialog(
             listOf("pollo", "gallina").any { nameLower.startsWith(it) } -> "🍗 Platos con Pollo"
             listOf("sopa", "caldo", "menestr", "aguadito").any { nameLower.startsWith(it) } -> "🥣 Sopas"
             listOf("ensalada", "vegetal", "palta").any { nameLower.startsWith(it) } -> "🥗 Ensaladas"
-            listOf("ají", "rocoto", "picante").any { nameLower.startsWith(it) } -> "🌶️ Ajíes"
+            listOf("ají", "rocoto", "picante").any { nameLower.startsWith(it) } -> "🌶️ Picantes"
             listOf("pescado", "sudado", "cebiche", "trucha").any { nameLower.startsWith(it) } -> "🐟 Pescados"
             listOf("cerdo", "chancho","seco","cabrito","bisteck").any { nameLower.startsWith(it) } -> "🐖 Carnes"
             else -> null
