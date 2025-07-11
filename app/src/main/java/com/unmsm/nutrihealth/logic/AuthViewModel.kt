@@ -1,5 +1,6 @@
 package com.unmsm.nutrihealth.logic
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -12,6 +13,7 @@ import com.google.firebase.auth.auth
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.firestore
+import com.unmsm.nutrihealth.data.model.CurrentUser.user
 import com.unmsm.nutrihealth.data.model.User
 import com.unmsm.nutrihealth.data.repository.FirebaseAuthManager
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -46,12 +48,19 @@ class AuthViewModel(
      * @param email User's email address
      * @param password User's password
      */
+    var isRegistering by mutableStateOf(false)
+
     suspend fun signup(name: String, email: String, password: String): Result<Unit> {
+        if (isRegistering) return Result.failure(IllegalStateException("Registro en curso"))
+
+        isRegistering = true
         _authState.value = AuthState.Loading
+        Log.i(TAG, "🟡 Iniciando registro para: $email")
 
         return try {
             val authResult = authManager.signUp(email, password).getOrThrow()
             val uid = authResult.user?.uid ?: throw IllegalStateException("User ID is null after signup")
+            Log.i(TAG, "✅ Usuario autenticado: UID=$uid")
 
             // Update local user object
             User.id = uid
@@ -67,15 +76,23 @@ class AuthViewModel(
                 "stage" to 0
             )
 
+            Log.i(TAG, "📤 Guardando datos en Firestore para UID=$uid")
             userDoc.set(data).await()
+            Log.i(TAG, "✅ Datos guardados exitosamente en Firestore")
+
             _authState.value = AuthState.Success("Registro exitoso")
+
             Result.success(Unit)
+
+
         } catch (e: Exception) {
+            Log.e(TAG, "❌ Error durante el registro: ${e.message}", e)
             errorMessage = getFriendlyError(e)
             _authState.value = AuthState.Error(errorMessage)
             Result.failure(e)
         }
     }
+
 
     /**
      * Signs in a user with email and password.
@@ -91,6 +108,13 @@ class AuthViewModel(
             val authResult = authManager.signIn(email, password).getOrThrow()
             val uid = authResult.user?.uid ?: throw IllegalStateException("User ID is null after login")
 
+            val user = authResult.user ?: throw IllegalStateException("Usuario nulo")
+
+            if (!user.isEmailVerified) {
+                errorMessage = "Tu correo no está verificado. Revisa tu bandeja de entrada."
+                _authState.value = AuthState.Error(errorMessage)
+                return Result.failure(Exception(errorMessage))
+            }
             // Update local user object
             User.id = uid
 
@@ -126,31 +150,46 @@ class AuthViewModel(
      */
     suspend fun loginWithGoogle(idToken: String): Result<Unit> {
         _authState.value = AuthState.Loading
+        Log.d("GOOGLE_LOGIN", "🔐 Iniciando login con token: ${idToken.take(10)}...")
 
         return try {
-            val credential = GoogleAuthProvider.getCredential(idToken, null)
-            val authResult = authManager.signInWithCredential(credential).getOrThrow()
-            val user = authResult.user ?: throw IllegalStateException("User is null after Google login")
+            if (idToken.isBlank()) {
+                Log.e("GOOGLE_LOGIN", "❌ Token vacío o nulo")
+                return Result.failure(IllegalArgumentException("El token de autenticación está vacío"))
+            }
 
-            // Update local user object
+            // 1. Generar credencial
+            val credential = GoogleAuthProvider.getCredential(idToken, null)
+            Log.d("GOOGLE_LOGIN", "📥 Credencial generada con éxito")
+
+            // 2. Autenticarse en Firebase
+            val authResult = authManager.signInWithCredential(credential).getOrThrow()
+            val user = authResult.user ?: throw IllegalStateException("⚠️ Usuario nulo tras login")
+
+            Log.d("GOOGLE_LOGIN", "✅ Autenticado con UID: ${user.uid}")
+            Log.d("GOOGLE_LOGIN", "📧 Email: ${user.email}, 👤 Nombre: ${user.displayName}")
+
+            // 3. Guardar datos locales
             User.id = user.uid
             User.name = user.displayName ?: "Nombre desconocido"
             User.email = user.email ?: "Correo desconocido"
 
-            // Check if user exists in Firestore
+            // 4. Consultar Firestore
             val userDoc = firestore.collection("user").document(user.uid)
             val docSnapshot = userDoc.get().await()
 
             if (docSnapshot.exists()) {
-                // User exists, update local data
+                Log.d("GOOGLE_LOGIN", "📄 Usuario ya existe en Firestore")
                 val data = docSnapshot.data
+
                 User.name = data?.get("name")?.toString() ?: User.name
                 User.email = data?.get("email")?.toString() ?: User.email
                 User.stage = (data?.get("stage") as? Long)?.toInt() ?: 0
 
                 _authState.value = AuthState.Success("Datos recuperados exitosamente")
             } else {
-                // New user, create record in Firestore
+                Log.d("GOOGLE_LOGIN", "🆕 Usuario nuevo. Guardando en Firestore")
+
                 val userData = hashMapOf(
                     "authID" to user.uid,
                     "email" to user.email,
@@ -159,16 +198,21 @@ class AuthViewModel(
                 )
 
                 userDoc.set(userData).await()
+                User.stage = 0
                 _authState.value = AuthState.Success("Autenticación exitosa con Google y datos guardados")
             }
 
             Result.success(Unit)
+
         } catch (e: Exception) {
             errorMessage = getFriendlyError(e)
+            Log.e("GOOGLE_LOGIN", "❌ Error de autenticación con Google: ${e.message}", e)
             _authState.value = AuthState.Error(errorMessage)
             Result.failure(e)
         }
     }
+
+
 
     /**
      * Sends a password reset email to the specified email address.
