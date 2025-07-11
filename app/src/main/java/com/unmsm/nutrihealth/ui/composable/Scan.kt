@@ -528,6 +528,7 @@ fun FoodPredictionResult(
                             fats = prediction.plato_general.nutricion.grasa,
                             water = prediction.plato_general.nutricion.agua,
                             timestamp = java.util.Date()
+
                         )
                     ) { success, message ->
                         isSaving = false
