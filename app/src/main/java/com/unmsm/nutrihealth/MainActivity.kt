@@ -45,10 +45,21 @@ import com.unmsm.nutrihealth.ui.theme.NutriHealthTheme
 import dagger.hilt.android.AndroidEntryPoint
 import androidx.activity.viewModels
 import androidx.hilt.navigation.compose.hiltViewModel
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 enum class MainScreen {
-    Onboarding, Auth, Setup, Main, Scan, History, Profile, Messaging,Welcome
+    Onboarding,
+    Auth,
+    Setup,
+    Main,
+    Scan,
+    History,
+    Profile,
+    Messaging,
+    Welcome,
+    Dashboard,
+    Settings,
 }
 
 @AndroidEntryPoint
@@ -65,6 +76,38 @@ class MainActivity : ComponentActivity() {
     // Usar viewModels() para inyectar AuthViewModel
     private val authViewModel: AuthViewModel by viewModels()
 
+//    val googleSignInLauncher =
+//        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+//            val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+//            try {
+//                val account = task.getResult(ApiException::class.java)
+//                account?.idToken?.let { idToken ->
+//                    // Launch in a coroutine scope
+//                    coroutineScope.launch {
+//                        val signInResult = authViewModel.loginWithGoogle(idToken)
+//                        signInResult.fold(
+//                            onSuccess = {
+//                                Toast.makeText(
+//                                    this@MainActivity,
+//                                    "Bienvenido, ${account.displayName}",
+//                                    Toast.LENGTH_SHORT
+//                                ).show()
+//                                gotoAfterLogin(MainScreen.Main.name)
+//                            },
+//                            onFailure = {
+//                                Toast.makeText(this@MainActivity, authViewModel.errorMessage, Toast.LENGTH_SHORT).show()
+//                            }
+//                        )
+//                    }
+//                } ?: run {
+//                    Toast.makeText(this@MainActivity, "Token de Google no válido", Toast.LENGTH_SHORT).show()
+//                }
+//            } catch (e: ApiException) {
+//                Log.e("GoogleSignIn", "Error: ${e.statusCode}")
+//                Toast.makeText(this@MainActivity, "Error de inicio con Google", Toast.LENGTH_SHORT).show()
+//            }
+//        }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -76,7 +119,9 @@ class MainActivity : ComponentActivity() {
         callbackManager = CallbackManager.Factory.create()
 
         setContent {
+            val coroutineScope = rememberCoroutineScope()
             PermissionRequester() // Permisos ubicación
+
 
             NutriHealthTheme {
                 val navController = rememberNavController()
@@ -89,18 +134,30 @@ class MainActivity : ComponentActivity() {
                 // Login con correo y contraseña
 
                 val login = { email: String, password: String ->
-                    authViewModel.login(email, password) { success, msg ->
-                        if (success) goto(MainScreen.Setup.name)
-                        else Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
+                    coroutineScope.launch {
+                        val result = authViewModel.login(email, password)
+                        result.fold(
+                            onSuccess = { goto(MainScreen.Setup.name) },
+                            onFailure = { Toast.makeText(baseContext, authViewModel.errorMessage, Toast.LENGTH_SHORT).show() }
+                        )
                     }
                 }
                 // Registro con correo y contraseña
 
                 val register = { name: String, email: String, password: String ->
-                    authViewModel.signup(name, email, password) { success, msg ->
-                        if (success) goto(MainScreen.Setup.name)
-                        else Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
+//                    authViewModel.signup(name, email, password) { success, msg ->
+//                        if (success) goto(MainScreen.Setup.name)
+//                        else Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
+//                    }
+                    coroutineScope.launch {
+                        val result = authViewModel.signup(name, email, password)
+                        result.fold(
+                            onSuccess = { goto(MainScreen.Setup.name) },
+                            onFailure = {
+                                Toast.makeText(baseContext, authViewModel.errorMessage, Toast.LENGTH_SHORT).show() }
+                        )
                     }
+
                 }
 
 
@@ -113,7 +170,7 @@ class MainActivity : ComponentActivity() {
 
                 val onGoogleAccess = {
                     val intent = googleSignInClient.signInIntent
-                    googleSignInLauncher.launch(intent)
+//                    googleSignInLauncher.launch(intent)
                 }
 
                 NavHost(
@@ -163,11 +220,11 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
-                    composable(MainScreen.Scan.name) { 
+                    composable(MainScreen.Scan.name) {
                         Scan(
                             onNavigate = navigate,
                             foodPredictionService = foodPredictionService
-                        ) 
+                        )
                     }
                     composable(MainScreen.History.name) {
                         HistoryScreen(navController = navController)
@@ -183,6 +240,12 @@ class MainActivity : ComponentActivity() {
                         val contact = getContacts().find { it.name == name } ?: Contact(name, "")
                         Messaging(contact = contact, onNavigate = navigate)
                     }
+                    composable(MainScreen.Settings.name) {
+
+                    }
+                    composable(MainScreen.Dashboard.name) {
+
+                    }
                 }
             }
         }
@@ -194,34 +257,7 @@ class MainActivity : ComponentActivity() {
     }
 
     // Lanzador de Google
-    val googleSignInLauncher =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
-            try {
-                val account = task.getResult(ApiException::class.java)
-                account?.idToken?.let { idToken ->
-                    // Asegurarse de que idToken no es null antes de pasarlo
-                    authViewModel.loginWithGoogle(idToken) { success, msg ->
-                        if (success) {
-                            Toast.makeText(
-                                this,
-                                "Bienvenido, ${account.displayName}",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                            gotoAfterLogin(MainScreen.Main.name)
-                        } else {
-                            Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                } ?: run {
-                    // Manejar el caso en que idToken es null
-                    Toast.makeText(this, "Token de Google no válido", Toast.LENGTH_SHORT).show()
-                }
-            } catch (e: ApiException) {
-                Log.e("GoogleSignIn", "Error: ${e.statusCode}")
-                Toast.makeText(this, "Error de inicio con Google", Toast.LENGTH_SHORT).show()
-            }
-        }
+
 
 
     // Función para iniciar sesión con Facebook

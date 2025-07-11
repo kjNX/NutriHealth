@@ -40,11 +40,19 @@ fun Profile(onNavigate: () -> Unit, onLogout: () -> Unit) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileDisplay(onLogout: () -> Unit, modifier: Modifier = Modifier) {
-    val pagerState = rememberPagerState { 3 }
+    val pagerState = rememberPagerState { 2 }
     val coroutineScope = rememberCoroutineScope()
 
-    val tabLabels = listOf("Objetivos", "Plan", "Ajustes")
-    val tabIcons = listOf(Icons.Default.Flag, Icons.Default.FitnessCenter, Icons.Default.Settings)
+    val tabLabels = listOf(
+        "Objetivos",
+        "Plan",
+//        "Ajustes"
+    )
+    val tabIcons = listOf(
+        Icons.Default.Flag,
+        Icons.Default.FitnessCenter,
+//        Icons.Default.Settings
+    )
 
     Column(modifier = modifier.fillMaxSize()) {
 
@@ -118,7 +126,7 @@ fun ProfileDisplay(onLogout: () -> Unit, modifier: Modifier = Modifier) {
             when (page) {
                 0 -> TargetTab()
                 1 -> PlanTab()
-                2 -> SettingsTab(onLogout = onLogout)
+//                2 -> SettingsTab(onLogout = onLogout)
             }
         }
     }

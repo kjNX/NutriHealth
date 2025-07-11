@@ -11,12 +11,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.automirrored.outlined.Chat
+import androidx.compose.material.icons.filled.Analytics
 import androidx.compose.material.icons.filled.BorderColor
 import androidx.compose.material.icons.filled.Camera
 import androidx.compose.material.icons.filled.Face3
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.MonitorHeart
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.MonitorHeart
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -43,13 +45,15 @@ import kotlinx.coroutines.launch
 fun MainTopBar(onClick: List<() -> Unit>) {
     val iconDescription = listOf(
         "Historial",
-//        "Informe detallado",
-        "Perfil"
+        "Informe detallado",
+        "Perfil",
+        "Ajustes"
     )
     val icons = listOf(
         Icons.Default.History,
-//        Icons.Default.Analytics,
-        Icons.Default.Face3
+        Icons.Default.Analytics,
+        Icons.Default.Face3,
+        Icons.Default.Settings
     )
 
     TopAppBar(

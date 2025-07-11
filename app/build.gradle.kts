@@ -140,6 +140,10 @@ dependencies {
     // Logging
     implementation(libs.timber)
 
+    // Dashboard
+    implementation(libs.vico.compose)
+    implementation(libs.vico.compose.m3)
+
     // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

@@ -18,7 +18,14 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.collectAsState
 import com.unmsm.nutrihealth.R
+import com.unmsm.nutrihealth.logic.AuthViewModel
+import com.unmsm.nutrihealth.logic.AuthState
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 
 @Composable
 fun EnhancedTextField(
@@ -74,18 +81,67 @@ fun SocialLoginButton(
 
 @Composable
 fun AuthDisplay(
-    onLogin: (String, String) -> Unit,
-    onRegister: (String, String, String) -> Unit,
+    onLogin: (String, String) -> Job,
+    onRegister: (String, String, String) -> Job,
     onGoogleAccess: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: AuthViewModel = viewModel()
 ) {
     var isLoggingIn by remember { mutableStateOf(true) }
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(false) }
 
-    val login = { onLogin(email, password) }
-    val register = { onRegister(name, email, password) }
+    // Create a coroutine scope that follows the Composable lifecycle
+    val coroutineScope = rememberCoroutineScope()
+
+    // Collect auth state
+    val authState by viewModel.authState.collectAsState()
+
+    // Handle auth state changes
+    LaunchedEffect(authState) {
+        when (authState) {
+            is AuthState.Loading -> {
+                isLoading = true
+            }
+            is AuthState.Success -> {
+                isLoading = false
+                // Call the appropriate callback based on the current mode
+                if (isLoggingIn) {
+                    onLogin(email, password)
+                } else {
+                    onRegister(name, email, password)
+                }
+            }
+            is AuthState.Error -> {
+                isLoading = false
+                // Error is already handled by the viewModel and displayed via errorMessage
+            }
+            else -> {
+                isLoading = false
+            }
+        }
+    }
+
+    // Create login and register functions that use the viewModel
+    val login: () -> Unit = {
+        coroutineScope.launch {
+            viewModel.login(email, password)
+        }
+    }
+
+    val register: () -> Unit = {
+        coroutineScope.launch {
+            viewModel.signup(name, email, password)
+        }
+    }
+
+    // Create a wrapper for Google sign-in
+    val googleSignIn: () -> Unit = {
+        onGoogleAccess()
+        // The actual Google sign-in is handled in MainActivity
+    }
 
     Column(
         modifier = modifier
@@ -157,8 +213,25 @@ fun AuthDisplay(
                 SocialLoginButton(
                     icon = R.drawable.google,
                     networkName = "Google",
-                    onClick = onGoogleAccess,
+                    onClick = googleSignIn,
                     modifier = Modifier.fillMaxWidth()
+                )
+            }
+
+            // Show loading indicator when authentication is in progress
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            }
+
+            // Show error message if there is one
+            if (viewModel.errorMessage.isNotEmpty()) {
+                Text(
+                    text = viewModel.errorMessage,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(top = 8.dp)
                 )
             }
 
@@ -177,4 +250,3 @@ fun AuthDisplay(
         }
     }
 }
-
