@@ -91,6 +91,10 @@ fun AuthDisplay(
     modifier: Modifier = Modifier,
     viewModel: AuthViewModel = viewModel()
 ) {
+    var showRecoveryDialog by remember { mutableStateOf(false) }
+    var recoveryEmail by remember { mutableStateOf("") }
+    var recoveryMessage by remember { mutableStateOf("") }
+    var recoveryError by remember { mutableStateOf("") }
     var showEmailVerificationDialog by remember { mutableStateOf(false) }
 
     var isLoggingIn by rememberSaveable { mutableStateOf(isLoginStart) }
@@ -213,6 +217,8 @@ fun AuthDisplay(
                 Text(text = if (isLoggingIn) "Iniciar sesión" else "Registrarse")
             }
 
+
+
             // Solo mostrar SocialLogin para iniciar sesión (isLoggingIn)
             if (isLoggingIn) {
                 SocialLoginButton(
@@ -222,6 +228,7 @@ fun AuthDisplay(
                     modifier = Modifier.fillMaxWidth()
                 )
             }
+
 
             // Show loading indicator when authentication is in progress
             if (isLoading) {
@@ -253,6 +260,20 @@ fun AuthDisplay(
                 fontSize = 14.sp
             )
         }
+        if (isLoggingIn) {
+            Text(
+                text = "¿Olvidaste tu contraseña?",
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .clickable {
+                        recoveryEmail = email
+                        showRecoveryDialog = true
+                    }
+                    .padding(top = 8.dp),
+                color = MaterialTheme.colorScheme.primary,
+                fontSize = 14.sp
+            )
+        }
         if (showEmailVerificationDialog) {
             AlertDialog(
                 onDismissRequest = {},
@@ -271,5 +292,76 @@ fun AuthDisplay(
                 }
             )
         }
+        var isRecoveryLoading by remember { mutableStateOf(false) }
+
+        if (showRecoveryDialog) {
+            AlertDialog(
+                onDismissRequest = { showRecoveryDialog = false },
+                confirmButton = {
+                    TextButton(onClick = {
+                        coroutineScope.launch {
+                            isRecoveryLoading = true
+                            val result = viewModel.sendPasswordResetEmail(recoveryEmail)
+                            if (result.isSuccess) {
+                                recoveryMessage = "Te hemos enviado un correo para restablecer tu contraseña."
+                                recoveryError = ""
+                                kotlinx.coroutines.delay(2500)
+                                showRecoveryDialog = false
+                                isLoggingIn = true
+                            } else {
+                                recoveryMessage = ""
+                                recoveryError = viewModel.errorMessage
+                            }
+                            isRecoveryLoading = false
+                        }
+                    }) {
+                        if (isRecoveryLoading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Text("Enviar")
+                        }
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showRecoveryDialog = false }) {
+                        Text("Cancelar")
+                    }
+                },
+                title = { Text("Recuperar contraseña") },
+                text = {
+                    Column {
+                        Text("Introduce tu correo para enviarte un enlace de recuperación.")
+                        Spacer(modifier = Modifier.height(8.dp))
+                        TextField(
+                            value = recoveryEmail,
+                            onValueChange = { recoveryEmail = it },
+                            label = { Text("Correo electrónico") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        if (recoveryMessage.isNotEmpty()) {
+                            Text(
+                                text = recoveryMessage,
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.padding(top = 8.dp)
+                            )
+                        }
+                        if (recoveryError.isNotEmpty()) {
+                            Text(
+                                text = recoveryError,
+                                color = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.padding(top = 8.dp)
+                            )
+                        }
+                    }
+                }
+            )
+        }
+
+
+
     }
 }
