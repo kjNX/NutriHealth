@@ -250,7 +250,6 @@ fun TargetData(
                 modifier = Modifier.fillMaxWidth()
             )
         }
-        InputField("Peso operativo", targetWeight, onWeightChange, "kg")
         FormField(label = "Meta principal") {
             RadioGroup(
                 selected = mainGoal,       // ✅ usamos el valor actual

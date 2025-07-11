@@ -31,7 +31,7 @@ fun Messaging(contact: Contact, onNavigate: () -> Unit, viewModel: ChatViewModel
     var userInput by remember { mutableStateOf("") }
 
     Scaffold(
-        topBar = { 
+        topBar = {
             Surface(
                 shadowElevation = 4.dp,
                 color = MaterialTheme.colorScheme.surface
@@ -39,6 +39,8 @@ fun Messaging(contact: Contact, onNavigate: () -> Unit, viewModel: ChatViewModel
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .statusBarsPadding() // 👈 Este es el cambio clave
+
                         .padding(horizontal = 8.dp, vertical = 12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -48,13 +50,13 @@ fun Messaging(contact: Contact, onNavigate: () -> Unit, viewModel: ChatViewModel
                             contentDescription = "Volver"
                         )
                     }
-                    
+
                     Box(
                         modifier = Modifier
                             .size(40.dp)
                             .clip(CircleShape)
                             .background(
-                                when(contact.name) {
+                                when (contact.name) {
                                     "Asesor de Bienestar" -> MaterialTheme.colorScheme.primary
                                     "Nutrición" -> MaterialTheme.colorScheme.secondary
                                     else -> MaterialTheme.colorScheme.tertiary
@@ -68,7 +70,7 @@ fun Messaging(contact: Contact, onNavigate: () -> Unit, viewModel: ChatViewModel
                             color = Color.White
                         )
                     }
-                    
+
                     Column(
                         modifier = Modifier
                             .weight(1f)
@@ -89,24 +91,36 @@ fun Messaging(contact: Contact, onNavigate: () -> Unit, viewModel: ChatViewModel
                 }
             }
         },
+
         bottomBar = {
-            Surface(
-                shadowElevation = 8.dp,
-                color = MaterialTheme.colorScheme.surface
+            // 👇 Envuelve en Column y aplica padding extra al fondo
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .navigationBarsPadding()
+                    .padding(bottom = 8.dp) // espacio entre barra y borde inferior
             ) {
-                MessageBar(
-                    message = userInput,
-                    onMessageChange = { userInput = it },
-                    onSend = {
-                        if (userInput.isNotBlank()) {
-                            val expertType = contact.name
-                            viewModel.sendMessage(expertType, userInput)
-                            userInput = ""
+                Surface(
+                    shadowElevation = 8.dp,
+                    tonalElevation = 4.dp,
+                    color = MaterialTheme.colorScheme.surface
+                ) {
+                    MessageBar(
+                        message = userInput,
+                        onMessageChange = { userInput = it },
+                        onSend = {
+                            if (userInput.isNotBlank()) {
+                                val expertType = contact.name
+                                viewModel.sendMessage(expertType, userInput)
+                                userInput = ""
+                            }
                         }
-                    }
-                )
+                    )
+                }
             }
-        }
+        },
+
+        contentWindowInsets = WindowInsets.systemBars.only(WindowInsetsSides.Horizontal) // evita solapamientos horizontales
     ) { innerPadding ->
         LazyColumn(
             modifier = Modifier
@@ -114,23 +128,23 @@ fun Messaging(contact: Contact, onNavigate: () -> Unit, viewModel: ChatViewModel
                 .fillMaxSize()
                 .background(Color(0xFFF5F5F5))
                 .padding(vertical = 8.dp)
-                .imePadding(),
+                .imePadding()
+                .navigationBarsPadding(), // evita que se oculte tras los botones del sistema
             reverseLayout = true
         ) {
-            item {
-                Spacer(modifier = Modifier.height(8.dp))
-            }
-            
+            item { Spacer(modifier = Modifier.height(8.dp)) }
+
             items(messages.reversed()) { msg ->
                 MessageItem(contact = contact, message = msg)
             }
-            
+
             item {
                 WelcomeMessage(contact.name)
             }
         }
     }
 }
+
 
 @Composable
 fun WelcomeMessage(expertName: String) {
@@ -156,9 +170,9 @@ fun WelcomeMessage(expertName: String) {
                     ),
                     color = MaterialTheme.colorScheme.primary
                 )
-                
+
                 Spacer(modifier = Modifier.height(8.dp))
-                
+
                 Text(
                     text = when(expertName) {
                         "Asesor de Bienestar" -> "Estoy aquí para ayudarte con recomendaciones personalizadas para mejorar tu salud y bienestar. ¿En qué puedo ayudarte hoy?"
@@ -215,9 +229,9 @@ fun MessageItem(contact: Contact, message: Message, modifier: Modifier = Modifie
                     bottomStart = 16.dp,
                     bottomEnd = 16.dp
                 ),
-                color = if (isUser) 
+                color = if (isUser)
                     MaterialTheme.colorScheme.primary.copy(alpha = 0.9f)
-                else 
+                else
                     MaterialTheme.colorScheme.surface,
                 shadowElevation = 1.dp
             ) {
@@ -231,7 +245,7 @@ fun MessageItem(contact: Contact, message: Message, modifier: Modifier = Modifie
                     )
                 }
             }
-            
+
             Text(
                 text = message.time,
                 style = MaterialTheme.typography.bodySmall,
@@ -260,7 +274,7 @@ fun MessageBar(
         TextField(
             value = message,
             onValueChange = onMessageChange,
-            placeholder = { 
+            placeholder = {
                 Text(
                     "Escribe un mensaje...",
                     style = MaterialTheme.typography.bodyLarge,
@@ -279,7 +293,7 @@ fun MessageBar(
             ),
             maxLines = 4
         )
-        
+
         FloatingActionButton(
             onClick = onSend,
             modifier = Modifier.size(48.dp),
