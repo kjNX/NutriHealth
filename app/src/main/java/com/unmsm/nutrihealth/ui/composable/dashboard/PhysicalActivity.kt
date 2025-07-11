@@ -138,7 +138,7 @@ fun ActivityCard(historyData: Map<String, Map<Int, Float>>) {
     ) {
         Column(Modifier.padding(16.dp)) {
             Text(
-                "📈 Consumo de nutrientes",
+                "📈 Actividad física",
                 style = MaterialTheme.typography.titleMedium
             )
             Spacer(Modifier.height(8.dp))

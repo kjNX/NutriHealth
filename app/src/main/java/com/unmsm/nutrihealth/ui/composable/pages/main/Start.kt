@@ -22,6 +22,7 @@ import com.unmsm.nutrihealth.data.model.Food
 import com.unmsm.nutrihealth.data.model.Run
 import com.unmsm.nutrihealth.data.model.UserObjective
 import com.unmsm.nutrihealth.ui.composable.dashboard.ActivityCard
+import com.unmsm.nutrihealth.ui.composable.dashboard.NutrientDistribution
 import com.unmsm.nutrihealth.ui.composable.dashboard.NutrientsCard
 import com.unmsm.nutrihealth.ui.composable.dashboard.getActivityData
 import com.unmsm.nutrihealth.ui.composable.dashboard.getNutrientsData
@@ -136,6 +137,7 @@ fun StartDisplay(
             },
             historyData = getNutrientsData(foodList)
         )*/
+        NutrientDistribution(foodList)
         ActivityCard(historyData = getActivityData(foodList, runList))
         NutrientsCard(historyData = getNutrientsData(foodList))
     }
