@@ -48,6 +48,7 @@ class AccountSetupViewModel: ViewModel() {
     fun setMainGoal(i: UserTarget.Priority) = _uiState.update { it.copy(mainGoal = i) }
 
     fun submitData(): Unit {
+        Log.d("FirestoreDebug", "📤 submitData() con User.id = ${User.id}")
         UserData.age = _uiState.value.age.toIntOrNull() ?: 0
         UserData.height = _uiState.value.height.toIntOrNull() ?: 0
         UserData.weight = _uiState.value.weight.toFloatOrNull() ?: 0f
@@ -57,11 +58,19 @@ class AccountSetupViewModel: ViewModel() {
             .collection("setup_data")
             .document("base_data")
             .set(UserData)
+            .addOnSuccessListener {
+                Log.d("FirestoreDebug", "✅ base_data guardado correctamente para ${User.id}")
+            }
+            .addOnFailureListener {
+                Log.e("FirestoreDebug", "❌ Error guardando base_data: ${it.message}")
+            }
 
         advanceStage()
     }
 
     fun submitTarget() {
+        Log.d("FirestoreDebug", "📤 submitData() con User.id = ${User.id}")
+
         val userTarget = com.unmsm.nutrihealth.data.model.UserTarget(
             targetWeight = _uiState.value.targetWeight.toFloatOrNull()?.toDouble() ?: 0.0,
             priority = _uiState.value.mainGoal
@@ -73,6 +82,7 @@ class AccountSetupViewModel: ViewModel() {
             .document("target_data")
             .set(userTarget)
             .addOnSuccessListener {
+                Log.d("FirestoreDebug", "✅ target_data guardado correctamente para ${User.id}")
                 calcPlan()
                 advanceStage()
             }
@@ -101,18 +111,34 @@ class AccountSetupViewModel: ViewModel() {
     }
 
     fun confirm(): Unit {
+        Log.d("FirestoreDebug", "📤 confirm() con User.id = ${User.id}")
+
         firestore.collection("user")
             .document(User.id)
             .collection("setup_data")
             .document("objective_data")
             .set(UserObjective)
+            .addOnSuccessListener {
+            Log.d("FirestoreDebug", "✅ objective_data guardado correctamente para ${User.id}")
+            }
+            .addOnFailureListener {
+                Log.e("FirestoreDebug", "❌ Error guardando objective_data: ${it.message}")
+            }
         advanceStage()
     }
 
     fun advanceStage(): Unit {
         ++User.stage
+        Log.d("FirestoreDebug", "📈 Avanzando stage a ${User.stage} para User.id = ${User.id}")
+
         firestore.collection("user")
             .document(User.id)
             .update("stage", User.stage)
+            .addOnSuccessListener {
+                Log.d("FirestoreDebug", "✅ stage actualizado correctamente para ${User.id}")
+            }
+            .addOnFailureListener {
+                Log.e("FirestoreDebug", "❌ Error actualizando stage: ${it.message}")
+            }
     }
 }
