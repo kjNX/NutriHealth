@@ -77,7 +77,8 @@ fun Composite(
             0 -> StartDisplay(
                 foodList = foodList,
                 runList = runList,
-                modifier = Modifier.fillMaxSize())
+                modifier = Modifier.fillMaxSize()
+            )
             1 -> ContactList(
                 contacts = getContacts(),
                 modifier = Modifier.fillMaxSize(),

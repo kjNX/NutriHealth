@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.unmsm.nutrihealth.ui.composable.blocks.SubsectionTopBar
 
@@ -16,6 +17,7 @@ fun SettingsExport(
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState = viewModel.uiState
+    val context = LocalContext.current
 
     Scaffold(
         topBar = { SubsectionTopBar(title = "Ajustes", onNavigate = onBack) }
@@ -30,18 +32,28 @@ fun SettingsExport(
             password = uiState.password,
             onPasswordChange = viewModel::updatePassword,
             onCommit = viewModel::commitUserChanges,
-            onPasswordChangeRequest = { TODO() },
+            onPasswordChangeRequest = viewModel::togglePassDialog,
             measureType = uiState.measureType,
             onMeasureTypeToggle = viewModel::toggleMeasureType,
             notifications = uiState.notifications,
             onNotificationsToggle = viewModel::toggleNotifications,
-//            onExportRequest = { TODO() },
-            onDeleteRequest = { TODO() },
+            onDeleteRequest = {
+                viewModel.deleteAccount()
+                onLogout()
+            },
             onLogout = {
                 viewModel.logout()
                 onLogout()
             },
             modifier = modifier.fillMaxSize().padding(innerPadding)
         )
+        if (uiState.showDialog) {
+            PassChangeDialog(
+                onDismiss = viewModel::togglePassDialog,
+                onConfirm = { currentPassword, newPassword, confirmPassword ->
+                    viewModel.changePassword(currentPassword, newPassword, confirmPassword)
+                }
+            )
+        }
     }
 }
