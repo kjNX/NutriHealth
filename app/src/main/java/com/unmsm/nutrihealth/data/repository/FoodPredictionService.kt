@@ -30,7 +30,7 @@ interface FoodPredictionService {
 
     companion object {
         const val BASE_URL = "https://server-comida-520374155933.us-central1.run.app/"
-        const val AI_BASE_URL = "https://studio-git-master-danielleonardo23s-projects.vercel.app/api/"
-        const val LABEL_BASE_URL = "https://studio-git-master-danielleonardo23s-projects.vercel.app/api/"
+        const val AI_BASE_URL = "https://studio-520374155933.europe-west1.run.app/api/"
+        const val LABEL_BASE_URL = "https://studio-520374155933.europe-west1.run.app/api/"
     }
 } 
