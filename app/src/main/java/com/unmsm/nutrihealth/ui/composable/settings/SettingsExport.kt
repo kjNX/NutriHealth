@@ -7,7 +7,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.unmsm.nutrihealth.ui.composable.blocks.SubsectionTopBar
-import com.unmsm.nutrihealth.ui.composable.settings.SettingsComposite
 
 @Composable
 fun SettingsExport(
@@ -28,8 +27,8 @@ fun SettingsExport(
             onNameChange = viewModel::updateName,
             email = uiState.email,
             onEmailChange = viewModel::updateEmail,
-//            phoneNumber = uiState.phoneNumber,
-//            onPhoneNumberChange = viewModel::updatePhoneNumber,
+            password = uiState.password,
+            onPasswordChange = viewModel::updatePassword,
             onCommit = viewModel::commitUserChanges,
             onPasswordChangeRequest = { TODO() },
             measureType = uiState.measureType,

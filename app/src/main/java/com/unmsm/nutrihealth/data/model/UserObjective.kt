@@ -3,7 +3,7 @@ package com.unmsm.nutrihealth.data.model
 object UserObjective {
     var id: Int = 0
     var tmb: Int = 0
-    var dailyCal: Int = 0
+    var dailyCal: Int = 1200
     var protein: Int = 0
     var carbs: Int = 0
     var fats: Int = 0

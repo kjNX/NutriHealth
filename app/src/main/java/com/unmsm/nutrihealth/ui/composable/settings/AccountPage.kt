@@ -25,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.unmsm.nutrihealth.ui.composable.EnhancedTextField
 
@@ -134,8 +135,8 @@ fun PersonalInfo(
     onNameChange: (String) -> Unit,
     email: String,
     onEmailChange: (String) -> Unit,
-//    phoneNumber: String,
-//    onPhoneNumberChange: (String) -> Unit,
+    password: String,
+    onPasswordChange: (String) -> Unit,
     onCommit: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -144,7 +145,7 @@ fun PersonalInfo(
         icon = Icons.Default.Person,
         modifier = modifier
     ) {
-        Text(text = "Nombre")
+//        Text(text = "Nombre")
         EnhancedTextField(
             value = name,
             onValueChange = onNameChange,
@@ -152,7 +153,7 @@ fun PersonalInfo(
             icon = Icons.Default.Person,
             placeholder = "Ingrese un nombre"
         )
-        Text(text = "Correo electrónico")
+//        Text(text = "Correo electrónico")
         EnhancedTextField(
             value = email,
             onValueChange = onEmailChange,
@@ -160,8 +161,15 @@ fun PersonalInfo(
             icon = Icons.Default.Email,
             placeholder = "Ingrese un email"
         )
-//        Text(text = "Teléfono")
-//        EnhancedTextField(value = phoneNumber, onValueChange = onPhoneNumberChange)
+//        Text(text = "Contraseña")
+        EnhancedTextField(
+            value = password,
+            onValueChange = onPasswordChange,
+            title = "Contraseña",
+            icon = Icons.Default.Lock,
+            placeholder = "Confirme su contraseña",
+            visualTransformation = PasswordVisualTransformation()
+        )
         LabeledButton(
             title = "Guardar cambios",
             onClick = onCommit,
@@ -204,8 +212,8 @@ fun AccountPage(
     onNameChange: (String) -> Unit,
     email: String,
     onEmailChange: (String) -> Unit,
-//    phoneNumber: String,
-//    onPhoneNumberChange: (String) -> Unit,
+    password: String,
+    onPasswordChange: (String) -> Unit,
     onCommit: () -> Unit,
     onPasswordChangeRequest: () -> Unit,
     modifier: Modifier = Modifier
@@ -217,8 +225,8 @@ fun AccountPage(
             onNameChange = onNameChange,
             email = email,
             onEmailChange = onEmailChange,
-//            phoneNumber = phoneNumber,
-//            onPhoneNumberChange = onPhoneNumberChange,
+            password = password,
+            onPasswordChange = onPasswordChange,
             onCommit = onCommit
         )
         SecuritySettings(exitEnabled, onPasswordChangeRequest)

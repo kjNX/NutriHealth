@@ -45,13 +45,13 @@ import kotlinx.coroutines.launch
 fun MainTopBar(onClick: List<() -> Unit>) {
     val iconDescription = listOf(
         "Historial",
-        "Informe detallado",
+//        "Informe detallado",
         "Perfil",
         "Ajustes"
     )
     val icons = listOf(
         Icons.Default.History,
-        Icons.Default.Analytics,
+//        Icons.Default.Analytics,
         Icons.Default.Face3,
         Icons.Default.Settings
     )

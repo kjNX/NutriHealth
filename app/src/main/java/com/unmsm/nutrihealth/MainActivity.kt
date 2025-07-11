@@ -1,5 +1,6 @@
 package com.unmsm.nutrihealth
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
@@ -10,22 +11,36 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.runtime.*
+import androidx.activity.viewModels
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.ActivityCompat
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.facebook.*
+import androidx.navigation.navArgument
+import com.facebook.CallbackManager
 import com.facebook.appevents.AppEventsLogger
-import com.facebook.login.LoginManager
-import com.facebook.login.LoginResult
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.firebase.auth.*
+import com.google.android.gms.common.api.ApiException
+import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.auth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.firestore
 import com.unmsm.nutrihealth.data.model.Contact
+import com.unmsm.nutrihealth.data.model.User
 import com.unmsm.nutrihealth.data.repository.FoodPredictionService
 import com.unmsm.nutrihealth.data.repository.getContacts
 import com.unmsm.nutrihealth.logic.AuthViewModel
@@ -33,21 +48,20 @@ import com.unmsm.nutrihealth.logic.extension.hasAllPermission
 import com.unmsm.nutrihealth.logic.extension.hasLocationPermission
 import com.unmsm.nutrihealth.logic.extension.openAppSetting
 import com.unmsm.nutrihealth.logic.utils.PermissionUtils
-import com.unmsm.nutrihealth.ui.composable.*
+import com.unmsm.nutrihealth.ui.composable.AccountSetupDisplay
+import com.unmsm.nutrihealth.ui.composable.AuthDisplay
+import com.unmsm.nutrihealth.ui.composable.MainDisplay
+import com.unmsm.nutrihealth.ui.composable.Messaging
+import com.unmsm.nutrihealth.ui.composable.OnboardingFlow
+import com.unmsm.nutrihealth.ui.composable.Profile
+import com.unmsm.nutrihealth.ui.composable.Scan
+import com.unmsm.nutrihealth.ui.composable.WelcomeScreen
+import com.unmsm.nutrihealth.ui.composable.dashboard.DashboardScreen
 import com.unmsm.nutrihealth.ui.composable.pages.map.HistoryScreen
-import com.unmsm.nutrihealth.ui.compose.component.LocationPermissionRequestDialog
 import com.unmsm.nutrihealth.ui.composable.settings.SettingsExport
+import com.unmsm.nutrihealth.ui.compose.component.LocationPermissionRequestDialog
 import com.unmsm.nutrihealth.ui.theme.NutriHealthTheme
 import dagger.hilt.android.AndroidEntryPoint
-import androidx.activity.viewModels
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.lifecycleScope
-import androidx.navigation.navArgument
-import com.google.android.gms.common.api.ApiException
-import com.google.firebase.Firebase
-import com.google.firebase.firestore.firestore
-import com.unmsm.nutrihealth.data.model.User
-import com.unmsm.nutrihealth.ui.composable.dashboard.DashboardScreen
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
@@ -116,6 +130,7 @@ class MainActivity : ComponentActivity() {
             launchUI(MainScreen.Welcome.name)
         }}
 
+        @SuppressLint("CoroutineCreationDuringComposition")
         private fun launchUI(startDestination: String) {
             setContent {
                 val coroutineScope = rememberCoroutineScope()
@@ -183,7 +198,24 @@ class MainActivity : ComponentActivity() {
                         googleSignInLauncher.launch(intent)
                     }
 
-                    val startDestination = if(FirebaseAuth.getInstance().currentUser != null) MainScreen.Main.name else MainScreen.Welcome.name
+                    var startDestination = MainScreen.Welcome.name
+
+                    if(FirebaseAuth.getInstance().currentUser != null) {
+                        startDestination = MainScreen.Main.name
+                        showOnboarding = false
+                        User.id = FirebaseAuth.getInstance().currentUser!!.uid
+                        coroutineScope.launch {
+                            val userData = FirebaseFirestore.getInstance()
+                                .collection("user")
+                                .document(User.id)
+                                .get()
+                                .await()
+
+                            User.name = userData.getString("name") ?: ""
+                            User.email = userData.getString("email") ?: ""
+                            User.stage = (userData.get("stage") as? Long)?.toInt() ?: 0
+                        }
+                    }
 
                     NavHost(
                         navController = navController,
@@ -242,7 +274,7 @@ class MainActivity : ComponentActivity() {
                                 navController = navController,
                                 onTopBarClick = listOf(
                                     { goto(MainScreen.History.name) },
-                                    { goto(MainScreen.Dashboard.name) },
+//                                    { goto(MainScreen.Dashboard.name) },
                                     { goto(MainScreen.Profile.name) },
                                     { goto(MainScreen.Settings.name) }
                                 ),
@@ -284,7 +316,7 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         composable(MainScreen.Dashboard.name) {
-                            DashboardScreen()
+                            DashboardScreen({ navController.navigateUp() })
                         }
                     }
                 }
