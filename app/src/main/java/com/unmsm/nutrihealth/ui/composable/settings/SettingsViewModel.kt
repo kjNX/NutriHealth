@@ -28,6 +28,7 @@ data class SettingsUiState(
     val password: String = "",
     val updateEnabled: Boolean = false,
     val exitEnabled: Boolean = true,
+    val showDialog: Boolean = false,
     val measureType: Boolean = false,
     val notifications: Boolean = false
 )
@@ -80,13 +81,41 @@ class SettingsViewModel @Inject constructor(
         )
     }
 
+    fun togglePassDialog() { uiState = uiState.copy(showDialog = !uiState.showDialog) }
+    fun changePassword(currentPassword: String, newPassword: String, confirmPassword: String) {
+        if (newPassword != confirmPassword) {
+            return
+        }
+
+        viewModelScope.launch {
+            try {
+                uiState = uiState.copy(exitEnabled = false)
+
+                val user = FirebaseAuth.getInstance().currentUser
+                val providerId = user?.providerData?.first()?.providerId
+
+                if (providerId == "password") {
+                    val credential = EmailAuthProvider.getCredential(user.email ?: "", currentPassword)
+                    user.reauthenticate(credential).await()
+                    user.updatePassword(newPassword).await()
+                } else Log.d("SettingsViewModel", "Password change not supported for provider: $providerId")
+
+                togglePassDialog()
+                uiState = uiState.copy(exitEnabled = true)
+            } catch (e: Exception) {
+                Log.e("SettingsViewModel", "Error changing password", e)
+                uiState = uiState.copy(exitEnabled = true)
+            }
+        }
+    }
+
     fun toggleMeasureType(measureType: Boolean) {
         viewModelScope.launch {
             try {
                 preferencesRepository.setValue(MEASURE_TYPE, measureType)
                 uiState = uiState.copy(measureType = measureType)
             } catch (e: Exception) {
-                // Handle error
+                Log.d("SettingsViewModel", "toggleMeasureType: ${e.localizedMessage}")
             }
         }
     }
@@ -104,30 +133,66 @@ class SettingsViewModel @Inject constructor(
 
     fun commitUserChanges() {
         viewModelScope.launch {
-            uiState = uiState.copy(exitEnabled = false)
+            try {
+                uiState = uiState.copy(exitEnabled = false)
 
-            // Update User object directly since it's a singleton
-            User.name = uiState.name
-            User.email = uiState.email
+                // Update User object directly since it's a singleton
+                User.name = uiState.name
+                User.email = uiState.email
 
-            Log.d("SettingsViewModel", "commitUserChanges: ${FirebaseAuth.getInstance().currentUser?.providerData?.first()?.providerId}")
+                val user = FirebaseAuth.getInstance().currentUser
+                val providerId = user?.providerData?.first()?.providerId
 
-            val credential = when(FirebaseAuth.getInstance().currentUser?.providerData?.first()?.providerId) {
-                "password" -> EmailAuthProvider.getCredential(uiState.email, uiState.password)
-                "google.com" -> GoogleAuthProvider.getCredential(FirebaseAuth.getInstance().currentUser?.uid, null)
-                else -> throw Exception()
+                Log.d("SettingsViewModel", "commitUserChanges: $providerId")
+
+                // Only attempt to update Firebase Auth if the email has changed
+                if (user?.email != uiState.email) {
+                    // Different authentication based on provider
+                    when(providerId) {
+                        "password" -> {
+                            // For email/password authentication
+                            if (uiState.password.isNotEmpty()) {
+                                val credential = EmailAuthProvider.getCredential(user.email ?: "", uiState.password)
+                                user.reauthenticate(credential).await()
+                                user.verifyBeforeUpdateEmail(uiState.email).await()
+                            } else {
+                                Log.d("SettingsViewModel", "Password required to update email for password provider")
+                            }
+                        }
+                        "google.com" -> {
+                            // For Google authentication
+                            // Google doesn't support email changes through Firebase directly
+                            // We can only update the email in Firestore
+                            Log.d("SettingsViewModel", "Email update through Google auth not supported directly")
+                        }
+                        else -> {
+                            Log.d("SettingsViewModel", "Unknown provider: $providerId")
+                        }
+                    }
+                }
+
+                // Update Firestore regardless of authentication provider
+                FirebaseFirestore.getInstance().collection("user").document(User.id).set(User).await()
+
+                uiState = uiState.copy(
+                    updateEnabled = false,
+                    exitEnabled = true
+                )
+            } catch (e: Exception) {
+                Log.e("SettingsViewModel", "Error updating user", e)
+                uiState = uiState.copy(exitEnabled = true)
             }
-            FirebaseAuth.getInstance().currentUser?.reauthenticate(credential)?.await()
-            FirebaseAuth.getInstance().currentUser?.verifyBeforeUpdateEmail(uiState.email)?.await()
+        }
+    }
 
-            FirebaseFirestore.getInstance().collection("user").document(User.id).set(User).await()
-
-            // In a real app, you would update Firebase here
-
-            uiState = uiState.copy(
-                updateEnabled = false,
-                exitEnabled = true
-            )
+    fun deleteAccount() {
+        viewModelScope.launch {
+            try {
+                FirebaseAuth.getInstance().currentUser?.delete()?.await()
+                FirebaseFirestore.getInstance().collection("user").document(User.id).delete().await()
+            } catch (e: Exception) {
+                Log.e("SettingsViewModel", "Error deleting account", e)
+            }
         }
     }
 
