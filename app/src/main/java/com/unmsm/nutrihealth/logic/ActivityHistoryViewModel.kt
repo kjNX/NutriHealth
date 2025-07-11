@@ -21,7 +21,7 @@ class ActivityHistoryViewModel : ViewModel() {
             "caloriesBurned" to run.caloriesBurned
         )
 
-        firestore.collection("users")
+        firestore.collection("user")
             .document(User.id)
             .collection("activities")
             .add(activity)
@@ -35,7 +35,7 @@ class ActivityHistoryViewModel : ViewModel() {
 
     // Método para traer todas las carreras desde Firestore
     fun fetchRunsFromFirestore(onResult: (List<Run>, String) -> Unit) {
-        firestore.collection("users")
+        firestore.collection("user")
             .document(User.id)
             .collection("activities")
             .get()

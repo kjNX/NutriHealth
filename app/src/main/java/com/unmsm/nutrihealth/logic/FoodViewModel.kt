@@ -16,12 +16,13 @@ class FoodViewModel : ViewModel() {
     private val db = FirebaseFirestore.getInstance()
     private val _foodList = MutableStateFlow<List<Food>>(emptyList())
     val foodList: StateFlow<List<Food>> = _foodList
-
+    private val _foodSuggestions = MutableStateFlow<List<Food>>(emptyList())  // base global de alimentos
+    val foodSuggestions: StateFlow<List<Food>> = _foodSuggestions
     private fun foodCollection(): CollectionReference? {
         val userId = User.id
         Log.d("FoodViewModel", "User.id: '$userId'")
         return if (userId.isNotEmpty()) {
-            db.collection("users").document(userId).collection("foods")
+            db.collection("user").document(userId).collection("foods")
         } else null
     }
 
@@ -78,6 +79,17 @@ class FoodViewModel : ViewModel() {
             .addOnFailureListener { e ->
                 Log.e("FoodViewModel", "Error al guardar comida: ${e.message}")
                 onResult(false, "Error al guardar: ${e.message}")
+            }
+    }
+    fun loadGlobalFoodSuggestions() {
+        db.collection("food").get()
+            .addOnSuccessListener { snapshot ->
+                val list = snapshot.documents.mapNotNull { it.toObject(Food::class.java) }
+                _foodSuggestions.value = list
+                Log.d("FoodViewModel", "Se cargaron ${list.size} sugerencias de alimentos.")
+            }
+            .addOnFailureListener { exception ->
+                Log.e("FoodViewModel", "Error al cargar sugerencias: ${exception.message}", exception)
             }
     }
 
