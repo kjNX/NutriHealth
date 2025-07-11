@@ -21,6 +21,9 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.saveable.rememberSaveable
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 import com.unmsm.nutrihealth.R
 import com.unmsm.nutrihealth.logic.AuthViewModel
 import com.unmsm.nutrihealth.logic.AuthState
@@ -84,10 +87,13 @@ fun AuthDisplay(
     onLogin: (String, String) -> Job,
     onRegister: (String, String, String) -> Job,
     onGoogleAccess: () -> Unit,
+    isLoginStart: Boolean = true, // <- NUEVO PARÁMETRO
     modifier: Modifier = Modifier,
     viewModel: AuthViewModel = viewModel()
 ) {
-    var isLoggingIn by remember { mutableStateOf(true) }
+    var showEmailVerificationDialog by remember { mutableStateOf(false) }
+
+    var isLoggingIn by rememberSaveable { mutableStateOf(isLoginStart) }
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -107,22 +113,16 @@ fun AuthDisplay(
             }
             is AuthState.Success -> {
                 isLoading = false
-                // Call the appropriate callback based on the current mode
-                if (isLoggingIn) {
-                    onLogin(email, password)
-                } else {
-                    onRegister(name, email, password)
-                }
-            }
+                onLogin(email, password)            }
             is AuthState.Error -> {
                 isLoading = false
-                // Error is already handled by the viewModel and displayed via errorMessage
             }
             else -> {
                 isLoading = false
             }
         }
     }
+
 
     // Create login and register functions that use the viewModel
     val login: () -> Unit = {
@@ -133,7 +133,12 @@ fun AuthDisplay(
 
     val register: () -> Unit = {
         coroutineScope.launch {
-            viewModel.signup(name, email, password)
+            val result = viewModel.signup(name, email, password)
+            if (result.isSuccess) {
+                Firebase.auth.currentUser?.sendEmailVerification()?.addOnSuccessListener {
+                    showEmailVerificationDialog = true
+                }
+            }
         }
     }
 
@@ -246,6 +251,24 @@ fun AuthDisplay(
                 modifier = Modifier.clickable { isLoggingIn = !isLoggingIn },
                 color = MaterialTheme.colorScheme.primary,
                 fontSize = 14.sp
+            )
+        }
+        if (showEmailVerificationDialog) {
+            AlertDialog(
+                onDismissRequest = {},
+                confirmButton = {
+                    TextButton(onClick = {
+                        showEmailVerificationDialog = false
+                        viewModel.signOut()
+                        isLoggingIn = true
+                    }) {
+                        Text("Entendido")
+                    }
+                },
+                title = { Text("Verificación de correo") },
+                text = {
+                    Text("Hemos enviado un correo de verificación a $email. Por favor verifica tu cuenta antes de iniciar sesión.")
+                }
             )
         }
     }
