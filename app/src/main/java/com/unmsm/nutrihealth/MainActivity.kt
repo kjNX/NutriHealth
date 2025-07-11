@@ -248,6 +248,8 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         composable(MainScreen.Setup.name) {
+                            val context = LocalContext.current
+
                             AccountSetupDisplay(
                                 navController = navController,
                                 onSetupFinish = {
@@ -261,7 +263,7 @@ class MainActivity : ComponentActivity() {
                                             }
                                         }
                                         .addOnFailureListener {
-                                            Toast.makeText(this@MainActivity, "Error actualizando stage", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(context, "Error actualizando stage", Toast.LENGTH_SHORT).show()
                                         }
                                 }
                             )
