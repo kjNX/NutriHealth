@@ -1,29 +1,24 @@
-package com.unmsm.nutrihealth.ui.composable
-
-import androidx.compose.foundation.layout.Column
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import com.unmsm.nutrihealth.data.model.Food
-import androidx.compose.runtime.*
-import com.unmsm.nutrihealth.logic.FoodViewModel
-import java.util.Date
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-
+import androidx.compose.ui.unit.sp
+import com.unmsm.nutrihealth.data.model.Food
+import com.unmsm.nutrihealth.logic.FoodViewModel
 import java.util.*
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TypeAddDialog(
@@ -43,20 +38,22 @@ fun TypeAddDialog(
     val filteredSuggestions = suggestions.filter {
         it.name.contains(query, ignoreCase = true)
     }
+
     val otros = mutableListOf<Food>()
     val agrupados = mutableMapOf<String, MutableList<Food>>()
+    val expandedCategories = remember { mutableStateMapOf<String, Boolean>() }
 
     for (food in filteredSuggestions) {
         val nameLower = food.name.lowercase()
 
         val categoria = when {
-            listOf("arroz", "chaufa", "arabe").any { nameLower.contains(it) } -> "🍚 Arroces"
-            listOf("pollo", "gallina").any { nameLower.contains(it) } -> "🍗 Platos con Pollo"
-            listOf("sopa", "caldo", "menestr", "aguadito").any { nameLower.contains(it) } -> "🥣 Sopas"
-            listOf("ensalada", "vegetal", "palta").any { nameLower.contains(it) } -> "🥗 Ensaladas"
-            listOf("ají", "rocoto", "picante").any { nameLower.contains(it) } -> "🌶️ Ajíes"
-            listOf("pescado", "sudado", "cebiche", "trucha").any { nameLower.contains(it) } -> "🐟 Pescados"
-            listOf("cerdo", "chancho").any { nameLower.contains(it) } -> "🐖 Cerdo"
+            listOf("arroz", "chaufa", "arabe").any { nameLower.startsWith(it) } -> "🍚 Arroces"
+            listOf("pollo", "gallina").any { nameLower.startsWith(it) } -> "🍗 Platos con Pollo"
+            listOf("sopa", "caldo", "menestr", "aguadito").any { nameLower.startsWith(it) } -> "🥣 Sopas"
+            listOf("ensalada", "vegetal", "palta").any { nameLower.startsWith(it) } -> "🥗 Ensaladas"
+            listOf("ají", "rocoto", "picante").any { nameLower.startsWith(it) } -> "🌶️ Ajíes"
+            listOf("pescado", "sudado", "cebiche", "trucha").any { nameLower.startsWith(it) } -> "🐟 Pescados"
+            listOf("cerdo", "chancho","seco","cabrito","bisteck").any { nameLower.startsWith(it) } -> "🐖 Carnes"
             else -> null
         }
 
@@ -67,36 +64,36 @@ fun TypeAddDialog(
         }
     }
 
-// ✅ Mapa final con "Otros" al final si hay elementos no clasificados
-    val groupedSuggestions: Map<String, List<Food>> =
-        if (otros.isNotEmpty()) agrupados + mapOf("🍽️ Otros" to otros)
-        else agrupados
-
-
+    val groupedSuggestions = if (otros.isNotEmpty()) agrupados + mapOf("🍽️ Otros" to otros) else agrupados
 
     LaunchedEffect(Unit) {
         viewModel.loadGlobalFoodSuggestions()
     }
 
-    Scaffold(
+    Scaffold   ( modifier = Modifier
+            .fillMaxSize()
+        .background(MaterialTheme.colorScheme.background),
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("🍴 Agregar comida") },
+                title = { Text("🍴 Agregar comida", color = MaterialTheme.colorScheme.primary) },
                 navigationIcon = {
                     IconButton(onClick = onDismiss) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Atrás")
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Atrás", tint = MaterialTheme.colorScheme.primary)
                     }
-                }
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                )
             )
         }
     ) { padding ->
-        Column(modifier = Modifier
-            .padding(padding)
-            .padding(16.dp)
-            .fillMaxSize()
+        Column(
+            modifier = Modifier
+                .padding(padding)
+                .background(MaterialTheme.colorScheme.background) // 👈 también aquí
+                .padding(16.dp)
+                .fillMaxSize()
         ) {
-
-            // 🔍 Buscador
             OutlinedTextField(
                 value = query,
                 onValueChange = {
@@ -104,43 +101,80 @@ fun TypeAddDialog(
                     selectedFood = null
                 },
                 label = { Text("Buscar comida peruana") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    cursorColor = MaterialTheme.colorScheme.primary
+                )
             )
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // 📋 Resultados
             if (groupedSuggestions.isNotEmpty() && selectedFood == null) {
                 LazyColumn(modifier = Modifier.weight(1f)) {
                     groupedSuggestions.forEach { (categoria, platos) ->
                         item {
-                            Text(
-                                text = categoria,
-                                style = MaterialTheme.typography.titleSmall,
-                                modifier = Modifier.padding(vertical = 6.dp)
-                            )
-                        }
-                        items(platos.take(4)) { food ->
-                            Card(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 4.dp)
-                                    .clickable {
-                                        selectedFood = food
-                                        query = food.name
-                                        energy = food.energy.toString()
-                                        protein = food.protein.toString()
-                                        fat = food.fats.toString()
-                                        water = food.water.toString()
-                                    },
-                                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                            ) {
-                                Column(Modifier.padding(12.dp)) {
-                                    Text(food.name, style = MaterialTheme.typography.bodyLarge)
+                            Column(modifier = Modifier.fillMaxWidth()) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            expandedCategories[categoria] = !(expandedCategories[categoria] ?: false)
+                                        }
+                                        .padding(vertical = 10.dp, horizontal = 8.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
                                     Text(
-                                        "Kcal: ${food.energy} | Prot: ${food.protein}g | Grasas: ${food.fats}g",
-                                        style = MaterialTheme.typography.bodySmall
+                                        text = categoria,
+                                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                        color = MaterialTheme.colorScheme.primary
                                     )
+                                    Icon(
+                                        imageVector = if (expandedCategories[categoria] == true) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                                if (expandedCategories[categoria] == true) {
+                                    platos.forEach { food ->
+                                        Card(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(horizontal = 8.dp, vertical = 6.dp)
+                                                .clickable {
+                                                    selectedFood = food
+                                                    query = food.name
+                                                    energy = food.energy.toString()
+                                                    protein = food.protein.toString()
+                                                    fat = food.fats.toString()
+                                                    water = food.water.toString()
+                                                },
+                                            colors = CardDefaults.cardColors(
+                                                containerColor = MaterialTheme.colorScheme.secondaryContainer
+                                            ),
+                                            shape = RoundedCornerShape(12.dp),
+                                            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                                        ) {
+                                            Column(Modifier.padding(12.dp)) {
+                                                Text(
+                                                    text = food.name,
+                                                    style = MaterialTheme.typography.titleMedium,
+                                                    color = MaterialTheme.colorScheme.onSurface
+                                                )
+                                                Spacer(modifier = Modifier.height(4.dp))
+                                                Text(
+                                                    text = "Kcal: ${food.energy} kcal",
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = Color.DarkGray
+                                                )
+                                                Text(
+                                                    text = "Proteínas: ${food.protein}g | Grasas: ${food.fats}g",
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = Color.DarkGray
+                                                )
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -148,8 +182,7 @@ fun TypeAddDialog(
                 }
             }
 
-            // 🧪 Nutrientes editables (solo si se ha seleccionado un alimento)
-            if (selectedFood != null ) {
+            if (selectedFood != null) {
                 Spacer(modifier = Modifier.height(12.dp))
                 Text("🔬 Información nutricional", style = MaterialTheme.typography.titleMedium)
                 Spacer(modifier = Modifier.height(4.dp))
@@ -171,14 +204,15 @@ fun TypeAddDialog(
                         )
                         onConfirm(food)
                     },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                 ) {
-                    Text("✅ Guardar comida")
+                    Text("✅ Guardar comida", color = MaterialTheme.colorScheme.onPrimary)
                 }
+
                 Spacer(modifier = Modifier.height(8.dp))
                 TextButton(
                     onClick = {
-                        // 🧼 Volver al buscador: limpia selección y campos
                         selectedFood = null
                         query = ""
                         energy = ""
@@ -188,13 +222,13 @@ fun TypeAddDialog(
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("🔙 Volver al buscador")
+                    Text("🔙 Volver al buscador", color = MaterialTheme.colorScheme.primary)
                 }
-
             }
         }
     }
 }
+
 @Composable
 fun NutrientField(label: String, value: String, onChange: (String) -> Unit) {
     OutlinedTextField(
@@ -206,4 +240,3 @@ fun NutrientField(label: String, value: String, onChange: (String) -> Unit) {
             .padding(vertical = 4.dp)
     )
 }
-

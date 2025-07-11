@@ -1,5 +1,6 @@
 package com.unmsm.nutrihealth.ui.composable
 
+import TypeAddDialog
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
@@ -163,17 +164,27 @@ fun MainDisplay(
         val foodViewModel: FoodViewModel = viewModel()
 
 
+        // Dentro de tu Composable principal
         if (showDialog) {
             TypeAddDialog(
                 viewModel = foodViewModel,
-                onDismiss = { showDialog = false },
+                onDismiss = {
+                    showDialog = false
+                },
                 onConfirm = { food ->
+                    // Guardar comida en Firestore (o localmente si usas Room también)
                     foodViewModel.addFood(food) { success ->
-                        showDialog = false
+                        if (success) {
+                            showDialog = false
+                        } else {
+                            // Opcional: Mostrar mensaje de error o retry
+                            // e.g., Snackbar("No se pudo guardar")
+                        }
                     }
                 }
             )
         }
+
 
 
     }
