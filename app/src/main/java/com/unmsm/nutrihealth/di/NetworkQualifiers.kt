@@ -8,4 +8,8 @@ annotation class RegularRetrofit
 
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
-annotation class AIRetrofit 
+annotation class AIRetrofit
+
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class LabelRetrofit 

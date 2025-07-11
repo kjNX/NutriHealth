@@ -5,6 +5,7 @@ import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.FirebaseFirestore
 import com.unmsm.nutrihealth.data.model.Food
 import com.unmsm.nutrihealth.data.model.User
+import com.unmsm.nutrihealth.data.model.LabelFoodPrediction
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import android.util.Log
@@ -78,5 +79,17 @@ class FoodViewModel : ViewModel() {
                 Log.e("FoodViewModel", "Error al guardar comida: ${e.message}")
                 onResult(false, "Error al guardar: ${e.message}")
             }
+    }
+
+    fun saveLabelPrediction(labelPrediction: LabelFoodPrediction, onResult: (Boolean, String) -> Unit) {
+        val food = Food(
+            name = labelPrediction.name,
+            energy = labelPrediction.energy,
+            protein = labelPrediction.protein,
+            fats = labelPrediction.fats,
+            water = labelPrediction.water,
+            timestamp = Date()
+        )
+        savePredictedFood(food, onResult)
     }
 }

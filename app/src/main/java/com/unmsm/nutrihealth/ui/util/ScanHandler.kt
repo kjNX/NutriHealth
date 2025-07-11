@@ -58,16 +58,18 @@ import okhttp3.RequestBody.Companion.asRequestBody
 fun CameraOrGalleryPicker(
     context: Context,
     foodPredictionService: FoodPredictionService,
-    onImageProcessed: (FoodPrediction) -> Unit,
+    onImageProcessed: (Any) -> Unit,
     onError: (String) -> Unit,
     viewModel: FoodViewModel,
     onNavigateToHome: () -> Unit,
-    isAIScan: Boolean = false
+    isAIScan: Boolean = false,
+    isLabelScan: Boolean = false
 ) {
     var showDialog by remember { mutableStateOf(false) }
     var photoUri by remember { mutableStateOf<Uri?>(null) }
     var photoFile by remember { mutableStateOf<File?>(null) }
     var currentPrediction by remember { mutableStateOf<FoodPrediction?>(null) }
+    var currentLabelPrediction by remember { mutableStateOf<LabelFoodPrediction?>(null) }
     var showSaveDialog by remember { mutableStateOf(false) }
     var selectedPlateIndex by remember { mutableStateOf(0) } // 0 para plato general, 1+ para específicos
     var expanded by remember { mutableStateOf(false) }
@@ -125,43 +127,54 @@ fun CameraOrGalleryPicker(
 
                 val requestFile = fileToUse.asRequestBody("image/*".toMediaTypeOrNull())
                 val body = MultipartBody.Part.createFormData(
-                    if (isAIScan) "photo" else "image",
+                    "photo",
                     fileToUse.name,
                     requestFile
                 )
 
                 withContext(Dispatchers.Main) {
                     try {
-                        if (isAIScan) {
-                            val aiResponse = foodPredictionService.predictFoodWithAI(body)
-                            if (aiResponse.isSuccessful && aiResponse.body() != null) {
-                                val aiPrediction = aiResponse.body()!!
-                                // Crear un FoodPrediction a partir de AIFoodPrediction
-                                currentPrediction = FoodPrediction(
-                                    categoria_detectada = aiPrediction.name,
-                                    categoria_general = "",
-                                    plato_general = PlatoGeneral(
-                                        nombre = aiPrediction.name,
-                                        nutricion = NutricionInfo(
-                                            energia = aiPrediction.energy.toDouble(),
-                                            proteinas = aiPrediction.protein.toDouble(),
-                                            grasa = aiPrediction.fats.toDouble(),
-                                            agua = aiPrediction.water.toDouble()
-                                        )
-                                    ),
-                                    platos_especificos = emptyList()
-                                )
-                                showSaveDialog = true
-                            } else {
-                                onError("Error al procesar la imagen con IA: ${aiResponse.message() ?: "Error desconocido"}")
+                        when {
+                            isLabelScan -> {
+                                val labelResponse = foodPredictionService.extractLabel(body)
+                                if (labelResponse.isSuccessful && labelResponse.body() != null) {
+                                    currentLabelPrediction = labelResponse.body()
+                                    onImageProcessed(currentLabelPrediction!!)
+                                } else {
+                                    onError("Error al procesar la etiqueta: ${labelResponse.message() ?: "Error desconocido"}")
+                                }
                             }
-                        } else {
-                            val regularResponse = foodPredictionService.predictFood(body)
-                            if (regularResponse.isSuccessful && regularResponse.body() != null) {
-                                currentPrediction = regularResponse.body()
-                                showSaveDialog = true
-                            } else {
-                                onError("Error al procesar la imagen: ${regularResponse.message() ?: "Error desconocido"}")
+                            isAIScan -> {
+                                val aiResponse = foodPredictionService.predictFoodWithAI(body)
+                                if (aiResponse.isSuccessful && aiResponse.body() != null) {
+                                    val aiPrediction = aiResponse.body()!!
+                                    currentPrediction = FoodPrediction(
+                                        categoria_detectada = aiPrediction.name,
+                                        categoria_general = "",
+                                        plato_general = PlatoGeneral(
+                                            nombre = aiPrediction.name,
+                                            nutricion = NutricionInfo(
+                                                energia = aiPrediction.energy.toDouble(),
+                                                proteinas = aiPrediction.protein.toDouble(),
+                                                grasa = aiPrediction.fats.toDouble(),
+                                                agua = aiPrediction.water.toDouble()
+                                            )
+                                        ),
+                                        platos_especificos = emptyList()
+                                    )
+                                    onImageProcessed(currentPrediction!!)
+                                } else {
+                                    onError("Error al procesar la imagen con IA: ${aiResponse.message() ?: "Error desconocido"}")
+                                }
+                            }
+                            else -> {
+                                val regularResponse = foodPredictionService.predictFood(body)
+                                if (regularResponse.isSuccessful && regularResponse.body() != null) {
+                                    currentPrediction = regularResponse.body()
+                                    onImageProcessed(currentPrediction!!)
+                                } else {
+                                    onError("Error al procesar la imagen: ${regularResponse.message() ?: "Error desconocido"}")
+                                }
                             }
                         }
                     } catch (e: Exception) {

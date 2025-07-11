@@ -41,6 +41,8 @@ import retrofit2.http.Multipart
 import retrofit2.http.POST
 import retrofit2.http.Part
 import com.unmsm.nutrihealth.data.model.AIFoodPrediction
+import com.unmsm.nutrihealth.data.model.LabelFoodPrediction
+import javax.inject.Qualifier
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -131,6 +133,17 @@ object NetworkModule {
             .build()
     }
 
+    @LabelRetrofit
+    @Provides
+    @Singleton
+    fun provideLabelRetrofit(okHttpClient: OkHttpClient): Retrofit {
+        return Retrofit.Builder()
+            .baseUrl(FoodPredictionService.LABEL_BASE_URL)
+            .client(okHttpClient)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+    }
+
     interface RegularFoodService {
         @Multipart
         @POST("predict")
@@ -147,14 +160,24 @@ object NetworkModule {
         ): Response<AIFoodPrediction>
     }
 
+    interface LabelFoodService {
+        @Multipart
+        @POST("extract/label")
+        suspend fun extractLabel(
+            @Part photo: MultipartBody.Part
+        ): Response<LabelFoodPrediction>
+    }
+
     @Provides
     @Singleton
     fun provideFoodPredictionService(
         @RegularRetrofit retrofit: Retrofit,
-        @AIRetrofit aiRetrofit: Retrofit
+        @AIRetrofit aiRetrofit: Retrofit,
+        @LabelRetrofit labelRetrofit: Retrofit
     ): FoodPredictionService {
         val regularService = retrofit.create(RegularFoodService::class.java)
         val aiService = aiRetrofit.create(AIFoodService::class.java)
+        val labelService = labelRetrofit.create(LabelFoodService::class.java)
 
         return object : FoodPredictionService {
             override suspend fun predictFood(image: MultipartBody.Part): Response<FoodPrediction> {
@@ -163,6 +186,10 @@ object NetworkModule {
 
             override suspend fun predictFoodWithAI(photo: MultipartBody.Part): Response<AIFoodPrediction> {
                 return aiService.predictFoodWithAI(photo)
+            }
+
+            override suspend fun extractLabel(photo: MultipartBody.Part): Response<LabelFoodPrediction> {
+                return labelService.extractLabel(photo)
             }
         }
     }
