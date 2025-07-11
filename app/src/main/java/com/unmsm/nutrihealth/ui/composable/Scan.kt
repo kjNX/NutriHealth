@@ -32,6 +32,8 @@ import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.graphics.vector.ImageVector
 import java.util.Date
+import com.unmsm.nutrihealth.data.model.PlatoGeneral
+import com.unmsm.nutrihealth.data.model.PlatoEspecifico
 
 @Composable
 fun Scan(
@@ -455,6 +457,7 @@ private fun NutritionInfoRow(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FoodPredictionResult(
     prediction: FoodPrediction,
@@ -462,7 +465,28 @@ fun FoodPredictionResult(
     foodViewModel: FoodViewModel = viewModel()
 ) {
     var isSaving by remember { mutableStateOf(false) }
+    var selectedPlateIndex by remember { mutableStateOf(0) } // 0 para plato general, 1+ para específicos
+    var portionPercentage by remember { mutableStateOf(100f) }
+    var expanded by remember { mutableStateOf(false) }
     val context = LocalContext.current
+
+    // Obtener el plato seleccionado
+    val selectedPlate = when (selectedPlateIndex) {
+        0 -> prediction.plato_general
+        else -> prediction.platos_especificos.getOrNull(selectedPlateIndex - 1)
+    }
+
+    // Calcular valores nutricionales basados en la porción
+    val nutricionInfo = when (selectedPlate) {
+        is PlatoGeneral -> selectedPlate.nutricion
+        is PlatoEspecifico -> selectedPlate.nutricion
+        else -> null
+    }
+
+    val currentEnergy = nutricionInfo?.energia?.times(portionPercentage / 100f) ?: 0.0
+    val currentProtein = nutricionInfo?.proteinas?.times(portionPercentage / 100f) ?: 0.0
+    val currentFats = nutricionInfo?.grasa?.times(portionPercentage / 100f) ?: 0.0
+    val currentWater = nutricionInfo?.agua?.times(portionPercentage / 100f) ?: 0.0
 
     Column(
         modifier = Modifier
@@ -471,7 +495,7 @@ fun FoodPredictionResult(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = prediction.name,
+            text = prediction.categoria_detectada,
             style = MaterialTheme.typography.headlineMedium,
             textAlign = TextAlign.Center
         )
@@ -485,13 +509,59 @@ fun FoodPredictionResult(
             )
         }
 
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Selector de plato
+        ExposedDropdownMenuBox(
+            expanded = expanded,
+            onExpandedChange = { expanded = !expanded }
+        ) {
+            TextField(
+                value = when (selectedPlateIndex) {
+                    0 -> prediction.plato_general.nombre
+                    else -> prediction.platos_especificos[selectedPlateIndex - 1].nombre_preparacion
+                },
+                onValueChange = {},
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .menuAnchor()
+            )
+
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                // Opción para plato general
+                DropdownMenuItem(
+                    text = { Text(prediction.plato_general.nombre) },
+                    onClick = {
+                        selectedPlateIndex = 0
+                        expanded = false
+                    }
+                )
+
+                // Opciones para platos específicos
+                prediction.platos_especificos.forEachIndexed { index, plato ->
+                    DropdownMenuItem(
+                        text = { Text(plato.nombre_preparacion) },
+                        onClick = {
+                            selectedPlateIndex = index + 1
+                            expanded = false
+                        }
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.secondaryContainer
-            )
+                .padding(8.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
         ) {
             Column(
                 modifier = Modifier
@@ -500,18 +570,59 @@ fun FoodPredictionResult(
             ) {
                 Text(
                     text = "Información Nutricional",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.padding(bottom = 8.dp)
                 )
-                Spacer(modifier = Modifier.height(8.dp))
 
-                val nutricion = prediction.plato_general.nutricion
-                Text("Energía: ${String.format("%.1f", nutricion.energia)} kcal")
-                Text("Proteínas: ${String.format("%.1f", nutricion.proteinas)}g")
-                Text("Grasas: ${String.format("%.1f", nutricion.grasa)}g")
-                Text("Agua: ${String.format("%.1f", nutricion.agua)}%")
+                // Ajuste de porción
+                Text(
+                    text = "Ajustar porción: ${portionPercentage.toInt()}%",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+
+                Slider(
+                    value = portionPercentage,
+                    onValueChange = { portionPercentage = it },
+                    valueRange = 1f..500f,
+                    steps = 199,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp)
+                )
+
+                Divider(modifier = Modifier.padding(vertical = 8.dp))
+
+                // Valores nutricionales
+                NutritionInfoRow(
+                    icon = Icons.Default.LocalFireDepartment,
+                    label = "Energía",
+                    value = String.format("%.1f kcal", currentEnergy)
+                )
+
+                NutritionInfoRow(
+                    icon = Icons.Default.Egg,
+                    label = "Proteínas",
+                    value = String.format("%.1f g", currentProtein)
+                )
+
+                NutritionInfoRow(
+                    icon = Icons.Default.Opacity,
+                    label = "Grasas",
+                    value = String.format("%.1f g", currentFats)
+                )
+
+                if (currentWater > 0) {
+                    NutritionInfoRow(
+                        icon = Icons.Default.WaterDrop,
+                        label = "Agua",
+                        value = String.format("%.1f g", currentWater)
+                    )
+                }
             }
         }
+
+        Spacer(modifier = Modifier.height(24.dp))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -520,23 +631,22 @@ fun FoodPredictionResult(
             Button(
                 onClick = {
                     isSaving = true
+                    val plateName = when (selectedPlateIndex) {
+                        0 -> prediction.plato_general.nombre
+                        else -> prediction.platos_especificos[selectedPlateIndex - 1].nombre_preparacion
+                    }
                     foodViewModel.savePredictedFood(
                         Food(
-                            name = prediction.name,
-                            energy = prediction.plato_general.nutricion.energia,
-                            protein = prediction.plato_general.nutricion.proteinas,
-                            fats = prediction.plato_general.nutricion.grasa,
-                            water = prediction.plato_general.nutricion.agua,
-                            timestamp = java.util.Date()
-
+                            name = "$plateName (${portionPercentage.toInt()}%)",
+                            energy = currentEnergy,
+                            protein = currentProtein,
+                            fats = currentFats,
+                            water = currentWater,
+                            timestamp = Date()
                         )
                     ) { success, message ->
                         isSaving = false
-                        Toast.makeText(
-                            context,
-                            message,
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                     }
                 },
                 enabled = !isSaving

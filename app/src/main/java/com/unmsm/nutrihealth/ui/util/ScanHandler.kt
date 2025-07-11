@@ -52,6 +52,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
+import android.util.Log
 
 
 @Composable
@@ -126,11 +127,11 @@ fun CameraOrGalleryPicker(
                 }
 
                 val requestFile = fileToUse.asRequestBody("image/*".toMediaTypeOrNull())
-                val body = MultipartBody.Part.createFormData(
-                    "photo",
-                    fileToUse.name,
-                    requestFile
-                )
+                val body = when {
+                    isLabelScan -> MultipartBody.Part.createFormData("photo", fileToUse.name, requestFile)
+                    isAIScan -> MultipartBody.Part.createFormData("photo", fileToUse.name, requestFile)
+                    else -> MultipartBody.Part.createFormData("image", fileToUse.name, requestFile)
+                }
 
                 withContext(Dispatchers.Main) {
                     try {
@@ -168,16 +169,20 @@ fun CameraOrGalleryPicker(
                                 }
                             }
                             else -> {
+                                Log.d("ScanHandler", "Enviando imagen para predicción regular")
                                 val regularResponse = foodPredictionService.predictFood(body)
                                 if (regularResponse.isSuccessful && regularResponse.body() != null) {
                                     currentPrediction = regularResponse.body()
                                     onImageProcessed(currentPrediction!!)
                                 } else {
-                                    onError("Error al procesar la imagen: ${regularResponse.message() ?: "Error desconocido"}")
+                                    val errorBody = regularResponse.errorBody()?.string() ?: "Error desconocido"
+                                    Log.e("ScanHandler", "Error en predicción regular: $errorBody")
+                                    onError("Error al procesar la imagen: $errorBody")
                                 }
                             }
                         }
                     } catch (e: Exception) {
+                        Log.e("ScanHandler", "Error al procesar la respuesta", e)
                         onError("Error al procesar la respuesta: ${e.message}")
                     }
                 }
@@ -186,6 +191,7 @@ fun CameraOrGalleryPicker(
                     fileToUse.delete()
                 }
             } catch (e: Exception) {
+                Log.e("ScanHandler", "Error al procesar la imagen", e)
                 withContext(Dispatchers.Main) {
                     onError("Error al procesar la imagen: ${e.message}")
                 }
