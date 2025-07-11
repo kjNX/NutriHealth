@@ -12,6 +12,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.unmsm.nutrihealth.data.model.Contact
 import com.unmsm.nutrihealth.data.model.Food
+import com.unmsm.nutrihealth.data.model.Run
 import com.unmsm.nutrihealth.data.repository.getContacts
 import com.unmsm.nutrihealth.logic.FoodViewModel
 import com.unmsm.nutrihealth.ui.composable.blocks.EntryFABs
@@ -20,6 +21,7 @@ import com.unmsm.nutrihealth.ui.composable.blocks.NavBar
 import com.unmsm.nutrihealth.ui.composable.pages.main.ContactList
 import com.unmsm.nutrihealth.ui.composable.pages.main.StartDisplay
 import com.unmsm.nutrihealth.ui.composable.pages.map.CurrentRunScreen
+import java.util.Calendar
 import java.util.Date
 import java.util.concurrent.TimeUnit
 import kotlin.random.Random
@@ -54,6 +56,49 @@ fun generateSampleFoodData(): List<Food> {
     return foodList.toList()
 }
 
+fun generateSampleRunData(): List<Run> {
+    val runs = mutableListOf<Run>()
+    val random = Random.Default
+    val calendar = Calendar.getInstance()
+
+    // Generate 30 unique run entries
+    for (i in 1..10) {
+        calendar.time = Date()
+        val daysAgo = random.nextInt(30)
+        calendar.add(Calendar.DAY_OF_MONTH, -daysAgo)
+
+        calendar.set(Calendar.HOUR_OF_DAY, random.nextInt(24))
+        calendar.set(Calendar.MINUTE, random.nextInt(60))
+        calendar.set(Calendar.SECOND, random.nextInt(60))
+        calendar.set(Calendar.MILLISECOND, random.nextInt(1000))
+        val timestamp = calendar.time
+
+        val durationMinutes = random.nextLong(10, 121)
+        val durationInMillis = durationMinutes * 60 * 1000L
+
+        val avgSpeedInKMH = random.nextFloat() * (15.0f - 5.0f) + 5.0f
+
+        val durationInHours = durationInMillis / (1000.0 * 60 * 60)
+        val distanceInKM = avgSpeedInKMH * durationInHours
+        val distanceInMeters = (distanceInKM * 1000).toInt()
+
+        val caloriesPerKm = random.nextFloat() * (100.0f - 60.0f) + 60.0f
+        val caloriesBurned = (distanceInKM * caloriesPerKm).toInt()
+
+        runs.add(
+            Run(
+                timestamp = timestamp,
+                avgSpeedInKMH = avgSpeedInKMH,
+                distanceInMeters = distanceInMeters,
+                durationInMillis = durationInMillis,
+                caloriesBurned = caloriesBurned,
+                id = i
+            )
+        )
+    }
+    return runs
+}
+
 @Composable
 fun Composite(
     state: PagerState,
@@ -65,9 +110,7 @@ fun Composite(
         when (page) {
             0 -> StartDisplay(
                 foodList = generateSampleFoodData(),
-                runList = listOf(
-                    
-                ),
+                runList = generateSampleRunData(),
                 extraWater = 1200,
                 modifier = Modifier.fillMaxSize())
             1 -> ContactList(
