@@ -34,6 +34,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import java.util.Date
 import com.unmsm.nutrihealth.data.model.PlatoGeneral
 import com.unmsm.nutrihealth.data.model.PlatoEspecifico
+import androidx.compose.foundation.clickable
+import androidx.compose.material.icons.filled.AutoAwesome
 
 @Composable
 fun Scan(
@@ -203,76 +205,138 @@ fun EmptyScanPrompt(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
         Text(
-            text = "Escanea tu comida",
-            style = MaterialTheme.typography.headlineMedium,
-            textAlign = TextAlign.Center
+            text = "¿Qué deseas escanear?",
+            style = MaterialTheme.typography.headlineMedium.copy(
+                fontWeight = FontWeight.Bold
+            ),
+            textAlign = TextAlign.Center,
+            color = MaterialTheme.colorScheme.onBackground
         )
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Text(
+            text = "Elige el modo de escaneo que mejor se adapte a tu comida",
+            style = MaterialTheme.typography.bodyLarge,
+            textAlign = TextAlign.Center,
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+        )
 
-        Button(
-            onClick = onScan,
+        Card(
             modifier = Modifier
-                .fillMaxWidth(0.8f)
-                .height(56.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primary
+                .fillMaxWidth()
+                .clickable(onClick = onScan),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
             ),
-            shape = MaterialTheme.shapes.medium
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
-            Icon(
-                imageVector = Icons.Default.CameraAlt,
-                contentDescription = null,
-                modifier = Modifier.size(24.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text("Escanear comida")
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Icon(
+                    imageVector = Icons.Default.CameraAlt,
+                    contentDescription = null,
+                    modifier = Modifier.size(32.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Escaneo Rápido",
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold
+                    ),
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    text = "Ideal para platos peruanos",
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+                )
+            }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Button(
-            onClick = onScanWithAI,
+        Card(
             modifier = Modifier
-                .fillMaxWidth(0.8f)
-                .height(56.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.secondary
+                .fillMaxWidth()
+                .clickable(onClick = onScanWithAI),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.1f)
             ),
-            shape = MaterialTheme.shapes.medium
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
-            Icon(
-                imageVector = Icons.Default.CameraAlt,
-                contentDescription = null,
-                modifier = Modifier.size(24.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text("Escanear comida con IA")
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Icon(
+                    imageVector = Icons.Default.AutoAwesome,
+                    contentDescription = null,
+                    modifier = Modifier.size(32.dp),
+                    tint = MaterialTheme.colorScheme.secondary
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Escaneo Inteligente",
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold
+                    ),
+                    color = MaterialTheme.colorScheme.secondary
+                )
+                Text(
+                    text = "Análisis detallado con IA para platos complejos",
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+                )
+            }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Button(
-            onClick = onScanLabel,
+        Card(
             modifier = Modifier
-                .fillMaxWidth(0.8f)
-                .height(56.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.tertiary
+                .fillMaxWidth()
+                .clickable(onClick = onScanLabel),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.1f)
             ),
-            shape = MaterialTheme.shapes.medium
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
-            Icon(
-                imageVector = Icons.Default.DocumentScanner,
-                contentDescription = null,
-                modifier = Modifier.size(24.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text("Escanear etiqueta nutricional")
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Icon(
+                    imageVector = Icons.Default.DocumentScanner,
+                    contentDescription = null,
+                    modifier = Modifier.size(32.dp),
+                    tint = MaterialTheme.colorScheme.tertiary
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Escaneo de Etiquetas",
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold
+                    ),
+                    color = MaterialTheme.colorScheme.tertiary
+                )
+                Text(
+                    text = "Lee información nutricional de etiquetas de alimentos",
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+                )
+            }
         }
     }
 }
