@@ -47,6 +47,7 @@ import com.google.android.gms.common.api.ApiException
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
 import com.unmsm.nutrihealth.data.model.User
+import com.unmsm.nutrihealth.ui.composable.dashboard.DashboardScreen
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
@@ -283,7 +284,7 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         composable(MainScreen.Dashboard.name) {
-
+                            DashboardScreen()
                         }
                     }
                 }

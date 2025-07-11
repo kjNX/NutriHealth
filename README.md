@@ -17,6 +17,10 @@ NutriHealth es una aplicación para la gestión nutricional y de actividades fí
 
 # Capturas de pantalla
 
-![image](img/login.png)
-![image](img/main.png)
-![image](img/profile.png)
+<img src="img/login.png" width="250"/>
+<img src="img/main.png" width="250"/>
+<img src="img/profile.png" width="250"/>
+
+[//]: # (![image]&#40;img/login.png =250X&#41;)
+[//]: # (![image]&#40;img/main.png =250X&#41;)
+[//]: # (![image]&#40;img/profile.png =250X&#41;)
