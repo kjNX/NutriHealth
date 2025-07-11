@@ -1,3 +1,22 @@
 # NutriHealth
 
-![image](https://github.com/user-attachments/assets/2e6cd86a-3b28-4f76-a4ca-7ca9c338418a)
+NutriHealth es una aplicación para la gestión nutricional y de actividades físicas.
+
+## Características
+
+- Scanner de comida impulsado por IA
+- Seguimiento de actividad física a través de un mapa
+- Visualización de datos
+
+## Librerías utilizadas
+
+- Firebase para la conexión con los servicios de autenticación, base de datos e IA
+- Hilt para facilitar la inyección de dependencias
+- Retrofit para la comunicación con servicios HTTP
+- Vico para la presentación de datos en formato de dashboards
+
+# Capturas de pantalla
+
+![image](img/login.png)
+![image](img/main.png)
+![image](img/profile.png)
