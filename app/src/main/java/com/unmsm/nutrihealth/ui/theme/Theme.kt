@@ -9,6 +9,7 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
@@ -18,28 +19,26 @@ private val DarkColorScheme = darkColorScheme(
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
-
-
+    primary = Color(0xFF66BB6A),              // Verde medio
+    onPrimary = Color.White,
+    secondary = Color(0xFFA8D8B9),            // Verde pastel
+    secondaryContainer = Color(0xFFE3F2FD),   // Azul pastel claro
+    background = Color(0xFFF8FFF8),           // Fondo general
+    surface = Color(0xFFF1F8E9),              // Fondo de paneles
+    onSurface = Color(0xFF2E7D32)             // Texto sobre surface
 )
+
 
 @Composable
 fun NutriHealthTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false, // Evitamos que lo sobreescriba
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
-
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
+    val colorScheme = if (darkTheme) {
+        DarkColorScheme // Puedes hacer otro esquema pastel oscuro si deseas
+    } else {
+        LightColorScheme // Este ya es el pastel
     }
 
     MaterialTheme(
